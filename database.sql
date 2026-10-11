@@ -55,7 +55,7 @@ CREATE TABLE `product_images` (
   CONSTRAINT `fk_product_images` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 4. TABEL PESANAN PRE-ORDER
+-- 4. TABEL PESANAN PRE-ORDER (orders & pesanan)
 DROP TABLE IF EXISTS `order_items`;
 DROP TABLE IF EXISTS `orders`;
 CREATE TABLE `orders` (
@@ -63,22 +63,50 @@ CREATE TABLE `orders` (
   `order_code` VARCHAR(50) NOT NULL UNIQUE,
   `customer_name` VARCHAR(150) NOT NULL,
   `customer_phone` VARCHAR(30) NOT NULL,
-  `customer_email` VARCHAR(100) NOT NULL,
-  `organization` VARCHAR(150) DEFAULT NULL,
+  `jurusan` VARCHAR(100) DEFAULT '-',
+  `customer_email` VARCHAR(100) DEFAULT '-',
+  `organization` VARCHAR(150) DEFAULT '-',
   `shipping_address` TEXT NOT NULL,
   `province` VARCHAR(100) NOT NULL,
   `city` VARCHAR(100) NOT NULL,
   `courier` VARCHAR(50) NOT NULL,
   `payment_scheme` ENUM('dp', 'full') DEFAULT 'dp',
+  `payment_method` VARCHAR(50) DEFAULT 'BCA',
   `subtotal` INT NOT NULL,
   `shipping_cost` INT NOT NULL DEFAULT 15000,
   `total_price` INT NOT NULL,
+  `total_bayar` INT NOT NULL DEFAULT 0,
   `dp_amount` INT NOT NULL,
-  `payment_status` VARCHAR(50) DEFAULT 'Menunggu Verifikasi DP',
-  `production_status` VARCHAR(50) DEFAULT 'Verifikasi Pesanan',
+  `bukti_pembayaran` VARCHAR(255) NULL DEFAULT NULL,
+  `payment_status` VARCHAR(80) DEFAULT 'Menunggu Verifikasi',
+  `production_status` VARCHAR(80) DEFAULT 'Menunggu Konfirmasi Admin',
   `notes` TEXT DEFAULT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `pesanan`;
+CREATE TABLE `pesanan` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `order_code` VARCHAR(50) NOT NULL UNIQUE,
+  `nama_pemesan` VARCHAR(150) NOT NULL,
+  `no_hp` VARCHAR(30) NOT NULL,
+  `jurusan` VARCHAR(100) NOT NULL DEFAULT '-',
+  `alamat_pengiriman` TEXT NOT NULL,
+  `provinsi` VARCHAR(100) NOT NULL,
+  `kota` VARCHAR(100) NOT NULL,
+  `ekspedisi` VARCHAR(50) NOT NULL,
+  `skema_pembayaran` ENUM('dp', 'full') DEFAULT 'dp',
+  `metode_pembayaran` VARCHAR(50) DEFAULT 'BCA',
+  `subtotal` INT NOT NULL DEFAULT 0,
+  `ongkir` INT NOT NULL DEFAULT 0,
+  `total_harga` INT NOT NULL DEFAULT 0,
+  `total_bayar` INT NOT NULL DEFAULT 0,
+  `status_pesanan` VARCHAR(80) DEFAULT 'Menunggu Konfirmasi Admin',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Migrasi Penambahan Kolom Bukti Pembayaran & Jurusan pada Tabel pesanan:
+ALTER TABLE `pesanan` ADD COLUMN `bukti_pembayaran` VARCHAR(255) NULL AFTER `total_bayar`;
 
 -- 5. TABEL RINCIAN ITEM PESANAN
 CREATE TABLE `order_items` (

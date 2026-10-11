@@ -17,6 +17,7 @@ define('DATA_ORDERS_FILE', __DIR__ . '/../data/orders.json');
 define('DATA_HERO_SETTINGS_FILE', __DIR__ . '/../data/hero_settings.json');
 define('UPLOAD_DIR', __DIR__ . '/../uploads/products/');
 define('UPLOAD_HERO_DIR', __DIR__ . '/../uploads/hero/');
+define('UPLOAD_BUKTI_DIR', __DIR__ . '/../uploads/bukti_pembayaran/');
 
 
 // ----------------------------------------------------
@@ -558,8 +559,425 @@ function getTrendingProducts() {
 }
 
 // ----------------------------------------------------
-// 5. PENGELOLAAN PESANAN (ORDERS)
+// 5. PENGELOLAAN PESANAN (ORDERS) & UPLOAD BUKTI PEMBAYARAN
 // ----------------------------------------------------
+function ensureOrdersTableSchema($pdo) {
+    if (!$pdo) return;
+    try {
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS `orders` (
+              `id` INT AUTO_INCREMENT PRIMARY KEY,
+              `order_code` VARCHAR(50) NOT NULL UNIQUE,
+              `customer_name` VARCHAR(150) NOT NULL,
+              `customer_phone` VARCHAR(30) NOT NULL,
+              `jurusan` VARCHAR(100) DEFAULT '-',
+              `customer_email` VARCHAR(100) DEFAULT '-',
+              `organization` VARCHAR(150) DEFAULT '-',
+              `shipping_address` TEXT NOT NULL,
+              `province` VARCHAR(100) NOT NULL,
+              `city` VARCHAR(100) NOT NULL,
+              `courier` VARCHAR(50) NOT NULL,
+              `payment_scheme` ENUM('dp', 'full') DEFAULT 'dp',
+              `payment_method` VARCHAR(50) DEFAULT 'BCA',
+              `subtotal` INT NOT NULL DEFAULT 0,
+              `shipping_cost` INT NOT NULL DEFAULT 0,
+              `total_price` INT NOT NULL DEFAULT 0,
+              `total_bayar` INT NOT NULL DEFAULT 0,
+              `dp_amount` INT NOT NULL DEFAULT 0,
+              `bukti_pembayaran` VARCHAR(255) NULL DEFAULT NULL,
+              `payment_status` VARCHAR(80) DEFAULT 'Menunggu Verifikasi',
+              `production_status` VARCHAR(80) DEFAULT 'Menunggu Konfirmasi Admin',
+              `notes` TEXT DEFAULT NULL,
+              `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
+
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS `pesanan` (
+              `id` INT AUTO_INCREMENT PRIMARY KEY,
+              `order_code` VARCHAR(50) NOT NULL UNIQUE,
+              `nama_pemesan` VARCHAR(150) NOT NULL,
+              `no_hp` VARCHAR(30) NOT NULL,
+              `jurusan` VARCHAR(100) NOT NULL DEFAULT '-',
+              `alamat_pengiriman` TEXT NOT NULL,
+              `provinsi` VARCHAR(100) NOT NULL,
+              `kota` VARCHAR(100) NOT NULL,
+              `ekspedisi` VARCHAR(50) NOT NULL,
+              `skema_pembayaran` ENUM('dp', 'full') DEFAULT 'dp',
+              `metode_pembayaran` VARCHAR(50) DEFAULT 'BCA',
+              `subtotal` INT NOT NULL DEFAULT 0,
+              `ongkir` INT NOT NULL DEFAULT 0,
+              `total_harga` INT NOT NULL DEFAULT 0,
+              `total_bayar` INT NOT NULL DEFAULT 0,
+              `bukti_pembayaran` VARCHAR(255) NULL DEFAULT NULL,
+              `status_pesanan` VARCHAR(80) DEFAULT 'Menunggu Konfirmasi Admin',
+              `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
+
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS `order_items` (
+              `id` INT AUTO_INCREMENT PRIMARY KEY,
+              `order_id` INT NOT NULL,
+              `product_id` INT DEFAULT NULL,
+              `product_name` VARCHAR(200) NOT NULL,
+              `size` VARCHAR(20) NOT NULL,
+              `color` VARCHAR(50) NOT NULL,
+              `custom_text` VARCHAR(100) DEFAULT NULL,
+              `quantity` INT NOT NULL DEFAULT 1,
+              `price` INT NOT NULL DEFAULT 0,
+              `subtotal` INT NOT NULL DEFAULT 0
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ");
+
+        // Auto-migrate kolom bukti_pembayaran & jurusan jika tabel lama belum memilikinya
+        $colCheckOrders = $pdo->query("SHOW COLUMNS FROM `orders` LIKE 'bukti_pembayaran'")->fetch();
+        if (!$colCheckOrders) {
+            $pdo->exec("ALTER TABLE `orders` ADD COLUMN `bukti_pembayaran` VARCHAR(255) NULL AFTER `dp_amount`");
+        }
+        $colCheckJurusanOrders = $pdo->query("SHOW COLUMNS FROM `orders` LIKE 'jurusan'")->fetch();
+        if (!$colCheckJurusanOrders) {
+            $pdo->exec("ALTER TABLE `orders` ADD COLUMN `jurusan` VARCHAR(100) DEFAULT '-' AFTER `customer_phone`");
+        }
+        $colCheckTotalBayar = $pdo->query("SHOW COLUMNS FROM `orders` LIKE 'total_bayar'")->fetch();
+        if (!$colCheckTotalBayar) {
+            $pdo->exec("ALTER TABLE `orders` ADD COLUMN `total_bayar` INT NOT NULL DEFAULT 0 AFTER `total_price`");
+        }
+        $colCheckPayMethod = $pdo->query("SHOW COLUMNS FROM `orders` LIKE 'payment_method'")->fetch();
+        if (!$colCheckPayMethod) {
+            $pdo->exec("ALTER TABLE `orders` ADD COLUMN `payment_method` VARCHAR(50) DEFAULT 'BCA' AFTER `payment_scheme`");
+        }
+        $colCheckPesanan = $pdo->query("SHOW COLUMNS FROM `pesanan` LIKE 'bukti_pembayaran'")->fetch();
+        if (!$colCheckPesanan) {
+            $pdo->exec("ALTER TABLE `pesanan` ADD COLUMN `bukti_pembayaran` VARCHAR(255) NULL AFTER `total_bayar`");
+        }
+        $colCheckJurusanPesanan = $pdo->query("SHOW COLUMNS FROM `pesanan` LIKE 'jurusan'")->fetch();
+        if (!$colCheckJurusanPesanan) {
+            $pdo->exec("ALTER TABLE `pesanan` ADD COLUMN `jurusan` VARCHAR(100) NOT NULL DEFAULT '-' AFTER `no_hp`");
+        }
+    } catch (Exception $e) {
+        // Abaikan jika gagal migrasi otomatis
+    }
+}
+
+/**
+ * Memproses checkout baru beserta validasi & penyimpanan bukti pembayaran
+ */
+function processNewCheckoutOrder($postData, $fileData) {
+    // 1. Validasi keberadaan dan error file bukti pembayaran
+    if (empty($fileData) || !isset($fileData['error']) || $fileData['error'] === UPLOAD_ERR_NO_FILE) {
+        return [
+            'success' => false,
+            'message' => 'Wajib mengunggah file bukti pembayaran sebelum konfirmasi pesanan.'
+        ];
+    }
+
+    if ($fileData['error'] !== UPLOAD_ERR_OK) {
+        return [
+            'success' => false,
+            'message' => 'Terjadi kesalahan saat mengunggah file bukti pembayaran (Kode Error: ' . (int)$fileData['error'] . ').'
+        ];
+    }
+
+    // 2. Validasi ukuran file (Maksimal 2MB = 2 * 1024 * 1024 bytes)
+    $maxSize = 2 * 1024 * 1024;
+    if ($fileData['size'] > $maxSize || $fileData['size'] <= 0) {
+        return [
+            'success' => false,
+            'message' => 'Ukuran file bukti pembayaran maksimal 2MB.'
+        ];
+    }
+
+    // 3. Validasi ekstensi dan MIME type (jpg, jpeg, png, pdf)
+    $originalName = basename($fileData['name']);
+    $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+    $allowedExts = ['jpg', 'jpeg', 'png', 'pdf'];
+    if (!in_array($ext, $allowedExts, true)) {
+        return [
+            'success' => false,
+            'message' => 'Format file tidak didukung. Gunakan format JPG, PNG, atau PDF.'
+        ];
+    }
+
+    if (function_exists('finfo_open')) {
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = finfo_file($finfo, $fileData['tmp_name']);
+        finfo_close($finfo);
+        $allowedMimes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+        if ($mimeType && !in_array($mimeType, $allowedMimes, true)) {
+            return [
+                'success' => false,
+                'message' => 'Tipe konten file tidak valid. Pastikan file adalah gambar JPG/PNG atau dokumen PDF asli.'
+            ];
+        }
+    }
+
+    // 4. Generate kode pesanan & nama file unik: bukti_PO-2026-XXXX_timestamp.ext
+    $randomSuffix = random_int(1000, 9999);
+    $orderCode = sanitize($postData['order_code'] ?? '') ?: ('PO-2026-' . $randomSuffix);
+    $safeOrderCode = preg_replace('/[^A-Za-z0-9\-]/', '', $orderCode);
+    $newFileName = 'bukti_' . $safeOrderCode . '_' . time() . '.' . $ext;
+
+    if (!is_dir(UPLOAD_BUKTI_DIR)) {
+        mkdir(UPLOAD_BUKTI_DIR, 0777, true);
+    }
+
+    $targetPath = UPLOAD_BUKTI_DIR . $newFileName;
+    if (!move_uploaded_file($fileData['tmp_name'], $targetPath)) {
+        return [
+            'success' => false,
+            'message' => 'Gagal menyimpan file bukti pembayaran ke server.'
+        ];
+    }
+
+    $relativeBuktiPath = 'uploads/bukti_pembayaran/' . $newFileName;
+
+    // 5. Ambil dan sanitasi data form pemesan & item keranjang
+    $buyerName = sanitize($postData['buyer_name'] ?? 'Pemesan Fastender');
+    $buyerPhone = sanitize($postData['buyer_phone'] ?? '-');
+    $jurusan = sanitize($postData['jurusan'] ?? ($postData['buyer_jurusan'] ?? '-'));
+    if ($jurusan === '') {
+        $jurusan = '-';
+    }
+
+    $isPickupUsma = !empty($postData['is_pickup_usma']) || ((string)($postData['ship_courier'] ?? '') === '0');
+    $shippingCost = max(0, (int)($postData['ship_courier'] ?? 0));
+
+    $province = sanitize($postData['ship_province'] ?? '');
+    $city = sanitize($postData['ship_city'] ?? '');
+    $address = sanitize($postData['ship_address'] ?? '');
+    $postal = sanitize($postData['ship_postal'] ?? '');
+
+    if ($isPickupUsma) {
+        $province = ($province === '' || $province === '-') ? '-' : $province;
+        $city = ($city === '' || $city === '-') ? '-' : $city;
+        $fullAddress = 'Ambil di Sekretariat USMA (Gedung UKM Polinema)';
+        $courierName = 'Ambil di Sekretariat / Kampus (Gratis Ongkir)';
+        $shippingCost = 0;
+    } else {
+        if ($province === '') $province = '-';
+        if ($city === '') $city = '-';
+        if ($address === '') $address = '-';
+        $fullAddress = ($postal !== '' && $postal !== '-') ? ($address . ' (Kode Pos: ' . $postal . ')') : $address;
+        $courierName = 'Ekspedisi (' . formatRupiah($shippingCost) . ')';
+    }
+
+    $paymentScheme = (($postData['payment_scheme'] ?? 'dp') === 'full') ? 'full' : 'dp';
+    $paymentMethod = sanitize($postData['pay_method'] ?? 'BCA');
+
+    $rawCart = $postData['cart_items'] ?? '[]';
+    $cartItems = is_string($rawCart) ? json_decode($rawCart, true) : $rawCart;
+    if (!is_array($cartItems)) {
+        $cartItems = [];
+    }
+
+    $subtotal = 0;
+    $dpTotal = 0;
+    $totalQty = 0;
+    $normalizedItems = [];
+
+    foreach ($cartItems as $item) {
+        $pId = (int)($item['id'] ?? 1);
+        $pName = sanitize($item['name'] ?? 'Produk Pre-Order Fastender');
+        if ($pName === '' || $pName === 'undefined') {
+            $pName = 'Produk Pre-Order Fastender';
+        }
+        $pPrice = max(0, (int)preg_replace('/[^0-9]/', '', (string)($item['price'] ?? 0)));
+        $pDp = max(0, (int)preg_replace('/[^0-9]/', '', (string)($item['dpPrice'] ?? ($item['dp_price'] ?? round($pPrice * 0.5)))));
+        if ($pDp <= 0 && $pPrice > 0) {
+            $pDp = (int)round($pPrice * 0.5);
+        }
+        $pQty = max(1, (int)($item['quantity'] ?? ($item['qty'] ?? 1)));
+        $pSize = sanitize($item['size'] ?? 'L');
+        $pColor = sanitize($item['color'] ?? 'Standar');
+        $pCustom = sanitize($item['customText'] ?? '');
+        $itemSub = $pPrice * $pQty;
+
+        $subtotal += $itemSub;
+        $dpTotal += ($pDp * $pQty);
+        $totalQty += $pQty;
+
+        $normalizedItems[] = [
+            'id' => $pId,
+            'name' => $pName,
+            'size' => $pSize,
+            'color' => $pColor,
+            'customText' => $pCustom,
+            'quantity' => $pQty,
+            'price' => $pPrice,
+            'dpPrice' => $pDp,
+            'subtotal' => $itemSub,
+            'image' => $item['image'] ?? null
+        ];
+    }
+
+    if ($subtotal <= 0 && !empty($postData['subtotal'])) {
+        $subtotal = max(0, (int)$postData['subtotal']);
+        $dpTotal = (int)round($subtotal * 0.5);
+    }
+
+    $totalPrice = $subtotal + $shippingCost;
+    $dueAmount = ($paymentScheme === 'dp') ? ($dpTotal + $shippingCost) : $totalPrice;
+
+    $paymentStatus = 'Menunggu Verifikasi';
+    $productionStatus = 'Menunggu Konfirmasi Admin';
+
+    $firstItemSummary = !empty($normalizedItems)
+        ? ($normalizedItems[0]['name'] . ' (' . $normalizedItems[0]['size'] . ', ' . $normalizedItems[0]['color'] . ')')
+        : 'Produk Pre-Order';
+
+    // 6. Simpan ke Database MySQL (orders, order_items, dan pesanan) jika koneksi tersedia
+    $pdo = getDbConnection();
+    if ($pdo) {
+        ensureOrdersTableSchema($pdo);
+        try {
+            $stmt = $pdo->prepare("
+                INSERT INTO `orders`
+                (`order_code`, `customer_name`, `customer_phone`, `jurusan`, `customer_email`, `organization`,
+                 `shipping_address`, `province`, `city`, `courier`, `payment_scheme`, `payment_method`,
+                 `subtotal`, `shipping_cost`, `total_price`, `total_bayar`, `dp_amount`,
+                 `bukti_pembayaran`, `payment_status`, `production_status`)
+                VALUES (?, ?, ?, ?, '-', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ");
+            $stmt->execute([
+                $orderCode,
+                $buyerName,
+                $buyerPhone,
+                $jurusan,
+                $jurusan,
+                $fullAddress,
+                $province,
+                $city,
+                $courierName,
+                $paymentScheme,
+                $paymentMethod,
+                $subtotal,
+                $shippingCost,
+                $totalPrice,
+                $dueAmount,
+                $dpTotal,
+                $relativeBuktiPath,
+                $paymentStatus,
+                $productionStatus
+            ]);
+            $insertedOrderId = (int)$pdo->lastInsertId();
+
+            if ($insertedOrderId > 0 && !empty($normalizedItems)) {
+                $itemStmt = $pdo->prepare("
+                    INSERT INTO `order_items`
+                    (`order_id`, `product_id`, `product_name`, `size`, `color`, `custom_text`, `quantity`, `price`, `subtotal`)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ");
+                foreach ($normalizedItems as $nItem) {
+                    $itemStmt->execute([
+                        $insertedOrderId,
+                        $nItem['id'],
+                        $nItem['name'],
+                        $nItem['size'],
+                        $nItem['color'],
+                        $nItem['customText'],
+                        $nItem['quantity'],
+                        $nItem['price'],
+                        $nItem['subtotal']
+                    ]);
+                }
+            }
+
+            // Simpan juga ke tabel `pesanan` sesuai skema migrasi
+            $stmtPesanan = $pdo->prepare("
+                INSERT INTO `pesanan`
+                (`order_code`, `nama_pemesan`, `no_hp`, `jurusan`, `alamat_pengiriman`, `provinsi`, `kota`,
+                 `ekspedisi`, `skema_pembayaran`, `metode_pembayaran`, `subtotal`, `ongkir`,
+                 `total_harga`, `total_bayar`, `bukti_pembayaran`, `status_pesanan`)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ");
+            $stmtPesanan->execute([
+                $orderCode,
+                $buyerName,
+                $buyerPhone,
+                $jurusan,
+                $fullAddress,
+                $province,
+                $city,
+                $courierName,
+                $paymentScheme,
+                $paymentMethod,
+                $subtotal,
+                $shippingCost,
+                $totalPrice,
+                $dueAmount,
+                $relativeBuktiPath,
+                $productionStatus
+            ]);
+        } catch (Exception $e) {
+            // Lanjut simpan ke JSON fallback jika DB error
+        }
+    }
+
+    // 7. Simpan juga ke file JSON data/orders.json agar selalu persisten
+    $orderRecord = [
+        'order_code' => $orderCode,
+        'orderId' => $orderCode,
+        'date' => date('d M Y'),
+        'customer_name' => $buyerName,
+        'customerName' => $buyerName,
+        'customer_phone' => $buyerPhone,
+        'customerPhone' => $buyerPhone,
+        'jurusan' => $jurusan,
+        'customer_email' => '-',
+        'organization' => $jurusan,
+        'org' => $jurusan,
+        'province' => $province,
+        'city' => $city,
+        'address' => $fullAddress,
+        'shipping_address' => $fullAddress,
+        'courier' => $courierName,
+        'payment_scheme' => $paymentScheme,
+        'paymentScheme' => $paymentScheme,
+        'payment_method' => $paymentMethod,
+        'product_summary' => $firstItemSummary,
+        'qty' => max(1, $totalQty),
+        'items' => $normalizedItems,
+        'subtotal' => $subtotal,
+        'shipping' => $shippingCost,
+        'shipping_cost' => $shippingCost,
+        'total_price' => $totalPrice,
+        'total' => $totalPrice,
+        'total_bayar' => $dueAmount,
+        'due' => $dueAmount,
+        'dp_amount' => $dpTotal,
+        'bukti_pembayaran' => $relativeBuktiPath,
+        'payment_status' => $paymentStatus,
+        'paymentStatus' => $paymentStatus,
+        'production_status' => $productionStatus,
+        'productionStatus' => $productionStatus,
+        'created_at' => date('Y-m-d H:i:s')
+    ];
+
+    $existingOrders = [];
+    if (file_exists(DATA_ORDERS_FILE)) {
+        $rawOrders = file_get_contents(DATA_ORDERS_FILE);
+        $decodedOrders = json_decode($rawOrders, true);
+        if (is_array($decodedOrders)) {
+            $existingOrders = $decodedOrders;
+        }
+    } else {
+        $existingOrders = getAllOrdersList();
+    }
+
+    if (!is_dir(dirname(DATA_ORDERS_FILE))) {
+        mkdir(dirname(DATA_ORDERS_FILE), 0777, true);
+    }
+    array_unshift($existingOrders, $orderRecord);
+    file_put_contents(DATA_ORDERS_FILE, json_encode($existingOrders, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    return [
+        'success' => true,
+        'message' => 'Pesanan dan bukti pembayaran berhasil diterima! Menunggu verifikasi admin.',
+        'order' => $orderRecord
+    ];
+}
+
 function getAllOrdersList() {
     $pdo = getDbConnection();
     if ($pdo) {
