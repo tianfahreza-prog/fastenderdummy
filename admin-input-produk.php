@@ -45,14 +45,15 @@ $storedProducts = getProductsList();
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Input Produk Pre-Order - Admin FastTender</title>
+  <title>Input Produk Pre-Order - Admin Fastender</title>
   
-  <!-- Google Fonts: Poppins & Inter -->
+  <!-- Google Fonts: Montserrat & Fira Code -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
   
   <!-- Stylesheets -->
+  <link rel="stylesheet" href="variables.css">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/admin.css">
 
@@ -97,20 +98,20 @@ $storedProducts = getProductsList();
             
             <!-- Tombol Demo: Muat Template Cepat -->
             <a href="admin-input-produk.php?action=load_demo" class="btn btn-outline-accent btn-sm">
-              ⚡ Isi Produk Demo Instan
+              Isi Produk Demo
             </a>
           </div>
         </div>
 
         <?php if (!empty($flashSuccess)): ?>
           <div style="background: #dcfce7; border: 1px solid #86efac; color: #15803d; padding: 14px 18px; border-radius: var(--radius-md); font-size: 14px; margin-bottom: 24px; font-weight: 500;">
-            ✓ <?= htmlspecialchars($flashSuccess) ?>
+            <?= htmlspecialchars($flashSuccess) ?>
           </div>
         <?php endif; ?>
 
         <?php if (!empty($flashError)): ?>
           <div style="background: #fee2e2; border: 1px solid #f87171; color: #b91c1c; padding: 14px 18px; border-radius: var(--radius-md); font-size: 14px; margin-bottom: 24px;">
-            ⚠️ <?= htmlspecialchars($flashError) ?>
+            <?= htmlspecialchars($flashError) ?>
           </div>
         <?php endif; ?>
 
@@ -265,7 +266,7 @@ $storedProducts = getProductsList();
                 <div class="form-card" style="padding: 20px; border-color: var(--accent);">
                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                     <span style="font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase;">
-                      🔴 Live Preview di Katalog
+                      Live Preview di Katalog
                     </span>
                     <span style="font-size: 11px; color: var(--text-muted);">Sisi Pengguna</span>
                   </div>
@@ -314,7 +315,7 @@ $storedProducts = getProductsList();
                   </button>
 
                   <p style="font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 10px; line-height: 1.4;">
-                    ✓ Produk akan langsung tampil mengisi slot di Beranda dan Katalog Toko.
+                    Produk akan langsung tampil mengisi slot di Beranda dan Katalog Toko.
                   </p>
                 </div>
 
@@ -356,7 +357,6 @@ $storedProducts = getProductsList();
                 <?php if (empty($storedProducts)): ?>
                   <tr>
                     <td colspan="9" style="text-align: center; padding: 40px; color: var(--text-muted); background: #fafbfc;">
-                      <div style="font-size: 32px; margin-bottom: 8px;">📭</div>
                       <strong>Status: Mode Space Kosong Aktif</strong><br>
                       <span style="font-size: 13px;">Belum ada produk yang diinput. Halaman Beranda dan Katalog pengguna saat ini menampilkan slot space kosong.</span>
                     </td>
@@ -520,7 +520,7 @@ $storedProducts = getProductsList();
       updateLivePreview();
 
       if (addedCount > 0) {
-        showToast(`✓ Berhasil menambahkan ${addedCount} foto! (Total: ${uploadedImages.length})`, "success");
+        showToast(`Berhasil menambahkan ${addedCount} foto! (Total: ${uploadedImages.length})`, "success");
       }
     }
 

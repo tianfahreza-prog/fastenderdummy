@@ -95,10 +95,22 @@ CREATE TABLE `order_items` (
   CONSTRAINT `fk_order_items` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Seed Data Contoh Pesanan Awal untuk Dashboard Admin
-INSERT INTO `orders` (`order_code`, `customer_name`, `customer_phone`, `customer_email`, `organization`, `shipping_address`, `province`, `city`, `courier`, `payment_scheme`, `subtotal`, `shipping_cost`, `total_price`, `dp_amount`, `payment_status`, `production_status`) VALUES
-('PO-2026-8891', 'Ahmad Fauzi', '081234567890', 'fauzi@example.com', 'Himpunan Informatika', 'Jl. Kaliurang KM 9, Sleman', 'D.I. Yogyakarta', 'Sleman', 'JNE Reguler', 'dp', 5880000, 15000, 5895000, 2955000, 'DP 50% Lunas', 'Sedang Produksi'),
-('PO-2026-1045', 'Siti Rahma', '081398765432', 'siti@example.com', 'BEM FT Undip', 'Jl. Prof Soedarto No. 1, Tembalang', 'Jawa Tengah', 'Semarang', 'SiCepat Halu', 'full', 2700000, 15000, 2715000, 2715000, 'Lunas 100%', 'Dalam Pengiriman'),
-('PO-2026-7734', 'Dewi Lestari', '085712345678', 'dewi@example.com', 'Manajemen Bisnis', 'Jl. Sukajadi No. 45', 'Jawa Barat', 'Bandung', 'J&T Express', 'full', 165000, 15000, 180000, 180000, 'Lunas 100%', 'Quality Check'),
-('PO-2026-4412', 'Rian Hidayat', '082187654321', 'rian@example.com', 'Teknik Sipil 2026', 'Jl. Dago Giri No. 102', 'Jawa Barat', 'Bandung', 'JNE Reguler', 'dp', 1140000, 15000, 1155000, 585000, 'DP 50% Lunas', 'Sedang Produksi'),
-('PO-2026-3390', 'Budi Santoso', '081912349999', 'budi@example.com', 'Teknik Mesin', 'Jl. Raya ITS No. 12', 'Jawa Timur', 'Surabaya', 'JNE Reguler', 'full', 185000, 15000, 200000, 200000, 'Lunas 100%', 'Selesai');
+-- 6. TABEL PENGATURAN SITUS & HERO BANNER
+DROP TABLE IF EXISTS `site_settings`;
+CREATE TABLE `site_settings` (
+  `setting_key` VARCHAR(100) PRIMARY KEY,
+  `setting_value` TEXT,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Seed Default Pengaturan Hero Section
+INSERT INTO `site_settings` (`setting_key`, `setting_value`) VALUES
+('hero_title', 'Pre-Order Batch 1 telah dibuka'),
+('hero_badge', 'BATCH PERDANA TAHUN AKADEMIK 2026'),
+('hero_description', 'Wujudkan identitas kebanggaan kelas, jurusan, dan organisasimu bersama Fastender. Bahan standar distro, gratis konsultasi desain bordir, sistem DP 50%, dan jaminan tepat waktu.'),
+('hero_countdown_label', 'PO DITUTUP DALAM'),
+('hero_countdown_deadline', '2026-10-25 23:59:59'),
+('hero_banner_image', 'assets/images/hero-showcase.png'),
+('hero_cta_text', 'Pesan Sekarang'),
+('hero_cta_link', 'katalog.php');
+

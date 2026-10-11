@@ -13,8 +13,8 @@ $adminPage = $adminPage ?? 'dashboard';
   <!-- Sidebar Header / Brand Logo -->
   <div class="sidebar-header">
     <a href="index.php" class="sidebar-brand">
-      <img src="assets/images/logo.png" alt="FastTender Logo" class="brand-logo-img">
-      <span>FastTender</span>
+      <img src="assets/images/logo.png" alt="Fastender logo" class="brand-logo-img">
+      <span class="brand-text" style="font-family: 'Montserrat', var(--font-roobert), sans-serif; font-weight: 700; text-transform: none; letter-spacing: -0.04em;">Fast<span>ender</span></span>
       <span class="admin-badge">ADMIN</span>
     </a>
   </div>
@@ -60,17 +60,16 @@ $adminPage = $adminPage ?? 'dashboard';
       </div>
     </a>
 
-    <!-- Menu 4: Studio 3D Showcase (Drag & Drop) -->
-    <a href="admin-dashboard.php#studio-3d-section" class="sidebar-link">
+    <!-- Menu 4: Pengaturan Hero & Countdown PO -->
+    <a href="admin-dashboard.php#hero-banner-section" class="sidebar-link">
       <div class="sidebar-link-content">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-          <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-          <line x1="12" y1="22.08" x2="12" y2="12"></line>
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
         </svg>
-        <span>Studio 3D Beranda</span>
+        <span>Pengaturan Hero PO</span>
       </div>
-      <span class="admin-badge" style="background: rgba(249, 115, 22, 0.2); color: var(--accent);">3D</span>
+      <span class="badge badge-accent" style="font-size: 10px; padding: 2px 6px;">LIVE</span>
     </a>
 
     <div class="nav-category">Tampilan Pengguna</div>
@@ -84,7 +83,7 @@ $adminPage = $adminPage ?? 'dashboard';
         </svg>
         <span>Lihat Hasil Katalog</span>
       </div>
-      <span style="font-size: 11px; color: var(--accent);">↗</span>
+      <span style="font-size: 11px; color: var(--color-ash, #737780);">↗</span>
     </a>
 
     <a href="index.php" target="_blank" class="sidebar-link">
@@ -95,7 +94,7 @@ $adminPage = $adminPage ?? 'dashboard';
         </svg>
         <span>Lihat Halaman Beranda</span>
       </div>
-      <span style="font-size: 11px; color: var(--accent);">↗</span>
+      <span style="font-size: 11px; color: var(--color-ash, #737780);">↗</span>
     </a>
   </nav>
 

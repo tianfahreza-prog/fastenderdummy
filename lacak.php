@@ -22,15 +22,11 @@ include __DIR__ . '/includes/navbar.php';
     
     <div class="track-container">
       
-      <!-- CARD FORM INPUT SATU INPUT (NOMOR RESI) & TOMBOL ORANYE "LACAK" -->
+      <!-- CARD FORM INPUT SATU INPUT (NOMOR RESI) & TOMBOL "LACAK" -->
       <div class="track-search-card">
-        <span class="section-tag" style="margin-bottom: 8px;">Pelacakan Real-Time</span>
-        <h1 style="font-size: 26px; font-weight: 800; color: var(--primary); margin-bottom: 8px;">
-          Lacak Status Pre-Order &amp; Pengiriman
+        <h1 style="font-size: 26px; font-weight: 700; color: var(--color-ink-black, #111111); margin-bottom: 24px; letter-spacing: -0.04em;">
+          Lacak Status Pesanan
         </h1>
-        <p style="font-size: 14px; color: var(--text-muted); max-width: 520px; margin: 0 auto;">
-          Masukkan Nomor Resi / No. Pesanan PO Anda untuk melihat progres produksi konveksi hingga status pengiriman ekspedisi.
-        </p>
 
         <!-- Form Satu Input + Tombol "Lacak" -->
         <form id="track-form" class="track-form" onsubmit="handleTrackSubmit(event)">
@@ -64,12 +60,12 @@ include __DIR__ . '/includes/navbar.php';
       <!-- HASIL PELACAKAN (TIMELINE STATUS) -->
       <div id="track-result" class="track-result-card">
         
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--color-fog, #d7d7d7); padding-bottom: 16px;">
           <div>
-            <span style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px;">NOMOR PESANAN</span>
-            <h2 id="res-order-id" style="font-size: 22px; font-weight: 800; color: var(--primary);">PO-2026-8891</h2>
+            <span style="font-size: 11px; text-transform: uppercase; font-family: var(--font-space-mono); color: var(--color-ash, #737780); font-weight: 700; letter-spacing: 0.05em;">NOMOR PESANAN</span>
+            <h2 id="res-order-id" style="font-family: var(--font-space-mono); font-size: 22px; font-weight: 700; color: var(--color-ink-black, #111111);">PO-2026-8891</h2>
           </div>
-          <span id="res-status-badge" class="badge badge-accent" style="font-size: 13px; padding: 6px 14px;">
+          <span id="res-status-badge" class="badge badge-accent" style="font-size: 12px; padding: 4px 12px;">
             Sedang Diproduksi
           </span>
         </div>
@@ -77,24 +73,24 @@ include __DIR__ . '/includes/navbar.php';
         <!-- Rincian Metadata Pesanan -->
         <div class="order-meta-box">
           <div>
-            <span style="font-size: 11px; color: var(--text-muted); display: block;">Nama Pemesan</span>
-            <strong id="res-customer-name" style="font-size: 14px; color: var(--text-main);">-</strong>
-            <div id="res-customer-org" style="font-size: 12px; color: var(--text-muted);">-</div>
+            <span style="font-size: 11px; color: var(--color-ash, #737780); display: block;">Nama Pemesan</span>
+            <strong id="res-customer-name" style="font-size: 14px; color: var(--color-ink-black, #111111);">-</strong>
+            <div id="res-customer-org" style="font-size: 12px; color: var(--color-ash, #737780);">-</div>
           </div>
           <div>
-            <span style="font-size: 11px; color: var(--text-muted); display: block;">Produk Pre-Order</span>
-            <strong id="res-product-name" style="font-size: 14px; color: var(--text-main);">-</strong>
-            <div id="res-product-meta" style="font-size: 12px; color: var(--text-muted);">-</div>
+            <span style="font-size: 11px; color: var(--color-ash, #737780); display: block;">Produk Pre-Order</span>
+            <strong id="res-product-name" style="font-size: 14px; color: var(--color-ink-black, #111111);">-</strong>
+            <div id="res-product-meta" style="font-size: 12px; color: var(--color-ash, #737780);">-</div>
           </div>
           <div>
-            <span style="font-size: 11px; color: var(--text-muted); display: block;">Estimasi Pengiriman</span>
-            <strong id="res-estimated-date" style="font-size: 14px; color: var(--accent);">15 Nov 2026</strong>
-            <div id="res-destination" style="font-size: 12px; color: var(--text-muted);">-</div>
+            <span style="font-size: 11px; color: var(--color-ash, #737780); display: block;">Estimasi Pengiriman</span>
+            <strong id="res-estimated-date" style="font-family: var(--font-space-mono); font-size: 14px; color: var(--color-electric-cobalt, #000aff);">15 Nov 2026</strong>
+            <div id="res-destination" style="font-size: 12px; color: var(--color-ash, #737780);">-</div>
           </div>
         </div>
 
         <!-- TIMELINE STATUS PENGIRIMAN & PRODUKSI -->
-        <h3 style="font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 24px;">
+        <h3 style="font-size: 16px; font-weight: 700; color: var(--color-ink-black, #111111); margin-bottom: 24px; letter-spacing: -0.04em;">
           Riwayat &amp; Timeline Pengerjaan PO:
         </h3>
 
@@ -102,9 +98,9 @@ include __DIR__ . '/includes/navbar.php';
           <!-- Rendered by JS -->
         </div>
 
-        <div style="margin-top: 32px; padding: 16px; background: var(--bg-muted); border-radius: var(--radius-md); font-size: 13px; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div style="margin-top: 32px; padding: 16px; background: var(--surface-plaster, #ecedee); border-radius: var(--radius-cards, 10px); font-size: 13px; color: var(--color-ash, #737780); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
           <span>Ada pertanyaan atau perubahan bordir nama?</span>
-          <a href="https://wa.me/6281234567890" target="_blank" style="color: var(--accent); font-weight: 700;">
+          <a href="https://wa.me/6281234567890" target="_blank" style="color: var(--color-electric-cobalt, #000aff); font-weight: 700;">
             Chat CS Fastender di WhatsApp &rarr;
           </a>
         </div>
@@ -112,11 +108,17 @@ include __DIR__ . '/includes/navbar.php';
       </div>
 
       <!-- ERROR STATE (RESI TIDAK DITEMUKAN) -->
-      <div id="track-not-found" style="display: none; text-align: center; padding: 48px 24px; background: #ffffff; border-radius: var(--radius-xl); border: 1px dashed var(--danger); margin-top: 24px;">
-        <div style="font-size: 40px; margin-bottom: 12px;">⚠️</div>
-        <h3 style="font-size: 18px; color: var(--danger); font-weight: 700;">Nomor Resi / Pesanan Tidak Ditemukan</h3>
-        <p style="font-size: 14px; color: var(--text-muted); margin: 6px auto 18px; max-width: 440px;">
-          Pastikan kode yang dimasukkan sudah benar sesuai invoice pemesanan Anda (Contoh: PO-2026-8891).
+      <div id="track-not-found" style="display: none; text-align: center; padding: 48px 24px; background: var(--surface-plaster, #ecedee); border-radius: var(--radius-cards, 28px); border: 1px dashed var(--color-slate, #a1a4aa); margin-top: 24px;">
+        <div style="display: flex; justify-content: center; margin-bottom: 12px;">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#d9383a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        </div>
+        <h3 style="font-size: 18px; color: var(--color-ink-black, #111111); font-weight: 700;">Nomor Resi Tidak Ditemukan</h3>
+        <p style="font-size: 14px; color: var(--color-ash, #737780); margin: 6px auto 18px; max-width: 440px;">
+          Pastikan nomor resi sesuai dengan invoice pemesanan (Contoh: PO-2026-8891).
         </p>
         <button type="button" class="btn btn-outline-primary btn-sm" onclick="quickFillTrack('PO-2026-8891')">
           Gunakan Contoh Resi Aktif
@@ -143,7 +145,7 @@ include __DIR__ . '/includes/navbar.php';
       estimatedDelivery: "15 Nov 2026",
       currentStep: 3, // 1-6
       timeline: [
-        { title: "Pesanan Masuk & Verifikasi DP", desc: "Uang muka 50% telah diverifikasi oleh tim FastTender.", time: "12 Okt 2026, 14:20 WIB", done: true },
+        { title: "Pesanan Masuk & Verifikasi DP", desc: "Uang muka 50% telah diverifikasi oleh tim Fastender.", time: "12 Okt 2026, 14:20 WIB", done: true },
         { title: "Penutupan Kuota Batch 1", desc: "Target 100 pcs tercapai penuh. Surat Perintah Kerja (SPK) diterbitkan.", time: "14 Okt 2026, 23:59 WIB", done: true },
         { title: "Sedang Produksi Konveksi", desc: "Kain katun fleece 330gsm dipotong dan proses bordir komputer dimulai.", time: "16 Okt 2026, 09:00 WIB", current: true },
         { title: "Quality Check & Steam Ironing", desc: "Pemeriksaan kerapihan benang bordir dan ukuran sesuai size chart.", time: "Estimasi 28 Okt 2026", pending: true },
@@ -164,7 +166,7 @@ include __DIR__ . '/includes/navbar.php';
         { title: "Pesanan Masuk & Verifikasi DP", desc: "Pembayaran lunas 100% tervalidasi.", time: "05 Okt 2026", done: true },
         { title: "Penutupan Kuota Batch 1", desc: "Kuota batch terpenuhi.", time: "07 Okt 2026", done: true },
         { title: "Selesai Produksi Konveksi", desc: "Jahitan rantai ganda dan bordir komputer selesai.", time: "14 Okt 2026", done: true },
-        { title: "Lolos Quality Check", desc: "100% item lolos uji standar mutu FastTender.", time: "17 Okt 2026", done: true },
+        { title: "Lolos Quality Check", desc: "100% item lolos uji standar mutu Fastender.", time: "17 Okt 2026", done: true },
         { title: "Dalam Pengiriman Ekspedisi", desc: "Sedang dalam perjalanan via SiCepat Halu (Resi: 00412891928).", time: "19 Okt 2026, 11:30 WIB", current: true },
         { title: "Pesanan Selesai Diterima", desc: "Menunggu konfirmasi penerimaan di lokasi tujuan.", time: "Estimasi 24 Okt 2026", pending: true }
       ]
@@ -231,7 +233,7 @@ include __DIR__ . '/includes/navbar.php';
               estimatedDelivery: "14 - 21 Hari Kerja",
               currentStep: 1,
               timeline: [
-                { title: "Pesanan Berhasil Masuk", desc: "Pesanan baru telah dicatat di sistem FastTender.", time: found.date, current: true },
+                { title: "Pesanan Berhasil Masuk", desc: "Pesanan baru telah dicatat di sistem Fastender.", time: found.date, current: true },
                 { title: "Verifikasi Pembayaran DP", desc: "Menunggu verifikasi pembayaran atas bukti transfer.", time: "Segera", pending: true },
                 { title: "Penutupan Kuota Batch", desc: "Menunggu pemenuhan batas kuota batch angkatan.", time: "Jadwal Tutup Batch", pending: true },
                 { title: "Produksi Konveksi", desc: "Proses pemotongan kain dan bordir komputer presisi.", time: "Estimasi 14 Hari", pending: true },
@@ -267,11 +269,11 @@ include __DIR__ . '/includes/navbar.php';
 
     const timelineContainer = document.getElementById("timeline-steps-list");
     timelineContainer.innerHTML = order.timeline.map((step, idx) => {
-      let icon = "✓";
+      let icon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
       let statusClass = "done";
 
       if (step.current) {
-        icon = "●";
+        icon = `<span style="width: 6px; height: 6px; background: currentColor; border-radius: 50%; display: block;"></span>`;
         statusClass = "current";
       } else if (step.pending) {
         icon = (idx + 1);

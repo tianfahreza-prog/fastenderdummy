@@ -4,17 +4,23 @@ Platform web terintegrasi untuk sistem **Pre-Order (PO)** apparel angkatan, jake
 
 ---
 
-## 🎨 1. Sistem Desain & Visual (Berdasarkan Figma)
+## 🎨 1. Sistem Desain & Visual (Zellerfeld Design System / DESIGN.md)
 
-- **Warna Utama (Primary):** `#1e3a8a` (Biru Dongker / Navy)  
-  Digunakan pada Navbar, Footer, Header Tabel Admin, judul harga tebal, dan elemen branding utama.
-- **Warna Aksen (Accent / Call-to-Action):** `#f97316` (Oranye / Amber)  
-  Digunakan khusus untuk tombol aksi utama (*Lihat Katalog*, *Detail Produk Outline*, *Tambah ke Keranjang*, *Lanjut ke Pembayaran*, *Konfirmasi Pesanan*, *Lacak*, *Simpan*).
-- **Background Utama:**
-  - Card & Container Konten: `#ffffff` (Putih Bersih)
-  - Latar Belakang Halaman (Body): `#f9fafb` (Abu-abu Sangat Terang)
-- **Tipografi:** Google Fonts modern sans-serif (*Poppins* & *Inter*).
-- **Layout:** CSS Grid & Flexbox responsif dengan kontainer maksimal `1140px` (`margin: 0 auto`).
+- **Warna Utama & Aksen:**
+  - **Electric Cobalt:** `#000aff` (Primary Accent CTA)
+  - **Pale Iris:** `#e5e7ff` (Accent Tint / Subtly tinted badges)
+  - **Ink Black:** `#111111` (Surface Level 3 / Secondary button / High contrast blocks)
+  - **Plaster:** `#ecedee` (Surface Level 2 / Card surfaces & Muted backgrounds)
+  - **Fog:** `#d7d7d7` (Border & Divider line)
+  - **Slate:** `#a1a4aa` (Secondary borders & Inactive pills)
+  - **Ash:** `#737780` (Muted supporting body copy & technical labels)
+  - **Pure White:** `#ffffff` (Canvas Surface Level 1)
+- **Tipografi:**
+  - **Roobert / Inter:** Font antarmuka utama (`--font-roobert`), tracking `-0.04em`.
+  - **Space Mono:** Monospace metadata, harga, nomor resi, kuota (`--font-space-mono`).
+- **Border Radius:** Strictly `10px` (`--radius-cards`, `--radius-buttons`, `--radius-inputs`) dan `30px` (`--radius-badges`, `--radius-pills`).
+- **Surface Elevation:** Tidak menggunakan drop shadow pada card; card bertengger di atas canvas putih dengan warna Plaster `#ecedee`.
+- **Branding:** Wordmark (`Fastender`). Iconography dengan outline tipis 1.5px monochrome.
 
 ---
 

@@ -29,7 +29,7 @@ session_destroy();
     window.location.replace("admin-login.php?msg=logged_out");
   </script>
 </head>
-<body style="font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f8fafc;">
+<body style="font-family: 'Montserrat', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f8fafc;">
   <p>Mengakhiri sesi admin... Mengalihkan ke halaman login...</p>
 </body>
 </html>

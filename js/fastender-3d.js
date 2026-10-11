@@ -1,5 +1,5 @@
 /**
- * FastTender 3D Showcase Engine (js/fastender-3d.js)
+ * Fastender 3D Showcase Engine (js/fastender-3d.js)
  * Mengonversi PNG (Logo/Mockup/Apparel) ke Model 3D dengan WebGL (Three.js)
  * Berotasi pelan secara otomatis dan mendukung interaksi drag/touch 360 derajat.
  */
@@ -8,7 +8,7 @@ class FastTender3DViewer {
   constructor(containerId, options = {}) {
     this.container = document.getElementById(containerId);
     if (!this.container) {
-      console.warn("FastTender3D: Container #" + containerId + " tidak ditemukan.");
+      console.warn("Fastender3D: Container #" + containerId + " tidak ditemukan.");
       return;
     }
 
@@ -20,8 +20,8 @@ class FastTender3DViewer {
       metalness: 0.35,
       roughness: 0.25,
       rimColor: 0x1e3a8a,      // Biru Navy
-      accentColor: 0xf97316,   // Oranye FastTender
-      enableParticles: true,
+      accentColor: 0x619ae6,   // Biru Fastender
+      enableParticles: false,  // Bersih tanpa partikel mengambang agar putih bersih
       fov: 45
     }, options);
 
@@ -110,7 +110,7 @@ class FastTender3DViewer {
     keyLight.position.set(5, 6, 6);
     this.scene.add(keyLight);
 
-    // Accent Light Oranye (Warna Aksen FastTender dari Kiri Bawah)
+    // Accent Light (Warna Aksen Fastender dari Kiri Bawah)
     const accentLight = new THREE.PointLight(this.options.accentColor, 1.8, 20);
     accentLight.position.set(-5, -3, 4);
     this.scene.add(accentLight);
@@ -383,3 +383,4 @@ class FastTender3DViewer {
 
 // Global window exposure
 window.FastTender3DViewer = FastTender3DViewer;
+window.Fastender3DViewer = FastTender3DViewer;

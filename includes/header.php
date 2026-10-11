@@ -5,7 +5,7 @@
  */
 require_once __DIR__ . '/functions.php';
 
-$pageTitle = $pageTitle ?? 'FastTender - Platform E-Commerce Pre-Order Apparel & Merchandise';
+$pageTitle = $pageTitle ?? 'Fastender - Platform E-Commerce Pre-Order Apparel & Merchandise';
 $activePage = $activePage ?? 'beranda';
 ?>
 <!DOCTYPE html>
@@ -15,13 +15,17 @@ $activePage = $activePage ?? 'beranda';
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= htmlspecialchars($pageTitle) ?></title>
   
-  <!-- Google Fonts: Poppins (Heading) & Inter (Body) -->
+  <!-- Google Fonts: Montserrat & Fira Code -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
   
-  <!-- Global Stylesheet -->
-  <link rel="stylesheet" href="css/style.css">
+  <!-- Swiper Slider CSS -->
+  <link rel="stylesheet" href="css/swiper-bundle.min.css">
+  
+  <!-- Design System Variables & Global Stylesheet -->
+  <link rel="stylesheet" href="variables.css?v=<?= file_exists(__DIR__ . '/../variables.css') ? filemtime(__DIR__ . '/../variables.css') : '1' ?>">
+  <link rel="stylesheet" href="css/style.css?v=<?= file_exists(__DIR__ . '/../css/style.css') ? filemtime(__DIR__ . '/../css/style.css') : '1' ?>">
   <?php if (!empty($extraCss)): ?>
     <link rel="stylesheet" href="<?= htmlspecialchars($extraCss) ?>">
   <?php endif; ?>

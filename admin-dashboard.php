@@ -17,42 +17,43 @@ foreach ($orders as $ord) {
     $totalRevenue += (int)($ord['total_price'] ?? ($ord['total'] ?? 0));
 }
 
-// Handle form simpan 3D showcase dari Admin
-$save3DSuccess = false;
-$flash3DMessage = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_3d_showcase') {
-    $fileData = $_FILES['png_file'] ?? null;
-    $updated3D = save3DShowcaseConfig($_POST, $fileData);
+// Handle form simpan Hero Banner & Countdown PO dari Admin
+$saveHeroSuccess = false;
+$flashHeroMessage = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_hero_settings') {
+    $fileData = $_FILES['banner_file'] ?? null;
+    $updatedHero = saveHeroSettings($_POST, $fileData);
     
     // Response JSON jika AJAX
     if ((!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') || isset($_POST['is_ajax'])) {
         header('Content-Type: application/json');
         echo json_encode([
             'success' => true,
-            'config' => $updated3D,
-            'message' => 'Model 3D berhasil disimpan dan langsung aktif berotasi di halaman Beranda!'
+            'config' => $updatedHero,
+            'message' => 'Pengaturan Hero Banner & Countdown PO berhasil disimpan!'
         ]);
         exit;
     }
-    $save3DSuccess = true;
-    $flash3DMessage = 'Model 3D berhasil disimpan dan langsung aktif berotasi di halaman Beranda!';
+    $saveHeroSuccess = true;
+    $flashHeroMessage = 'Pengaturan Hero Banner & Countdown PO berhasil disimpan!';
 }
 
-$showcase3D = get3DShowcaseConfig();
+$heroSettings = getHeroSettings();
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard - FastTender Pre-Order Platform</title>
+  <title>Admin Dashboard - Fastender Pre-Order Platform</title>
   
-  <!-- Google Fonts: Poppins & Inter -->
+  <!-- Google Fonts: Montserrat & Fira Code -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
   
   <!-- Stylesheets -->
+  <link rel="stylesheet" href="variables.css">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/admin.css">
 
@@ -74,8 +75,12 @@ $showcase3D = get3DShowcaseConfig();
       <header class="admin-header">
         <div style="display: flex; align-items: center; gap: 14px;">
           <!-- Mobile Toggle Sidebar -->
-          <button id="toggle-admin-sidebar" style="background: none; border: none; font-size: 22px; cursor: pointer; color: var(--primary);" class="nav-toggle-btn">
-            ☰
+          <button id="toggle-admin-sidebar" style="background: none; border: none; cursor: pointer; color: var(--color-ink-black, #111111); display: flex; align-items: center; padding: 4px;" class="nav-toggle-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
           </button>
           
           <div class="header-search">
@@ -204,18 +209,19 @@ $showcase3D = get3DShowcaseConfig();
         </div>
 
         <!-- ========================================================
-             STUDIO 3D SHOWCASE: DRAG & DROP PNG TO 3D MODEL BERANDA
+        <!-- ========================================================
+             PENGATURAN HERO BANNER & COUNTDOWN PRE-ORDER (SPLIT-CARD)
              ======================================================== -->
-        <div class="admin-3d-studio-card" id="studio-3d-section">
+        <div class="admin-3d-studio-card" id="hero-banner-section">
           
           <div class="admin-3d-studio-header">
             <div>
               <h2 class="admin-3d-studio-title">
-                <span>🔮 Studio Model 3D Beranda (Drag &amp; Drop PNG)</span>
+                <span>Pengaturan Hero Banner &amp; Countdown PO</span>
                 <span class="badge badge-accent">LIVE DI BERANDA</span>
               </h2>
               <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
-                Tarik dan lepaskan file PNG logo atau desain apparel di bawah ini. Sistem Three.js WebGL langsung mengonversinya menjadi model 3D dan ditampilkan berotasi pelan di halaman Beranda.
+                Atur judul utama, label &amp; deadline countdown PO, dan upload foto showcase apparel untuk tampilan hero split-card di Beranda.
               </p>
             </div>
             <div>
@@ -230,112 +236,93 @@ $showcase3D = get3DShowcaseConfig();
             </div>
           </div>
 
-          <?php if (!empty($flash3DMessage)): ?>
+          <?php if (!empty($flashHeroMessage)): ?>
             <div style="background: #dcfce7; border: 1px solid #86efac; color: #15803d; padding: 12px 16px; border-radius: var(--radius-md); font-size: 13px; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
-              <span>✓</span>
-              <span><?= htmlspecialchars($flash3DMessage) ?></span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span><?= htmlspecialchars($flashHeroMessage) ?></span>
             </div>
           <?php endif; ?>
 
-          <div id="alert-3d-ajax" style="display: none; padding: 12px 16px; border-radius: var(--radius-md); font-size: 13px; margin-bottom: 18px;"></div>
+          <div id="alert-hero-ajax" style="display: none; padding: 12px 16px; border-radius: var(--radius-md); font-size: 13px; margin-bottom: 18px;"></div>
 
-          <div class="admin-3d-grid">
-            
-            <!-- Kolom Kiri: Dropzone & Kontrol Pengaturan -->
-            <div>
-              <!-- Drag and Drop Dropzone -->
-              <div class="dropzone-3d" id="dropzone-png">
-                <input type="file" id="png-file-input" accept="image/png" style="display: none;">
-                <div class="dropzone-3d-icon">
-                  📥
-                </div>
-                <div class="dropzone-3d-title">Tarik &amp; Lepaskan File PNG di Sini</div>
-                <div class="dropzone-3d-desc">
-                  Atau klik untuk memilih file dari komputer. File PNG transparan akan langsung dikonversi menjadi model 3D secara instan.
-                </div>
-                <button type="button" class="btn btn-outline-accent btn-sm" onclick="document.getElementById('png-file-input').click()">
-                  Pilih File PNG
-                </button>
-                <div id="file-selected-info" style="margin-top: 10px; font-size: 12px; font-weight: 600; color: var(--accent); display: none;"></div>
-              </div>
+          <form id="form-hero-settings" method="POST" enctype="multipart/form-data" onsubmit="handleSaveHero(event)">
+            <input type="hidden" name="action" value="save_hero_settings">
 
-              <!-- Form Pengaturan Model 3D -->
-              <form id="form-3d-showcase" method="POST" enctype="multipart/form-data" onsubmit="handleSave3D(event)">
-                <input type="hidden" name="action" value="save_3d_showcase">
-                <input type="hidden" name="image_base64" id="image-base64" value="">
-                
+            <div style="display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 24px;">
+              
+              <!-- Kolom Kiri: Form Teks, Deadline & CTA -->
+              <div>
+                <div class="form-group" style="margin-bottom: 14px;">
+                  <label class="form-label" style="font-size: 13px; font-weight: 600;">Judul Utama Hero (Kolom Kiri):</label>
+                  <input type="text" class="form-control" name="title" id="hero-title" value="<?= htmlspecialchars($heroSettings['title'] ?? 'Pre-Order Batch 1 telah dibuka') ?>" required>
+                  <small style="color: var(--text-muted); font-size: 11px;">Gunakan baris baru atau spasi untuk menyesuaikan tipografi di halaman utama.</small>
+                </div>
+
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
-                  <div class="admin-3d-slider-group">
-                    <label>
-                      <span>Ketebalan 3D (Depth):</span>
-                      <strong id="label-depth-val" style="color: var(--primary);"><?= (float)($showcase3D['depth'] ?? 8) ?></strong>
-                    </label>
-                    <input type="range" id="slider-depth" name="depth" min="2" max="25" step="1" value="<?= (float)($showcase3D['depth'] ?? 8) ?>" oninput="onDepthChange(this.value)">
+                  <div class="form-group">
+                    <label class="form-label" style="font-size: 13px; font-weight: 600;">Badge Atas:</label>
+                    <input type="text" class="form-control" name="badge" value="<?= htmlspecialchars($heroSettings['badge'] ?? 'BATCH PERDANA TAHUN AKADEMIK 2026') ?>">
                   </div>
-
-                  <div class="admin-3d-slider-group">
-                    <label>
-                      <span>Kecepatan Rotasi:</span>
-                      <strong id="label-speed-val" style="color: var(--accent);"><?= (float)($showcase3D['rotation_speed'] ?? 0.006) ?></strong>
-                    </label>
-                    <input type="range" id="slider-speed" name="rotation_speed" min="0.001" max="0.02" step="0.001" value="<?= (float)($showcase3D['rotation_speed'] ?? 0.006) ?>" oninput="onSpeedChange(this.value)">
+                  <div class="form-group">
+                    <label class="form-label" style="font-size: 13px; font-weight: 600;">Label Countdown:</label>
+                    <input type="text" class="form-control" name="countdown_label" value="<?= htmlspecialchars($heroSettings['countdown_label'] ?? 'PO DITUTUP DALAM') ?>" required>
                   </div>
                 </div>
 
+                <div class="form-group" style="margin-bottom: 14px;">
+                  <label class="form-label" style="font-size: 13px; font-weight: 600;">Target Waktu Penutupan PO (Deadline Countdown):</label>
+                  <input type="datetime-local" class="form-control" name="countdown_deadline" id="hero-deadline" value="<?= date('Y-m-d\TH:i', strtotime($heroSettings['countdown_deadline'] ?? '+14 days')) ?>" required>
+                  <small style="color: var(--text-muted); font-size: 11px;">Timer DAYS, HOURS, MINS, SECS di Beranda akan menghitung mundur ke waktu ini secara realtime.</small>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 14px;">
+                  <label class="form-label" style="font-size: 13px; font-weight: 600;">Deskripsi Singkat:</label>
+                  <textarea class="form-control" name="description" rows="2"><?= htmlspecialchars($heroSettings['description'] ?? '') ?></textarea>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">
+                  <div class="form-group">
+                    <label class="form-label" style="font-size: 13px; font-weight: 600;">Teks Tombol CTA:</label>
+                    <input type="text" class="form-control" name="cta_text" value="<?= htmlspecialchars($heroSettings['cta_text'] ?? 'Pesan Sekarang') ?>">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" style="font-size: 13px; font-weight: 600;">Link Tujuan CTA:</label>
+                    <input type="text" class="form-control" name="cta_link" value="<?= htmlspecialchars($heroSettings['cta_link'] ?? 'katalog.php') ?>">
+                  </div>
+                </div>
+
+                <button type="submit" class="btn btn-accent btn-lg" id="btn-save-hero" style="width: 100%;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                    <polyline points="7 3 7 8 15 8"></polyline>
+                  </svg>
+                  Simpan Pengaturan Hero &amp; Countdown
+                </button>
+              </div>
+
+              <!-- Kolom Kanan: Upload & Live Image Preview Showcase -->
+              <div>
                 <div class="form-group" style="margin-bottom: 12px;">
-                  <label class="form-label" style="font-size: 13px;">Judul Model 3D di Beranda:</label>
-                  <input type="text" class="form-control" name="title" id="input-3d-title" value="<?= htmlspecialchars($showcase3D['title'] ?? 'Emblem Resmi FastTender 2026') ?>" required>
+                  <label class="form-label" style="font-size: 13px; font-weight: 600;">Upload Gambar Showcase Baru (Kolom Kanan):</label>
+                  <input type="file" name="banner_file" id="hero-banner-input" class="form-control" accept="image/*" onchange="previewHeroBanner(this)">
+                  <input type="hidden" name="banner_image_path" value="<?= htmlspecialchars($heroSettings['banner_image'] ?? 'assets/images/hero-showcase.png') ?>">
+                  <small style="color: var(--text-muted); font-size: 11px;">Mendukung format JPG, PNG, WebP (Rekomendasi rasio 4:3 atau 16:10).</small>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 18px;">
-                  <label class="form-label" style="font-size: 13px;">Subtitle / Keterangan Singkat:</label>
-                  <input type="text" class="form-control" name="subtitle" id="input-3d-subtitle" value="<?= htmlspecialchars($showcase3D['subtitle'] ?? 'Convert PNG to 3D Realtime • Berotasi Pelan 360°') ?>">
-                </div>
-
-                <div style="display: flex; gap: 10px;">
-                  <button type="submit" class="btn btn-accent" id="btn-save-3d" style="flex: 1;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                      <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                      <polyline points="7 3 7 8 15 8"></polyline>
-                    </svg>
-                    Simpan &amp; Tampilkan di Beranda
-                  </button>
-                  <button type="button" class="btn btn-outline-primary" onclick="resetToDefault3D()" title="Kembalikan ke Logo Default">
-                    Reset Default
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            <!-- Kolom Kanan: Live Preview 3D WebGL di Admin -->
-            <div>
-              <div class="admin-3d-preview-card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                  <span style="font-size: 12px; font-weight: 700; color: #fed7aa; display: flex; align-items: center; gap: 6px;">
-                    <span class="hero-3d-badge-pulse"></span>
-                    LIVE 3D PREVIEW DI ADMIN
-                  </span>
-                  <div style="display: flex; gap: 6px;">
-                    <button type="button" class="hero-3d-btn-icon" id="admin-pause-3d-btn" title="Pause / Lanjutkan Rotasi" onclick="toggleAdmin3D()">
-                      ⏸️
-                    </button>
-                    <button type="button" class="hero-3d-btn-icon" title="Reset Sudut" onclick="resetAdmin3DAngle()">
-                      🔄
-                    </button>
+                <div style="margin-top: 14px;">
+                  <label class="form-label" style="font-size: 12px; font-weight: 600;">Live Preview Gambar Showcase Saat Ini:</label>
+                  <div style="width: 100%; height: 280px; border-radius: 18px; overflow: hidden; border: 1px solid var(--color-plaster, #ecedee); background: #111; position: relative; box-shadow: 0 8px 24px rgba(0,0,0,0.08);">
+                    <img id="hero-banner-preview" src="<?= htmlspecialchars($heroSettings['banner_image'] ?? 'assets/images/hero-showcase.png') ?>" alt="Preview Showcase" style="width: 100%; height: 100%; object-fit: cover;">
+                    <div style="position: absolute; bottom: 12px; left: 12px; background: rgba(17, 17, 17, 0.8); backdrop-filter: blur(8px); color: #fff; font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2);">
+                      ● Aktif di Beranda
+                    </div>
                   </div>
-                </div>
-
-                <div class="admin-3d-viewport" id="admin-3d-viewport"></div>
-
-                <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: rgba(255,255,255,0.75);">
-                  <span>✋ Drag mouse untuk memutar 360°</span>
-                  <span id="preview-active-status" style="color: #4ade80;">● Sedang Berotasi</span>
                 </div>
               </div>
-            </div>
 
-          </div>
+            </div>
+          </form>
 
         </div>
 
@@ -394,7 +381,7 @@ $showcase3D = get3DShowcaseConfig();
     <div class="modal-dialog">
       <div class="modal-header">
         <h3 class="modal-title">Perbarui Status Pesanan PO</h3>
-        <button type="button" class="modal-close" onclick="closeStatusModal()">✕</button>
+        <button type="button" class="modal-close" onclick="closeStatusModal()">&times;</button>
       </div>
 
       <form id="update-status-form" onsubmit="handleSaveOrderStatus(event)">
@@ -644,166 +631,40 @@ $showcase3D = get3DShowcaseConfig();
     function exportOrdersData() {
       showToast("Sedang mengekspor rekap PO ke file CSV...", "info");
       setTimeout(() => {
-        showToast("✓ File Rekap_PreOrder_Fastender_2026.csv siap diunduh!", "success");
+        showToast("File Rekap_PreOrder_Fastender_2026.csv siap diunduh!", "success");
       }, 1000);
     }
 
     // ========================================================
-    // STUDIO 3D SHOWCASE LOGIC (DRAG & DROP PNG TO 3D MODEL)
+    // PENGATURAN HERO BANNER & COUNTDOWN PRE-ORDER
     // ========================================================
-    let admin3DViewer = null;
-    let current3DDataUrl = null;
-
-    document.addEventListener("DOMContentLoaded", function() {
-      // Inisialisasi Three.js WebGL Viewer di Admin Preview
-      if (document.getElementById("admin-3d-viewport") && typeof FastTender3DViewer !== 'undefined') {
-        admin3DViewer = new FastTender3DViewer('admin-3d-viewport', {
-          imageUrl: '<?= htmlspecialchars($showcase3D['image_url']) ?>',
-          depth: <?= (float)($showcase3D['depth'] ?? 8) ?>,
-          rotationSpeed: <?= (float)($showcase3D['rotation_speed'] ?? 0.006) ?>,
-          metalness: <?= (float)($showcase3D['metalness'] ?? 0.35) ?>,
-          roughness: <?= (float)($showcase3D['roughness'] ?? 0.3) ?>
-        });
-      }
-
-      setupDragAndDrop();
-    });
-
-    function setupDragAndDrop() {
-      const dropzone = document.getElementById("dropzone-png");
-      const fileInput = document.getElementById("png-file-input");
-      if (!dropzone || !fileInput) return;
-
-      // Drag Over
-      dropzone.addEventListener("dragover", function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        dropzone.classList.add("dragover");
-      });
-
-      // Drag Leave
-      dropzone.addEventListener("dragleave", function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        dropzone.classList.remove("dragover");
-      });
-
-      // Drop File PNG
-      dropzone.addEventListener("drop", function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        dropzone.classList.remove("dragover");
-
-        const files = e.dataTransfer.files;
-        if (files && files.length > 0) {
-          processPNGFile(files[0]);
-        }
-      });
-
-      // File Input Change (saat klik pilih file)
-      fileInput.addEventListener("change", function(e) {
-        if (this.files && this.files.length > 0) {
-          processPNGFile(this.files[0]);
-        }
-      });
-    }
-
-    function processPNGFile(file) {
-      if (!file.type.includes("image/png") && !file.name.toLowerCase().endsWith(".png")) {
-        alert("Mohon pilih file dengan format PNG (disarankan dengan latar transparan)!");
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        const dataUrl = event.target.result;
-        current3DDataUrl = dataUrl;
-        document.getElementById("image-base64").value = dataUrl;
-
-        // Tampilkan info file
-        const info = document.getElementById("file-selected-info");
-        if (info) {
-          info.style.display = "block";
-          info.textContent = `✓ File PNG Dipilih: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+    function previewHeroBanner(input) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        if (!file.type.startsWith('image/')) {
+          showToast("Mohon pilih file gambar yang valid (JPG, PNG, WebP)!", "danger");
+          return;
         }
 
-        // Otomatis isi judul dari nama file jika masih default
-        const inputTitle = document.getElementById("input-3d-title");
-        if (inputTitle && (!inputTitle.value || inputTitle.value.includes("Emblem Resmi"))) {
-          inputTitle.value = file.name.replace(/\.[^/.]+$/, "").replace(/[_-]/g, " ").toUpperCase();
-        }
-
-        // LANGSUNG KONVERSI KE 3D MODEL SECARA REALTIME!
-        if (admin3DViewer) {
-          const depth = parseFloat(document.getElementById("slider-depth").value) || 8;
-          const speed = parseFloat(document.getElementById("slider-speed").value) || 0.006;
-          admin3DViewer.updateImage(dataUrl, { depth: depth, rotationSpeed: speed });
-        }
-
-        showToast("✓ File PNG berhasil dikonversi ke Model 3D! Putar dengan mouse untuk memeriksa.", "success");
-      };
-
-      reader.readAsDataURL(file);
-    }
-
-    function onDepthChange(val) {
-      document.getElementById("label-depth-val").textContent = val;
-      if (admin3DViewer) {
-        admin3DViewer.setDepth(val);
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const previewImg = document.getElementById("hero-banner-preview");
+          if (previewImg) {
+            previewImg.src = e.target.result;
+          }
+          showToast(`File banner baru dipilih: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`, "info");
+        };
+        reader.readAsDataURL(file);
       }
     }
 
-    function onSpeedChange(val) {
-      document.getElementById("label-speed-val").textContent = val;
-      if (admin3DViewer) {
-        admin3DViewer.setRotationSpeed(val);
-      }
-    }
-
-    function toggleAdmin3D() {
-      if (!admin3DViewer) return;
-      const isPaused = admin3DViewer.togglePause();
-      const btn = document.getElementById("admin-pause-3d-btn");
-      const status = document.getElementById("preview-active-status");
-      if (btn) btn.textContent = isPaused ? "▶️" : "⏸️";
-      if (status) {
-        status.textContent = isPaused ? "⏸ Berhenti Sementara" : "● Sedang Berotasi";
-        status.style.color = isPaused ? "#facc15" : "#4ade80";
-      }
-    }
-
-    function resetAdmin3DAngle() {
-      if (!admin3DViewer) return;
-      admin3DViewer.resetRotation();
-    }
-
-    function resetToDefault3D() {
-      const defaultUrl = 'assets/images/logo.png';
-      current3DDataUrl = null;
-      document.getElementById("image-base64").value = "";
-      document.getElementById("input-3d-title").value = "Emblem Resmi FastTender 2026";
-      document.getElementById("input-3d-subtitle").value = "Convert PNG to 3D Realtime • Berotasi Pelan 360°";
-      document.getElementById("slider-depth").value = 8;
-      document.getElementById("label-depth-val").textContent = "8";
-      document.getElementById("slider-speed").value = 0.006;
-      document.getElementById("label-speed-val").textContent = "0.006";
-
-      const info = document.getElementById("file-selected-info");
-      if (info) info.style.display = "none";
-
-      if (admin3DViewer) {
-        admin3DViewer.updateImage(defaultUrl, { depth: 8, rotationSpeed: 0.006 });
-      }
-      showToast("Model 3D dikembalikan ke Logo Default.", "info");
-    }
-
-    function handleSave3D(e) {
+    function handleSaveHero(e) {
       e.preventDefault();
-      const btn = document.getElementById("btn-save-3d");
+      const btn = document.getElementById("btn-save-hero");
       btn.disabled = true;
-      btn.innerHTML = `<span>⏳ Menyimpan ke Beranda...</span>`;
+      btn.innerHTML = `<span>Menyimpan ke Beranda...</span>`;
 
-      const form = document.getElementById("form-3d-showcase");
+      const form = document.getElementById("form-hero-settings");
       const formData = new FormData(form);
       formData.append("is_ajax", "1");
 
@@ -814,26 +675,31 @@ $showcase3D = get3DShowcaseConfig();
       .then(res => res.json())
       .then(data => {
         btn.disabled = false;
-        btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Simpan &amp; Tampilkan di Beranda`;
+        btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Simpan Pengaturan Hero &amp; Countdown`;
 
         if (data.success) {
-          showToast("🎉 Sukses! Model 3D berhasil disimpan dan langsung tayang berotasi di Beranda!", "success");
-          const alertBox = document.getElementById("alert-3d-ajax");
+          showToast("Pengaturan Hero Banner & Countdown PO berhasil disimpan!", "success");
+          const alertBox = document.getElementById("alert-hero-ajax");
           if (alertBox) {
             alertBox.style.display = "flex";
             alertBox.style.background = "#dcfce7";
             alertBox.style.border = "1px solid #86efac";
             alertBox.style.color = "#15803d";
-            alertBox.innerHTML = `<span>✓</span> <div><strong>Berhasil Disimpan!</strong> Model 3D kini aktif di halaman Beranda. <a href="index.php" target="_blank" style="text-decoration: underline; font-weight: 700; margin-left: 6px;">Buka Beranda untuk melihat</a></div>`;
+            alertBox.innerHTML = `<div><strong>Berhasil Disimpan!</strong> Perubahan banner &amp; countdown kini aktif di Beranda. <a href="index.php" target="_blank" style="text-decoration: underline; font-weight: 700; margin-left: 6px;">Buka Beranda untuk melihat</a></div>`;
+          }
+          if (data.config && data.config.banner_image) {
+            const previewImg = document.getElementById("hero-banner-preview");
+            if (previewImg) previewImg.src = data.config.banner_image;
           }
         } else {
-          showToast("Gagal menyimpan model 3D: " + (data.message || "Error"), "danger");
+          showToast("Gagal menyimpan pengaturan: " + (data.message || "Error"), "danger");
         }
       })
       .catch(err => {
         btn.disabled = false;
-        btn.innerHTML = `Simpan &amp; Tampilkan di Beranda`;
-        showToast("Model 3D berhasil diperbarui!", "success");
+        btn.innerHTML = `Simpan Pengaturan Hero &amp; Countdown`;
+        // Form fallback jika fetch terkendala
+        form.submit();
       });
     }
   </script>

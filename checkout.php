@@ -16,18 +16,17 @@ include __DIR__ . '/includes/navbar.php';
 <!-- ==========================================
      PROGRESS STEPPER
      ========================================== -->
-<div style="background-color: var(--primary-subtle); border-bottom: 1px solid var(--border-color); padding: 18px 0;">
+<div style="background-color: var(--surface-plaster, #ecedee); border-bottom: 1px solid var(--color-fog, #d7d7d7); padding: 18px 0;">
   <div class="container" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
     <div>
-      <h1 style="font-size: 22px; font-weight: 800; color: var(--primary);">Form Pemesanan Pre-Order</h1>
-      <p style="font-size: 13px; color: var(--text-muted);">Lengkapi data identitas pemesan dan alamat pengiriman dengan tepat.</p>
+      <h1 style="font-size: 24px; font-weight: 700; color: var(--color-ink-black, #111111); letter-spacing: -0.04em; margin: 0;">Form Pemesanan Pre-Order</h1>
     </div>
-    <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600;">
-      <span style="color: var(--success);">✓ 1. Keranjang</span>
-      <span style="color: var(--text-light);">&rarr;</span>
-      <span style="color: var(--accent);"><strong>2. Form Pemesanan PO</strong></span>
-      <span style="color: var(--text-light);">&rarr;</span>
-      <span style="color: var(--text-light);">3. Konfirmasi</span>
+    <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-family: var(--font-space-mono);">
+      <span style="color: var(--color-ash, #737780);">1. Keranjang</span>
+      <span style="color: var(--color-slate, #a1a4aa);">&rarr;</span>
+      <span style="color: #619ae6; font-weight: 700;">2. Form Pemesanan</span>
+      <span style="color: var(--color-slate, #a1a4aa);">&rarr;</span>
+      <span style="color: var(--color-ash, #737780);">3. Konfirmasi</span>
     </div>
   </div>
 </div>
@@ -193,23 +192,23 @@ include __DIR__ . '/includes/navbar.php';
               <strong id="chk-order-total" style="color: var(--text-main);">Rp 0</strong>
             </div>
 
-            <div class="summary-total" style="background: var(--primary-subtle); padding: 14px 16px; border-radius: var(--radius-md); border: none;">
+            <div class="summary-total" style="background: var(--surface-plaster, #ecedee); padding: 14px 16px; border-radius: var(--radius-cards, 10px); border: none;">
               <div>
                 <div style="font-size: 13px;" id="chk-due-label">Nominal DP Harus Dibayar:</div>
-                <div style="font-size: 11px; color: var(--text-muted); font-weight: normal;">(DP 50% + Ongkir)</div>
+                <div style="font-size: 11px; color: var(--color-ash, #737780); font-weight: normal;">(DP 50% + Ongkir)</div>
               </div>
-              <div id="chk-due-amount" style="font-size: 20px; color: var(--accent);">Rp 0</div>
+              <div id="chk-due-amount" style="font-family: var(--font-space-mono); font-size: 20px; font-weight: 700; color: var(--color-electric-cobalt, #000aff);">Rp 0</div>
             </div>
 
             <!-- Checkbox Persetujuan PO -->
-            <div style="margin: 20px 0 16px; font-size: 12px; color: var(--text-muted);">
+            <div style="margin: 20px 0 16px; font-size: 12px; color: var(--color-ash, #737780);">
               <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer;">
-                <input type="checkbox" required checked style="margin-top: 3px; accent-color: var(--accent);">
+                <input type="checkbox" required checked style="margin-top: 3px; accent-color: var(--color-electric-cobalt, #000aff);">
                 <span>Saya menyetujui ketentuan Pre-Order (PO) dengan estimasi waktu produksi sekitar 14-21 hari kerja setelah kuota batch ditutup.</span>
               </label>
             </div>
 
-            <!-- Tombol "Konfirmasi Pesanan" Warna Oranye Sesuai Spesifikasi -->
+            <!-- Tombol "Konfirmasi Pesanan" -->
             <button type="submit" id="confirm-order-btn" class="btn btn-accent btn-block btn-lg">
               Konfirmasi Pesanan
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -218,7 +217,7 @@ include __DIR__ . '/includes/navbar.php';
             </button>
 
             <div style="margin-top: 14px; text-align: center;">
-              <a href="keranjang.php" style="font-size: 12px; color: var(--primary); text-decoration: underline;">
+              <a href="keranjang.php" style="font-size: 12px; color: var(--color-ink-black, #111111); text-decoration: underline;">
                 &larr; Ubah Item di Keranjang
               </a>
             </div>
@@ -235,28 +234,30 @@ include __DIR__ . '/includes/navbar.php';
      MODAL SUKSES PEMESANAN (ORDER SUCCESS)
      ========================================== -->
 <div id="order-success-modal" class="modal-overlay">
-  <div class="modal-dialog" style="max-width: 520px; text-align: center;">
-    <div style="width: 64px; height: 64px; background: #dcfce7; color: #16a34a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 16px;">
-      ✓
+  <div class="modal-dialog" style="max-width: 520px; text-align: center; border-radius: var(--radius-cards, 28px);">
+    <div style="width: 60px; height: 60px; background: rgba(97, 154, 230, 0.15); color: #619ae6; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#619ae6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
     </div>
-    <h2 style="font-size: 22px; font-weight: 800; color: var(--primary); margin-bottom: 6px;">Pesanan Pre-Order Berhasil Dibuat!</h2>
-    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
-      Terima kasih telah mempercayakan apparel angkatanmu pada Fastender. Simpan Nomor Resi PO di bawah ini:
+    <h2 style="font-size: 22px; font-weight: 700; color: var(--color-ink-black, #111111); margin-bottom: 6px; letter-spacing: -0.04em;">Pesanan Berhasil Dibuat</h2>
+    <p style="font-size: 13px; color: var(--color-ash, #737780); margin-bottom: 20px;">
+      Simpan Nomor Resi PO di bawah ini:
     </p>
 
     <!-- Kode Resi / No. Pesanan Highlight Box -->
-    <div style="background: var(--primary-subtle); border: 2px dashed var(--primary); border-radius: var(--radius-lg); padding: 18px; margin-bottom: 20px;">
-      <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 700;">Nomor Resi / No. Pesanan Anda:</span>
-      <div id="success-order-code" style="font-size: 26px; font-weight: 800; color: var(--primary); letter-spacing: 1px; margin: 6px 0;">
+    <div style="background: var(--surface-plaster, #ecedee); border: 2px dashed var(--color-ink-black, #111111); border-radius: var(--radius-cards, 10px); padding: 18px; margin-bottom: 20px;">
+      <span style="font-size: 11px; text-transform: uppercase; font-family: var(--font-space-mono); letter-spacing: 0.05em; color: var(--color-ash, #737780); font-weight: 700;">Nomor Resi / No. Pesanan Anda:</span>
+      <div id="success-order-code" style="font-family: var(--font-space-mono); font-size: 26px; font-weight: 700; color: var(--color-ink-black, #111111); letter-spacing: 0.02em; margin: 6px 0;">
         PO-2026-8891
       </div>
-      <div style="font-size: 12px; color: var(--accent); font-weight: 600;">
+      <div style="font-size: 13px; font-family: var(--font-space-mono); color: var(--color-electric-cobalt, #000aff); font-weight: 600;">
         Silakan transfer sebesar: <span id="success-order-amount">Rp 0</span>
       </div>
     </div>
 
-    <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: var(--radius-md); padding: 12px; font-size: 12px; color: #92400e; margin-bottom: 24px; text-align: left;">
-      <strong>Informasi Pembayaran:</strong> Silakan lakukan transfer ke rekening <strong>BCA 828-091-2334 (a.n FastTender Konveksi)</strong> dan simpan bukti transfer untuk verifikasi.
+    <div style="background: var(--surface-plaster, #ecedee); border: 1px solid var(--color-fog, #d7d7d7); border-radius: var(--radius-cards, 10px); padding: 14px; font-size: 12px; color: var(--color-ink-black, #111111); margin-bottom: 24px; text-align: left; line-height: 1.5;">
+      <strong>Informasi Pembayaran:</strong> Silakan lakukan transfer ke rekening <strong style="font-family: var(--font-space-mono);">BCA 828-091-2334 (a.n Fastender Konveksi)</strong> dan simpan bukti transfer untuk verifikasi.
     </div>
 
     <div style="display: flex; gap: 12px;">

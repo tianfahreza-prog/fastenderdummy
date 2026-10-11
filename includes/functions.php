@@ -14,7 +14,10 @@ require_once __DIR__ . '/../config/database.php';
 // Path data JSON untuk fallback jika MySQL belum diimport/aktif
 define('DATA_PRODUCTS_FILE', __DIR__ . '/../data/products.json');
 define('DATA_ORDERS_FILE', __DIR__ . '/../data/orders.json');
+define('DATA_HERO_SETTINGS_FILE', __DIR__ . '/../data/hero_settings.json');
 define('UPLOAD_DIR', __DIR__ . '/../uploads/products/');
+define('UPLOAD_HERO_DIR', __DIR__ . '/../uploads/hero/');
+
 
 // ----------------------------------------------------
 // 1. HELPER FORMAT RUPIAH & TEKS
@@ -76,13 +79,123 @@ function getProductsList() {
     if (file_exists(DATA_PRODUCTS_FILE)) {
         $json = file_get_contents(DATA_PRODUCTS_FILE);
         $data = json_decode($json, true);
-        if (is_array($data)) {
+        if (is_array($data) && !empty($data)) {
             return $data;
         }
     }
 
-    // Default mode: KOSONGAN (Empty Space) sesuai permintaan awal user
-    return [];
+    // Default mode: Array dinamis katalog produk 2026
+    return getDefaultCatalogProducts();
+}
+
+/**
+ * Data katalog produk bawaan resmi jika tabel MySQL/JSON belum ada data
+ */
+function getDefaultCatalogProducts() {
+    return [
+        [
+            'id' => 1,
+            'name' => 'Varsity Jacket Angkatan 2026',
+            'category' => 'jaket',
+            'category_name' => 'Jaket & Varsity',
+            'price' => 245000,
+            'dp_price' => 122500,
+            'quota_target' => 100,
+            'quota_current' => 64,
+            'batch' => 'Batch 1',
+            'badge' => 'Terpopuler',
+            'images' => ['assets/images/gambar1.jpg'],
+            'specs' => ['Bahan Wol Tebal & Lengan Kulit Sintetis', 'Bordir Komputer High Density', 'Furing Despo Halus'],
+            'sizes' => ['S', 'M', 'L', 'XL', 'XXL', '3XL'],
+            'colors' => ['Navy & White', 'Black & Cream', 'Forest Green'],
+            'description' => 'Varsity jacket edisi angkatan 2026 dengan material wool fleece premium kombinasi lengan semi-kulit sintetis fleksibel.'
+        ],
+        [
+            'id' => 2,
+            'name' => 'Kemeja PDH Drill Bordir Komputer',
+            'category' => 'pdh',
+            'category_name' => 'Kemeja PDH',
+            'price' => 135000,
+            'dp_price' => 70000,
+            'quota_target' => 150,
+            'quota_current' => 112,
+            'batch' => 'Batch 1',
+            'badge' => 'Best Seller',
+            'images' => ['assets/images/gambar2.jpg'],
+            'specs' => ['Bahan American Drill Grade A', 'Bordir 4 Titik Presisi', 'Jahitan Rantai Kuat'],
+            'sizes' => ['S', 'M', 'L', 'XL', 'XXL', '3XL'],
+            'colors' => ['Navy Blue', 'Hitam Elegan', 'Abu Khaki'],
+            'description' => 'Kemeja PDH dinas harian mahasiswa dan organisasi dengan bahan American drill dingin, tidak mudah kusut.'
+        ],
+        [
+            'id' => 3,
+            'name' => 'Heavyweight Hoodie 330gsm 2026',
+            'category' => 'hoodie',
+            'category_name' => 'Hoodie & Sweatshirt',
+            'price' => 185000,
+            'dp_price' => 95000,
+            'quota_target' => 80,
+            'quota_current' => 58,
+            'batch' => 'Batch 1',
+            'badge' => 'Edisi Terbatas',
+            'images' => ['assets/images/gambar3.jpg'],
+            'specs' => ['Cotton Fleece 330 GSM Super Tebal', 'Boxy Cut Silhouette', 'Tali Hood Tebal Anti Melar'],
+            'sizes' => ['M', 'L', 'XL', 'XXL'],
+            'colors' => ['Charcoal Grey', 'Deep Forest', 'Pure Black'],
+            'description' => 'Hoodie boxy fit berbahan katun fleece 330 gsm tebal, nyaman, dan hangat dengan sablon timbul grafis angkatan.'
+        ],
+        [
+            'id' => 4,
+            'name' => 'T-Shirt Cotton Combed 24s Sablon',
+            'category' => 'kaos',
+            'category_name' => 'Kaos Angkatan',
+            'price' => 95000,
+            'dp_price' => 50000,
+            'quota_target' => 200,
+            'quota_current' => 140,
+            'batch' => 'Batch 1',
+            'badge' => 'Favorit',
+            'images' => ['assets/images/gambar1.jpg'],
+            'specs' => ['100% Cotton Combed 24s Reaktif', 'Sablon Plastisol Doff', 'Kerah Rib Katun Tidak Melar'],
+            'sizes' => ['S', 'M', 'L', 'XL', 'XXL', '3XL'],
+            'colors' => ['Hitam Solid', 'Putih Bersih', 'Navy Tua'],
+            'description' => 'Kaos angkatan kasual harian bahan cotton combed 24s adem dan menyerap keringat dengan sablon tahan cuci.'
+        ],
+        [
+            'id' => 5,
+            'name' => 'Coach Jacket Windbreaker 2026',
+            'category' => 'jaket',
+            'category_name' => 'Jaket & Varsity',
+            'price' => 195000,
+            'dp_price' => 100000,
+            'quota_target' => 75,
+            'quota_current' => 42,
+            'batch' => 'Batch 1',
+            'badge' => 'Baru',
+            'images' => ['assets/images/gambar2.jpg'],
+            'specs' => ['Micro Taslan Water-Repellent', 'Kancing Snap Logam Anti Karat', 'Saku Dalam Rahasia'],
+            'sizes' => ['S', 'M', 'L', 'XL', 'XXL'],
+            'colors' => ['Hitam Onyx', 'Army Green', 'Navy Blue'],
+            'description' => 'Coach jacket tahan angin dan cipratan air dengan furing katun adem, sangat stylish untuk aktivitas lapangan.'
+        ],
+        [
+            'id' => 6,
+            'name' => 'Canvas Totebag & Lanyard Merch Set',
+            'category' => 'merch',
+            'category_name' => 'Merchandise & Aksesoris',
+            'price' => 75000,
+            'dp_price' => 40000,
+            'quota_target' => 120,
+            'quota_current' => 88,
+            'batch' => 'Batch 1',
+            'badge' => 'Merch Resmi',
+            'images' => ['assets/images/gambar3.jpg'],
+            'specs' => ['Kanvas Tebal 12oz dengan Resleting', 'Lanyard Tisu Cetak 2 Sisi', 'Bonus 3 Sticker Pack Vinyl'],
+            'sizes' => ['One Size (All Sizes)'],
+            'colors' => ['Off-White Canvas', 'Midnight Black'],
+            'description' => 'Paket aksesoris merchandise resmi angkatan 2026 berisi tote bag kanvas zipper kuat dan lanyard id card eksklusif.'
+        ]
+    ];
 }
 
 /**
@@ -367,6 +480,83 @@ function getDefaultDemoProducts() {
     ];
 }
 
+/**
+ * Mengambil daftar produk trending untuk horizontal carousel di beranda (gaya Zellerfeld)
+ * Mengambil dari tabel produk database (atau fallback JSON) jika tersedia,
+ * dan menyediakan array dinamis produk showcase berfoto asli jika database belum diisi.
+ */
+function getTrendingProducts() {
+    $dbProducts = getProductsList();
+    if (!empty($dbProducts)) {
+        $result = [];
+        $sampleImages = ['assets/images/gambar1.jpg', 'assets/images/gambar2.jpg', 'assets/images/gambar3.jpg'];
+        foreach ($dbProducts as $idx => $p) {
+            $img = !empty($p['images'][0]) ? $p['images'][0] : (!empty($p['image']) ? $p['image'] : $sampleImages[$idx % count($sampleImages)]);
+            $result[] = [
+                'id' => $p['id'] ?? ($idx + 1),
+                'name' => $p['name'] ?? 'Produk Pre-Order',
+                'price' => (int)($p['price'] ?? 150000),
+                'image' => $img,
+                'category' => $p['category_name'] ?? ($p['category'] ?? 'Apparel'),
+                'link' => 'detail.php?id=' . ($p['id'] ?? ($idx + 1))
+            ];
+        }
+        return $result;
+    }
+
+    // Array dinamis data produk showcase jika database produk belum diisi
+    return [
+        [
+            'id' => 1,
+            'name' => 'Varsity Jacket Angkatan 2026',
+            'price' => 245000,
+            'image' => 'assets/images/gambar1.jpg',
+            'category' => 'Jaket & Varsity',
+            'link' => 'detail.php?id=1'
+        ],
+        [
+            'id' => 2,
+            'name' => 'Kemeja PDH Drill Bordir Komputer',
+            'price' => 135000,
+            'image' => 'assets/images/gambar2.jpg',
+            'category' => 'Kemeja PDH',
+            'link' => 'detail.php?id=2'
+        ],
+        [
+            'id' => 3,
+            'name' => 'Heavyweight Hoodie 330gsm 2026',
+            'price' => 185000,
+            'image' => 'assets/images/gambar3.jpg',
+            'category' => 'Hoodie & Sweatshirt',
+            'link' => 'detail.php?id=3'
+        ],
+        [
+            'id' => 4,
+            'name' => 'T-Shirt Cotton Combed 24s Sablon',
+            'price' => 95000,
+            'image' => 'assets/images/gambar1.jpg',
+            'category' => 'Kaos Angkatan',
+            'link' => 'detail.php?id=4'
+        ],
+        [
+            'id' => 5,
+            'name' => 'Coach Jacket Windbreaker 2026',
+            'price' => 195000,
+            'image' => 'assets/images/gambar2.jpg',
+            'category' => 'Jaket & Outerwear',
+            'link' => 'detail.php?id=1'
+        ],
+        [
+            'id' => 6,
+            'name' => 'Polo Shirt Monogram Bordir Timbal',
+            'price' => 115000,
+            'image' => 'assets/images/gambar3.jpg',
+            'category' => 'Polo Shirt',
+            'link' => 'detail.php?id=2'
+        ]
+    ];
+}
+
 // ----------------------------------------------------
 // 5. PENGELOLAAN PESANAN (ORDERS)
 // ----------------------------------------------------
@@ -465,50 +655,50 @@ function getProductSvgPhp($type) {
     switch ($type) {
         case 'varsity':
             return '<svg viewBox="0 0 160 160" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="160" height="160" rx="16" fill="#eff6ff"/>
-              <path d="M45 42L80 56L115 42L135 68L120 82L112 74V130H48V74L40 82L25 68L45 42Z" fill="#1e3a8a"/>
-              <path d="M45 42L25 68L40 82L48 74V60L45 42Z" fill="#f97316"/>
-              <path d="M115 42L135 68L120 82L112 74V60L115 42Z" fill="#f97316"/>
+              <rect width="160" height="160" rx="10" fill="#ecedee"/>
+              <path d="M45 42L80 56L115 42L135 68L120 82L112 74V130H48V74L40 82L25 68L45 42Z" fill="#111111"/>
+              <path d="M45 42L25 68L40 82L48 74V60L45 42Z" fill="#000aff"/>
+              <path d="M115 42L135 68L120 82L112 74V60L115 42Z" fill="#000aff"/>
               <path d="M78 55V130H82V55H78Z" fill="#ffffff" opacity="0.4"/>
-              <circle cx="80" cy="75" r="2.5" fill="#f97316"/>
-              <circle cx="80" cy="90" r="2.5" fill="#f97316"/>
-              <circle cx="80" cy="105" r="2.5" fill="#f97316"/>
-              <circle cx="80" cy="120" r="2.5" fill="#f97316"/>
-              <text x="60" y="80" font-family="Poppins, sans-serif" font-weight="800" font-size="14" fill="#ffffff">26</text>
+              <circle cx="80" cy="75" r="2.5" fill="#000aff"/>
+              <circle cx="80" cy="90" r="2.5" fill="#000aff"/>
+              <circle cx="80" cy="105" r="2.5" fill="#000aff"/>
+              <circle cx="80" cy="120" r="2.5" fill="#000aff"/>
+              <text x="60" y="80" font-family="Montserrat, sans-serif" font-weight="700" font-size="13" fill="#ffffff">26</text>
             </svg>';
         case 'shirt':
             return '<svg viewBox="0 0 160 160" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="160" height="160" rx="16" fill="#f0fdf4"/>
-              <path d="M48 38L80 48L112 38L130 62L116 74L108 68V132H52V68L44 74L30 62L48 38Z" fill="#1e3a8a"/>
-              <path d="M68 38L80 54L92 38H68Z" fill="#f8fafc"/>
-              <rect x="58" y="72" width="16" height="18" rx="2" fill="#172554"/>
-              <circle cx="80" cy="70" r="2" fill="#cbd5e1"/>
-              <circle cx="80" cy="85" r="2" fill="#cbd5e1"/>
-              <circle cx="80" cy="100" r="2" fill="#cbd5e1"/>
-              <circle cx="80" cy="115" r="2" fill="#cbd5e1"/>
+              <rect width="160" height="160" rx="10" fill="#ecedee"/>
+              <path d="M48 38L80 48L112 38L130 62L116 74L108 68V132H52V68L44 74L30 62L48 38Z" fill="#111111"/>
+              <path d="M68 38L80 54L92 38H68Z" fill="#ecedee"/>
+              <rect x="58" y="72" width="16" height="18" rx="2" fill="#2b2b2b"/>
+              <circle cx="80" cy="70" r="2" fill="#a1a4aa"/>
+              <circle cx="80" cy="85" r="2" fill="#a1a4aa"/>
+              <circle cx="80" cy="100" r="2" fill="#a1a4aa"/>
+              <circle cx="80" cy="115" r="2" fill="#a1a4aa"/>
               <path d="M79 48V132H81V48H79Z" fill="#ffffff" opacity="0.3"/>
             </svg>';
         case 'hoodie':
             return '<svg viewBox="0 0 160 160" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="160" height="160" rx="16" fill="#f8fafc"/>
-              <ellipse cx="80" cy="40" rx="26" ry="16" fill="#172554"/>
-              <path d="M46 44L80 50L114 44L134 74L118 84L110 76V130H50V76L42 84L26 74L46 44Z" fill="#1e3a8a"/>
-              <path d="M60 100H100L96 124H64L60 100Z" fill="#172554"/>
-              <path d="M74 54V76M86 54V76" stroke="#f97316" stroke-width="2.5" stroke-linecap="round"/>
-              <text x="80" y="85" text-anchor="middle" font-family="Poppins, sans-serif" font-weight="700" font-size="10" fill="#ffffff" letter-spacing="1">FASTENDER</text>
+              <rect width="160" height="160" rx="10" fill="#ecedee"/>
+              <ellipse cx="80" cy="40" rx="26" ry="16" fill="#2b2b2b"/>
+              <path d="M46 44L80 50L114 44L134 74L118 84L110 76V130H50V76L42 84L26 74L46 44Z" fill="#111111"/>
+              <path d="M60 100H100L96 124H64L60 100Z" fill="#2b2b2b"/>
+              <path d="M74 54V76M86 54V76" stroke="#000aff" stroke-width="2.5" stroke-linecap="round"/>
+              <text x="80" y="85" text-anchor="middle" font-family="Montserrat, sans-serif" font-weight="700" font-size="9" fill="#ffffff" letter-spacing="1">FASTENDER</text>
             </svg>';
         case 'tshirt':
             return '<svg viewBox="0 0 160 160" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="160" height="160" rx="16" fill="#fff7ed"/>
-              <path d="M52 40L80 48L108 40L126 62L112 72L106 66V130H54V66L48 72L34 62L52 40Z" fill="#1e3a8a"/>
-              <path d="M70 40C70 46 90 46 90 40Z" fill="#fff7ed"/>
-              <rect x="65" y="70" width="30" height="20" rx="3" fill="#f97316"/>
-              <text x="80" y="84" text-anchor="middle" font-family="Poppins, sans-serif" font-weight="800" font-size="8" fill="#ffffff">PO 2026</text>
+              <rect width="160" height="160" rx="10" fill="#ecedee"/>
+              <path d="M52 40L80 48L108 40L126 62L112 72L106 66V130H54V66L48 72L34 62L52 40Z" fill="#111111"/>
+              <path d="M70 40C70 46 90 46 90 40Z" fill="#ecedee"/>
+              <rect x="65" y="70" width="30" height="20" rx="3" fill="#000aff"/>
+              <text x="80" y="84" text-anchor="middle" font-family="Montserrat, sans-serif" font-weight="700" font-size="8" fill="#ffffff">PO 2026</text>
             </svg>';
         default:
             return '<svg viewBox="0 0 160 160" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect width="160" height="160" rx="16" fill="#eff6ff"/>
-              <path d="M52 40L80 48L108 40L126 62L112 72L106 66V130H54V66L48 72L34 62L52 40Z" fill="#1e3a8a"/>
+              <rect width="160" height="160" rx="10" fill="#ecedee"/>
+              <path d="M52 40L80 48L108 40L126 62L112 72L106 66V130H54V66L48 72L34 62L52 40Z" fill="#111111"/>
             </svg>';
     }
 }
@@ -529,7 +719,7 @@ function get3DShowcaseConfig() {
     }
     return [
         'image_url' => 'assets/images/logo.png',
-        'title' => 'Emblem Resmi FastTender 2026',
+        'title' => 'Emblem Resmi Fastender 2026',
         'subtitle' => 'Convert PNG to 3D Realtime • Berotasi Pelan 360°',
         'depth' => 8,
         'rotation_speed' => 0.006,
@@ -574,7 +764,7 @@ function save3DShowcaseConfig($postData, $fileData = null) {
     
     $config = [
         'image_url' => $imageUrl,
-        'title' => sanitize($postData['title'] ?? ($current['title'] ?? '3D Apparel FastTender')),
+        'title' => sanitize($postData['title'] ?? ($current['title'] ?? '3D Apparel Fastender')),
         'subtitle' => sanitize($postData['subtitle'] ?? ($current['subtitle'] ?? 'Desain 3D Pre-Order Terkini')),
         'depth' => floatval($postData['depth'] ?? 8),
         'rotation_speed' => floatval($postData['rotation_speed'] ?? 0.006),
@@ -586,4 +776,185 @@ function save3DShowcaseConfig($postData, $fileData = null) {
     file_put_contents(DATA_SHOWCASE_3D_FILE, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
     return $config;
 }
+
+// ----------------------------------------------------
+// 9. PENGELOLAAN HERO SECTION & COUNTDOWN BANNER (SPLIT-CARD)
+// ----------------------------------------------------
+
+/**
+ * Mengambil pengaturan hero section split-card & countdown (dari DB atau JSON fallback)
+ */
+function getHeroSettings() {
+    $defaults = [
+        'title' => 'Pre-Order Batch 1 telah dibuka',
+        'badge' => 'BATCH PERDANA TAHUN AKADEMIK 2026',
+        'description' => 'Wujudkan identitas kebanggaan kelas, jurusan, dan organisasimu bersama Fastender. Bahan standar distro, gratis konsultasi desain bordir, sistem DP 50%, dan jaminan tepat waktu.',
+        'countdown_label' => 'PO DITUTUP DALAM',
+        'countdown_deadline' => date('Y-m-d\TH:i', strtotime('+14 days 23:59')),
+        'banner_image' => 'assets/images/hero-showcase.png',
+        'cta_text' => 'Pesan Sekarang',
+        'cta_link' => 'katalog.php',
+    ];
+
+    $pdo = getDbConnection();
+    if ($pdo) {
+        try {
+            // Pastikan tabel site_settings tersedia
+            $pdo->exec("
+                CREATE TABLE IF NOT EXISTS `site_settings` (
+                    `setting_key` VARCHAR(100) PRIMARY KEY,
+                    `setting_value` TEXT,
+                    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            ");
+
+            $stmt = $pdo->query("SELECT setting_key, setting_value FROM site_settings WHERE setting_key LIKE 'hero_%'");
+            $rows = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+            if (!empty($rows)) {
+                return [
+                    'title' => $rows['hero_title'] ?? $defaults['title'],
+                    'badge' => $rows['hero_badge'] ?? $defaults['badge'],
+                    'description' => $rows['hero_description'] ?? $defaults['description'],
+                    'countdown_label' => $rows['hero_countdown_label'] ?? $defaults['countdown_label'],
+                    'countdown_deadline' => $rows['hero_countdown_deadline'] ?? $defaults['countdown_deadline'],
+                    'banner_image' => $rows['hero_banner_image'] ?? $defaults['banner_image'],
+                    'cta_text' => $rows['hero_cta_text'] ?? $defaults['cta_text'],
+                    'cta_link' => $rows['hero_cta_link'] ?? $defaults['cta_link'],
+                ];
+            }
+        } catch (Exception $e) {
+            // Lanjut ke fallback file
+        }
+    }
+
+    // Fallback file JSON
+    if (file_exists(DATA_HERO_SETTINGS_FILE)) {
+        $json = file_get_contents(DATA_HERO_SETTINGS_FILE);
+        $data = json_decode($json, true);
+        if (is_array($data)) {
+            return array_merge($defaults, $data);
+        }
+    }
+
+    return $defaults;
+}
+
+/**
+ * Menyimpan pengaturan hero section (dari form admin)
+ */
+function saveHeroSettings($postData, $filesData = null) {
+    $current = getHeroSettings();
+
+    $title = sanitize($postData['title'] ?? $current['title']);
+    $badge = sanitize($postData['badge'] ?? $current['badge']);
+    $description = sanitize($postData['description'] ?? $current['description']);
+    $countdownLabel = sanitize($postData['countdown_label'] ?? $current['countdown_label']);
+    $countdownDeadline = sanitize($postData['countdown_deadline'] ?? $current['countdown_deadline']);
+    $ctaText = sanitize($postData['cta_text'] ?? $current['cta_text']);
+    $ctaLink = sanitize($postData['cta_link'] ?? $current['cta_link']);
+    $bannerImage = $current['banner_image'];
+
+    // 1. Cek unggahan file gambar banner baru via $_FILES
+    if (!empty($filesData['name']) && $filesData['error'] === UPLOAD_ERR_OK) {
+        if (!is_dir(UPLOAD_HERO_DIR)) {
+            mkdir(UPLOAD_HERO_DIR, 0777, true);
+        }
+        $ext = strtolower(pathinfo($filesData['name'], PATHINFO_EXTENSION));
+        if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'svg'])) {
+            $fileName = 'hero_banner_' . time() . '.' . $ext;
+            if (move_uploaded_file($filesData['tmp_name'], UPLOAD_HERO_DIR . $fileName)) {
+                $bannerImage = 'uploads/hero/' . $fileName;
+            }
+        }
+    } elseif (!empty($postData['banner_image_path'])) {
+        $bannerImage = sanitize($postData['banner_image_path']);
+    }
+
+    $updated = [
+        'title' => $title,
+        'badge' => $badge,
+        'description' => $description,
+        'countdown_label' => $countdownLabel,
+        'countdown_deadline' => $countdownDeadline,
+        'banner_image' => $bannerImage,
+        'cta_text' => $ctaText,
+        'cta_link' => $ctaLink,
+    ];
+
+    // Simpan ke DB MySQL jika aktif
+    $pdo = getDbConnection();
+    if ($pdo) {
+        try {
+            $stmt = $pdo->prepare("
+                INSERT INTO site_settings (setting_key, setting_value) 
+                VALUES (?, ?) 
+                ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)
+            ");
+            foreach ($updated as $k => $v) {
+                $stmt->execute(['hero_' . $k, $v]);
+            }
+        } catch (Exception $e) {
+            // Lanjut simpan ke file JSON
+        }
+    }
+
+    // Selalu simpan juga ke file JSON data/hero_settings.json
+    if (!is_dir(dirname(DATA_HERO_SETTINGS_FILE))) {
+        mkdir(dirname(DATA_HERO_SETTINGS_FILE), 0777, true);
+    }
+    file_put_contents(DATA_HERO_SETTINGS_FILE, json_encode($updated, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    return $updated;
+}
+
+/**
+ * Mengambil daftar gambar slider hero section secara dinamis dari folder assets/image/ atau assets/images/
+ */
+function getHeroSliderImages() {
+    $images = [];
+    
+    // Cek folder fisik di server (assets/images atau assets/image)
+    $possibleDirs = [
+        __DIR__ . '/../assets/images',
+        __DIR__ . '/../assets/image'
+    ];
+
+    foreach ($possibleDirs as $dir) {
+        if (is_dir($dir)) {
+            // Cari file dengan pola gambar* (gambar1.jpg, gambar2.jpg, gambar3.jpg, dll)
+            $files = glob($dir . '/*gambar*.{jpg,jpeg,png,webp,JPG,JPEG,PNG,WEBP}', GLOB_BRACE);
+            if (!empty($files)) {
+                sort($files, SORT_NATURAL | SORT_FLAG_CASE);
+                foreach ($files as $filePath) {
+                    $rel = 'assets/images/' . basename($filePath);
+                    if (!in_array($rel, $images)) {
+                        $images[] = $rel;
+                    }
+                }
+                break;
+            }
+        }
+    }
+
+    // Jika belum ada hasil, scan file gambar1, gambar2, gambar3 secara langsung
+    if (empty($images)) {
+        $checkList = ['gambar1.jpg', 'gambar2.jpg', 'gambar3.jpg'];
+        foreach ($checkList as $imgName) {
+            if (file_exists(__DIR__ . '/../assets/images/' . $imgName)) {
+                $images[] = 'assets/images/' . $imgName;
+            }
+        }
+    }
+
+    // Fallback jika tidak ada gambar
+    if (empty($images)) {
+        $images = [
+            'assets/images/hero-showcase.png'
+        ];
+    }
+
+    return $images;
+}
+
+
 

@@ -9,35 +9,35 @@
      ========================================== -->
 <footer class="footer">
   <div class="footer-top">
-    <div class="container">
+    <div class="hero-split-container">
       <div class="footer-grid">
         
         <!-- Kolom 1: Tentang Kami -->
         <div class="footer-col">
-          <div class="navbar-brand" style="margin-bottom: 16px;">
-            <img src="assets/images/logo.png" alt="FastTender Logo" class="brand-logo-img" style="width: 44px; height: 44px;">
-            <span class="brand-text">Fast<span style="color: var(--accent);">Tender</span></span>
+          <div class="footer-brand" style="margin-bottom: 16px; display: inline-flex; align-items: center; gap: 10px;">
+            <img src="assets/images/logo.png" alt="Fastender Logo" class="brand-logo-img" style="width: 36px; height: 36px; border-color: rgba(255, 255, 255, 0.35);">
+            <span class="brand-text" style="color: #ffffff; font-size: 20px;">Fast<span style="color: #ffffff; opacity: 0.9;">ender</span></span>
           </div>
           <p class="footer-desc">
-            FastTender adalah platform e-commerce pre-order terintegrasi khusus untuk pembuatan apparel angkatan, jaket varsity, kemeja PDH organisasi, dan merchandise kampus dengan standar mutu konveksi terbaik di Indonesia.
+            Fastender adalah platform e-commerce pre-order terintegrasi khusus untuk pembuatan apparel angkatan, jaket varsity, kemeja PDH organisasi, dan merchandise kampus dengan standar mutu konveksi presisi di Indonesia.
           </p>
         </div>
 
         <!-- Kolom 2: Tautan Cepat -->
         <div class="footer-col">
-          <h4>Tautan Cepat</h4>
+          <h4>tautan cepat</h4>
           <ul class="footer-links">
-            <li><a href="index.php">Beranda</a></li>
-            <li><a href="katalog.php">Katalog Produk PO</a></li>
-            <li><a href="lacak.php">Lacak Status Pesanan</a></li>
-            <li><a href="keranjang.php">Keranjang Belanja</a></li>
-            <li><a href="checkout.php">Formulir Pemesanan PO</a></li>
+            <li><a href="index.php">beranda</a></li>
+            <li><a href="katalog.php">katalog produk po</a></li>
+            <li><a href="lacak.php">lacak status pesanan</a></li>
+            <li><a href="keranjang.php">keranjang belanja</a></li>
+            <li><a href="checkout.php">formulir pemesanan po</a></li>
           </ul>
         </div>
 
         <!-- Kolom 3: Kontak & Workshop -->
         <div class="footer-col">
-          <h4>Kontak & Workshop</h4>
+          <h4>kontak &amp; workshop</h4>
           <div class="footer-contact-item">
             <span>Jl. Industri Konveksi Kreatif No. 88, Kampus Terpadu, Indonesia</span>
           </div>
@@ -55,14 +55,15 @@
 
   <!-- Baris Hak Cipta di Paling Bawah -->
   <div class="footer-bottom">
-    <div class="container">
-      <div>&copy; 2026 Fastender E-Commerce Pre-Order. Hak Cipta Dilindungi Undang-Undang.</div>
-      <div>Dibuat dengan PHP Native murni, HTML murni, CSS murni, &amp; Vanilla JavaScript.</div>
+    <div class="hero-split-container">
+      <div>&copy; 2026 Fastender pre-order platform. hak cipta dilindungi undang-undang.</div>
+      <div>monolithic plinth surfaces &bull; electric cobalt spark &bull; sculptural apparel</div>
     </div>
   </div>
 </footer>
 
-<!-- Shared JavaScript -->
+<!-- Swiper Slider JS & Shared JavaScript -->
+<script src="js/swiper-bundle.min.js"></script>
 <script src="js/script.js"></script>
 </body>
 </html>

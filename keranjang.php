@@ -16,20 +16,20 @@ include __DIR__ . '/includes/navbar.php';
 <!-- ==========================================
      BREADCRUMB & PROGRESS STEPPER
      ========================================== -->
-<div style="background-color: var(--primary-subtle); border-bottom: 1px solid var(--border-color); padding: 20px 0;">
+<div style="background-color: var(--surface-plaster, #ecedee); border-bottom: 1px solid var(--color-fog, #d7d7d7); padding: 20px 0;">
   <div class="container" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
     <div>
-      <h1 style="font-size: 22px; font-weight: 800; color: var(--primary);">Keranjang Pesanan Pre-Order</h1>
-      <p style="font-size: 13px; color: var(--text-muted);">Periksa kembali rincian produk, ukuran, dan kuantitas sebelum checkout.</p>
+      <h1 style="font-size: 24px; font-weight: 700; color: var(--color-ink-black, #111111); letter-spacing: -0.04em;">Keranjang Pesanan Pre-Order</h1>
+      <p style="font-size: 13px; color: var(--color-ash, #737780);">Periksa kembali rincian produk, ukuran, dan kuantitas sebelum checkout.</p>
     </div>
-    <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600;">
-      <span style="color: var(--accent); display: flex; align-items: center; gap: 4px;">
-        <strong>1. Keranjang</strong>
+    <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-family: var(--font-space-mono);">
+      <span style="color: var(--color-electric-cobalt, #000aff); display: flex; align-items: center; gap: 4px; font-weight: 700;">
+        1. Keranjang
       </span>
-      <span style="color: var(--text-light);">&rarr;</span>
-      <span style="color: var(--text-light);">2. Form Pemesanan PO</span>
-      <span style="color: var(--text-light);">&rarr;</span>
-      <span style="color: var(--text-light);">3. Konfirmasi</span>
+      <span style="color: var(--color-slate, #a1a4aa);">&rarr;</span>
+      <span style="color: var(--color-ash, #737780);">2. Form Pemesanan PO</span>
+      <span style="color: var(--color-slate, #a1a4aa);">&rarr;</span>
+      <span style="color: var(--color-ash, #737780);">3. Konfirmasi</span>
     </div>
   </div>
 </div>
@@ -46,9 +46,9 @@ include __DIR__ . '/includes/navbar.php';
       <!-- KOLOM KIRI: DAFTAR ITEM PESANAN -->
       <div>
         <div class="cart-items-card">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--border-color);">
-            <h2 style="font-size: 18px; font-weight: 700; color: var(--primary);">Item Pre-Order</h2>
-            <span id="cart-item-count" style="font-size: 13px; color: var(--text-muted); font-weight: 500;">0 item</span>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--color-fog, #d7d7d7);">
+            <h2 style="font-size: 18px; font-weight: 700; color: var(--color-ink-black, #111111); letter-spacing: -0.04em;">Item Pre-Order</h2>
+            <span id="cart-item-count" style="font-size: 13px; color: var(--color-ash, #737780); font-family: var(--font-space-mono);">0 item</span>
           </div>
 
           <!-- List Item Container -->
@@ -118,24 +118,23 @@ include __DIR__ . '/includes/navbar.php';
               </svg>
             </a>
           </div>
-
-          <div style="margin-top: 16px; font-size: 12px; color: var(--text-muted); text-align: center; line-height: 1.5;">
-            🔒 Transaksi aman &amp; terjamin. Dukungan pembayaran melalui DP 50% atau Pembayaran Penuh.
-          </div>
         </div>
       </aside>
 
     </div>
 
     <!-- State Jika Keranjang Kosong -->
-    <div id="empty-cart-view" style="display: none; text-align: center; padding: 70px 20px; background: #ffffff; border-radius: var(--radius-xl); border: 1px dashed var(--border-color); max-width: 600px; margin: 0 auto;">
-      <div style="font-size: 56px; margin-bottom: 16px;">🛒</div>
-      <h2 style="font-size: 22px; font-weight: 800; color: var(--primary); margin-bottom: 8px;">Keranjang Pre-Order Kamu Masih Kosong</h2>
-      <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.6;">
-        Yuk jelajahi berbagai produk apparel angkatan, jaket varsity, dan merchandise menarik di katalog kami.
-      </p>
-      <a href="katalog.php" class="btn btn-accent btn-lg">
-        Mulai Belanja Sekarang
+    <div id="empty-cart-view" style="display: none; text-align: center; padding: 60px 20px; background: var(--surface-plaster, #ecedee); border-radius: var(--radius-cards, 28px); border: 1px dashed var(--color-slate, #a1a4aa); max-width: 540px; margin: 0 auto;">
+      <div style="display: flex; justify-content: center; margin-bottom: 16px;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#737780" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="9" cy="21" r="1"></circle>
+          <circle cx="20" cy="21" r="1"></circle>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+        </svg>
+      </div>
+      <h2 style="font-size: 20px; font-weight: 700; color: var(--color-ink-black, #111111); margin-bottom: 20px; letter-spacing: -0.03em;">Keranjang Masih Kosong</h2>
+      <a href="katalog.php" class="btn btn-accent btn-lg" style="border-radius: 28px; padding: 12px 32px;">
+        Mulai Belanja
       </a>
     </div>
 
@@ -269,12 +268,12 @@ include __DIR__ . '/includes/navbar.php';
         const code = voucherInput.value.trim().toUpperCase();
         if (code === "FAST2026" || code === "ANGKATAN2026") {
           discountAmount = 25000;
-          voucherFeedback.textContent = "✓ Kupon berhasil diterapkan! Diskon Rp 25.000";
+          voucherFeedback.textContent = "Kupon berhasil diterapkan: Diskon Rp 25.000";
           voucherFeedback.style.color = "var(--success)";
           showToast("Kupon diskon Rp 25.000 berhasil digunakan!", "success");
           renderCart();
         } else {
-          voucherFeedback.textContent = "✕ Kode promo tidak valid atau kuota kupon habis.";
+          voucherFeedback.textContent = "Kode promo tidak valid atau telah kedaluwarsa.";
           voucherFeedback.style.color = "var(--danger)";
           showToast("Kode promo tidak valid", "error");
         }

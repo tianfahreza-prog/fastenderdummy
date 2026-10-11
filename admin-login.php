@@ -68,12 +68,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login Administrator - Fastender Pre-Order</title>
   
-  <!-- Google Fonts: Poppins & Inter -->
+  <!-- Google Fonts: Montserrat & Fira Code -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
   
   <!-- Stylesheets -->
+  <link rel="stylesheet" href="variables.css">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/admin.css">
 
@@ -95,8 +96,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       
       <!-- Brand Logo & Header -->
       <div class="login-brand-header">
-        <img src="assets/images/logo.png" alt="FastTender Logo" style="width: 76px; height: 76px; border-radius: 50%; margin: 0 auto 16px; display: block; box-shadow: 0 4px 16px rgba(30, 58, 138, 0.25); border: 2px solid rgba(255, 255, 255, 0.8);">
-        <h1 class="login-title">Admin FastTender</h1>
+        <img src="assets/images/logo.png" alt="Fastender Logo" style="width: 76px; height: 76px; border-radius: 50%; margin: 0 auto 16px; display: block; box-shadow: 0 4px 16px rgba(30, 58, 138, 0.25); border: 2px solid rgba(255, 255, 255, 0.8);">
+        <h1 class="login-title">Admin Fastender</h1>
         <p class="login-subtitle">Masuk untuk mengelola data pesanan &amp; katalog produk PO</p>
       </div>
 
@@ -109,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <?php if (!empty($successMsg)): ?>
         <div style="background: #dcfce7; border: 1px solid #86efac; color: #15803d; padding: 12px 14px; border-radius: var(--radius-md); font-size: 13px; margin-bottom: 18px;">
-          ✓ <?= htmlspecialchars($successMsg) ?>
+          <?= htmlspecialchars($successMsg) ?>
         </div>
       <?php endif; ?>
 
@@ -119,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div>Email: <code>admin@fastender.id</code></div>
         <div>Password: <code>admin123</code></div>
         <button type="button" class="demo-quick-btn" onclick="quickFillAdmin()">
-          ⚡ Isi Otomatis Akun Admin
+          Isi Otomatis Akun Admin
         </button>
       </div>
 
@@ -129,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <label class="form-label" for="admin-email">Email / Username Administrator *</label>
           <input 
             type="text" 
-            name="email"
+            name="email" 
             id="admin-email" 
             class="form-control" 
             placeholder="admin@fastender.id" 
@@ -144,7 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <div style="position: relative;">
             <input 
               type="password" 
-              name="password"
+              name="password" 
               id="admin-password" 
               class="form-control" 
               placeholder="••••••••" 
@@ -157,10 +158,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               type="button" 
               id="toggle-pwd-btn" 
               onclick="togglePasswordVisibility()" 
-              style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-light); font-size: 14px;"
-              title="Lihat kata sandi"
+              style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-light); font-size: 13px; font-weight: 600;"
+              title="Tampilkan / Sembunyikan"
             >
-              👁️
+              Lihat
             </button>
           </div>
         </div>
@@ -206,10 +207,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       const btn = document.getElementById("toggle-pwd-btn");
       if (pwdInput.type === "password") {
         pwdInput.type = "text";
-        btn.textContent = "🙈";
+        btn.textContent = "Tutup";
       } else {
         pwdInput.type = "password";
-        btn.textContent = "👁️";
+        btn.textContent = "Lihat";
       }
     }
   </script>

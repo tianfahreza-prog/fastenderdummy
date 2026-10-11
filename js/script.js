@@ -202,95 +202,95 @@ function formatRupiah(amount) {
   return "Rp " + Number(amount).toLocaleString("id-ID");
 }
 
-function getProductSvg(type, color = "#1e3a8a") {
-  // Return styled SVG illustrations for accurate, crisp visualization
+function getProductSvg(type, color = "#111111") {
+  // Return styled SVG illustrations matching Zellerfeld aesthetic
   switch (type) {
     case "varsity":
       return `
         <svg viewBox="0 0 160 160" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="160" height="160" rx="16" fill="#eff6ff"/>
-          <path d="M45 42L80 56L115 42L135 68L120 82L112 74V130H48V74L40 82L25 68L45 42Z" fill="#1e3a8a"/>
-          <path d="M45 42L25 68L40 82L48 74V60L45 42Z" fill="#f97316"/>
-          <path d="M115 42L135 68L120 82L112 74V60L115 42Z" fill="#f97316"/>
+          <rect width="160" height="160" rx="10" fill="#ecedee"/>
+          <path d="M45 42L80 56L115 42L135 68L120 82L112 74V130H48V74L40 82L25 68L45 42Z" fill="#111111"/>
+          <path d="M45 42L25 68L40 82L48 74V60L45 42Z" fill="#000aff"/>
+          <path d="M115 42L135 68L120 82L112 74V60L115 42Z" fill="#000aff"/>
           <path d="M78 55V130H82V55H78Z" fill="#ffffff" opacity="0.4"/>
-          <circle cx="80" cy="75" r="2.5" fill="#f97316"/>
-          <circle cx="80" cy="90" r="2.5" fill="#f97316"/>
-          <circle cx="80" cy="105" r="2.5" fill="#f97316"/>
-          <circle cx="80" cy="120" r="2.5" fill="#f97316"/>
-          <text x="60" y="80" font-family="Poppins, sans-serif" font-weight="800" font-size="14" fill="#ffffff">26</text>
+          <circle cx="80" cy="75" r="2.5" fill="#000aff"/>
+          <circle cx="80" cy="90" r="2.5" fill="#000aff"/>
+          <circle cx="80" cy="105" r="2.5" fill="#000aff"/>
+          <circle cx="80" cy="120" r="2.5" fill="#000aff"/>
+          <text x="60" y="80" font-family="Space Mono, monospace" font-weight="700" font-size="13" fill="#ffffff">26</text>
         </svg>
       `;
     case "shirt":
       return `
         <svg viewBox="0 0 160 160" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="160" height="160" rx="16" fill="#f0fdf4"/>
-          <path d="M48 38L80 48L112 38L130 62L116 74L108 68V132H52V68L44 74L30 62L48 38Z" fill="#1e3a8a"/>
-          <path d="M68 38L80 54L92 38H68Z" fill="#f8fafc"/>
-          <rect x="58" y="72" width="16" height="18" rx="2" fill="#172554"/>
-          <circle cx="80" cy="70" r="2" fill="#cbd5e1"/>
-          <circle cx="80" cy="85" r="2" fill="#cbd5e1"/>
-          <circle cx="80" cy="100" r="2" fill="#cbd5e1"/>
-          <circle cx="80" cy="115" r="2" fill="#cbd5e1"/>
+          <rect width="160" height="160" rx="10" fill="#ecedee"/>
+          <path d="M48 38L80 48L112 38L130 62L116 74L108 68V132H52V68L44 74L30 62L48 38Z" fill="#111111"/>
+          <path d="M68 38L80 54L92 38H68Z" fill="#ecedee"/>
+          <rect x="58" y="72" width="16" height="18" rx="2" fill="#2b2b2b"/>
+          <circle cx="80" cy="70" r="2" fill="#a1a4aa"/>
+          <circle cx="80" cy="85" r="2" fill="#a1a4aa"/>
+          <circle cx="80" cy="100" r="2" fill="#a1a4aa"/>
+          <circle cx="80" cy="115" r="2" fill="#a1a4aa"/>
           <path d="M79 48V132H81V48H79Z" fill="#ffffff" opacity="0.3"/>
         </svg>
       `;
     case "hoodie":
       return `
         <svg viewBox="0 0 160 160" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="160" height="160" rx="16" fill="#f8fafc"/>
-          <ellipse cx="80" cy="40" rx="26" ry="16" fill="#172554"/>
-          <path d="M46 44L80 50L114 44L134 74L118 84L110 76V130H50V76L42 84L26 74L46 44Z" fill="#1e3a8a"/>
-          <path d="M60 100H100L96 124H64L60 100Z" fill="#172554"/>
-          <path d="M74 54V76M86 54V76" stroke="#f97316" stroke-width="2.5" stroke-linecap="round"/>
-          <text x="80" y="85" text-anchor="middle" font-family="Poppins, sans-serif" font-weight="700" font-size="10" fill="#ffffff" letter-spacing="1">FASTENDER</text>
+          <rect width="160" height="160" rx="10" fill="#ecedee"/>
+          <ellipse cx="80" cy="40" rx="26" ry="16" fill="#2b2b2b"/>
+          <path d="M46 44L80 50L114 44L134 74L118 84L110 76V130H50V76L42 84L26 74L46 44Z" fill="#111111"/>
+          <path d="M60 100H100L96 124H64L60 100Z" fill="#2b2b2b"/>
+          <path d="M74 54V76M86 54V76" stroke="#000aff" stroke-width="2.5" stroke-linecap="round"/>
+          <text x="80" y="85" text-anchor="middle" font-family="Space Mono, monospace" font-weight="700" font-size="9" fill="#ffffff" letter-spacing="1">FASTENDER</text>
         </svg>
       `;
     case "tshirt":
       return `
         <svg viewBox="0 0 160 160" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="160" height="160" rx="16" fill="#fff7ed"/>
-          <path d="M52 40L80 48L108 40L126 62L112 72L106 66V130H54V66L48 72L34 62L52 40Z" fill="#1e3a8a"/>
-          <path d="M70 40C70 46 90 46 90 40Z" fill="#fff7ed"/>
-          <rect x="65" y="70" width="30" height="20" rx="3" fill="#f97316"/>
-          <text x="80" y="84" text-anchor="middle" font-family="Poppins, sans-serif" font-weight="800" font-size="8" fill="#ffffff">PO 2026</text>
+          <rect width="160" height="160" rx="10" fill="#ecedee"/>
+          <path d="M52 40L80 48L108 40L126 62L112 72L106 66V130H54V66L48 72L34 62L52 40Z" fill="#111111"/>
+          <path d="M70 40C70 46 90 46 90 40Z" fill="#ecedee"/>
+          <rect x="65" y="70" width="30" height="20" rx="3" fill="#000aff"/>
+          <text x="80" y="84" text-anchor="middle" font-family="Space Mono, monospace" font-weight="700" font-size="8" fill="#ffffff">PO 2026</text>
         </svg>
       `;
     case "windbreaker":
       return `
         <svg viewBox="0 0 160 160" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="160" height="160" rx="16" fill="#f0f9ff"/>
-          <path d="M46 42L80 50L114 42L132 68L118 78L110 72V132H50V72L42 78L28 68L46 42Z" fill="#0f172a"/>
-          <path d="M50 72L80 90L110 72V132H50V72Z" fill="#1e3a8a"/>
-          <line x1="80" y1="50" x2="80" y2="132" stroke="#f97316" stroke-width="2.5"/>
+          <rect width="160" height="160" rx="10" fill="#ecedee"/>
+          <path d="M46 42L80 50L114 42L132 68L118 78L110 72V132H50V72L42 78L28 68L46 42Z" fill="#111111"/>
+          <path d="M50 72L80 90L110 72V132H50V72Z" fill="#2b2b2b"/>
+          <line x1="80" y1="50" x2="80" y2="132" stroke="#000aff" stroke-width="2.5"/>
         </svg>
       `;
     case "totebag":
       return `
         <svg viewBox="0 0 160 160" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="160" height="160" rx="16" fill="#fefce8"/>
-          <path d="M60 60V35C60 26 100 26 100 35V60" stroke="#1e3a8a" stroke-width="4" stroke-linecap="round"/>
-          <rect x="45" y="55" width="70" height="80" rx="6" fill="#1e3a8a"/>
-          <circle cx="80" cy="95" r="14" fill="#f97316"/>
-          <text x="80" y="99" text-anchor="middle" font-family="Poppins, sans-serif" font-weight="800" font-size="11" fill="#ffffff">PO</text>
+          <rect width="160" height="160" rx="10" fill="#ecedee"/>
+          <path d="M60 60V35C60 26 100 26 100 35V60" stroke="#111111" stroke-width="4" stroke-linecap="round"/>
+          <rect x="45" y="55" width="70" height="80" rx="6" fill="#111111"/>
+          <circle cx="80" cy="95" r="14" fill="#000aff"/>
+          <text x="80" y="99" text-anchor="middle" font-family="Space Mono, monospace" font-weight="700" font-size="11" fill="#ffffff">PO</text>
         </svg>
       `;
     case "lanyard":
       return `
         <svg viewBox="0 0 160 160" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="160" height="160" rx="16" fill="#fdf4ff"/>
-          <path d="M60 20L78 80H82L100 20" stroke="#1e3a8a" stroke-width="8" stroke-linecap="round"/>
-          <rect x="76" y="80" width="8" height="10" rx="2" fill="#f97316"/>
-          <circle cx="80" cy="94" r="4" fill="#94a3b8"/>
-          <rect x="62" y="98" width="36" height="48" rx="4" fill="#172554"/>
+          <rect width="160" height="160" rx="10" fill="#ecedee"/>
+          <path d="M60 20L78 80H82L100 20" stroke="#111111" stroke-width="8" stroke-linecap="round"/>
+          <rect x="76" y="80" width="8" height="10" rx="2" fill="#000aff"/>
+          <circle cx="80" cy="94" r="4" fill="#a1a4aa"/>
+          <rect x="62" y="98" width="36" height="48" rx="4" fill="#2b2b2b"/>
           <rect x="68" y="106" width="24" height="14" rx="2" fill="#ffffff"/>
-          <line x1="68" y1="126" x2="92" y2="126" stroke="#f97316" stroke-width="2"/>
+          <line x1="68" y1="126" x2="92" y2="126" stroke="#000aff" stroke-width="2"/>
         </svg>
       `;
     default:
       return `
         <svg viewBox="0 0 160 160" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="160" height="160" rx="16" fill="#eff6ff"/>
-          <path d="M52 40L80 48L108 40L126 62L112 72L106 66V130H54V66L48 72L34 62L52 40Z" fill="#1e3a8a"/>
+          <rect width="160" height="160" rx="10" fill="#ecedee"/>
+          <path d="M52 40L80 48L108 40L126 62L112 72L106 66V130H54V66L48 72L34 62L52 40Z" fill="#111111"/>
         </svg>
       `;
   }
@@ -476,18 +476,17 @@ function renderEmptySlotBanner() {
   return `
     <div class="empty-slot-banner">
       <div class="empty-slot-banner-text">
-        <div style="font-size: 24px;">✨</div>
         <div>
           <h4>Koleksi Produk Pre-Order Segera Dibuka</h4>
           <p>Katalog apparel resmi angkatan 2026 sedang dalam proses persiapan rilis.</p>
         </div>
       </div>
       <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-        <a href="https://wa.me/6281234567890?text=Halo%20FastTender,%20saya%20ingin%20konsultasi%20PO" target="_blank" class="btn btn-accent btn-sm">
-          💬 Konsultasi via WhatsApp
+        <a href="https://wa.me/6281234567890?text=Halo%20Fastender,%20saya%20ingin%20konsultasi%20PO" target="_blank" class="btn btn-accent btn-sm">
+          Konsultasi via WhatsApp
         </a>
         <a href="lacak.php" class="btn btn-outline-primary btn-sm">
-          🔍 Lacak Pesanan
+          Lacak Pesanan
         </a>
       </div>
     </div>
@@ -501,35 +500,93 @@ document.addEventListener("DOMContentLoaded", () => {
   // Update badge saat halaman dimuat
   updateCartBadge();
 
-  // Mobile menu toggle
+  // Mobile menu toggle dengan auto-close saat klik di luar
   const navToggle = document.querySelector(".nav-toggle-btn");
   const navMenu = document.querySelector(".navbar-menu");
   if (navToggle && navMenu) {
-    navToggle.addEventListener("click", () => {
+    navToggle.addEventListener("click", (e) => {
+      e.stopPropagation();
       navMenu.classList.toggle("active");
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!navMenu.contains(e.target) && !navToggle.contains(e.target)) {
+        navMenu.classList.remove("active");
+      }
+    });
+
+    navMenu.querySelectorAll(".navbar-link").forEach((link) => {
+      link.addEventListener("click", () => {
+        navMenu.classList.remove("active");
+      });
     });
   }
 
-  // Inisialisasi grid produk di Beranda jika ada elemennya
-  const popularGrid = document.getElementById("popular-products-grid");
-  if (popularGrid) {
-    const allStored = getAllProducts();
-    const bannerContainer = document.getElementById("popular-empty-banner");
-    
-    if (allStored.length === 0) {
-      if (bannerContainer) bannerContainer.innerHTML = renderEmptySlotBanner();
-      // Render 4 space kosongan per permintaan user
-      popularGrid.innerHTML = [1, 2, 3, 4].map(renderEmptyProductSlot).join("");
-    } else {
-      if (bannerContainer) bannerContainer.innerHTML = "";
-      const popularProducts = allStored.slice(0, 4);
-      popularGrid.innerHTML = popularProducts.map(renderProductCard).join("");
-    }
-  }
+  // Inisialisasi Realtime Countdown Timer Hero Section
+  initHeroCountdown();
+
+  // Inisialisasi Image Slider / Carousel Otomatis Hero Section
+  initHeroSlider();
+
+  // Inisialisasi Now Trending Horizontal Carousel (Zellerfeld Style)
+  initTrendingCarousel();
 
   // Inisialisasi modal login / daftar
   setupAuthModal();
 });
+
+// ==========================================
+// REALTIME COUNTDOWN TIMER (HERO SECTION)
+// ==========================================
+function initHeroCountdown() {
+  const container = document.getElementById("hero-countdown");
+  if (!container) return;
+
+  const deadlineStr = container.getAttribute("data-deadline");
+  if (!deadlineStr) return;
+
+  // Tangani format cross-browser ISO / MySQL
+  let targetTime = new Date(deadlineStr).getTime();
+  if (isNaN(targetTime)) {
+    targetTime = new Date(deadlineStr.replace(" ", "T")).getTime();
+  }
+
+  // Jika format invalid, gunakan fallback 14 hari ke depan
+  if (isNaN(targetTime)) {
+    targetTime = Date.now() + 14 * 24 * 60 * 60 * 1000;
+  }
+
+  const elDays = document.getElementById("cd-days");
+  const elHours = document.getElementById("cd-hours");
+  const elMins = document.getElementById("cd-mins");
+  const elSecs = document.getElementById("cd-secs");
+
+  function updateTimer() {
+    const now = Date.now();
+    const distance = targetTime - now;
+
+    if (distance <= 0) {
+      if (elDays) elDays.textContent = "00";
+      if (elHours) elHours.textContent = "00";
+      if (elMins) elMins.textContent = "00";
+      if (elSecs) elSecs.textContent = "00";
+      return;
+    }
+
+    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+    if (elDays) elDays.textContent = String(days).padStart(2, "0");
+    if (elHours) elHours.textContent = String(hours).padStart(2, "0");
+    if (elMins) elMins.textContent = String(minutes).padStart(2, "0");
+    if (elSecs) elSecs.textContent = String(seconds).padStart(2, "0");
+  }
+
+  updateTimer();
+  setInterval(updateTimer, 1000);
+}
 
 // ==========================================
 // 7. MODAL LOGIN / DAFTAR
@@ -614,35 +671,174 @@ function handleAuthSubmit(e) {
 }
 
 // ==========================================
-// 8. HERO COUNTDOWN TIMER
+// 8. HERO SHOWCASE SLIDER / CAROUSEL OTOMATIS
 // ==========================================
-function initCountdown() {
-  const dayEl = document.getElementById("cd-days");
-  const hourEl = document.getElementById("cd-hours");
-  const minEl = document.getElementById("cd-mins");
-  const secEl = document.getElementById("cd-secs");
+function initHeroSlider() {
+  const sliderEl = document.getElementById("hero-slider");
+  if (!sliderEl) return;
 
-  if (!dayEl || !hourEl || !minEl || !secEl) return;
+  const slides = sliderEl.querySelectorAll(".slider-slide");
+  const dots = sliderEl.querySelectorAll(".slider-dot");
+  const prevBtn = document.getElementById("slider-prev");
+  const nextBtn = document.getElementById("slider-next");
 
-  // Target 5 hari dari sekarang
-  let totalSeconds = (5 * 24 * 3600) + (14 * 3600) + (42 * 60) + 18;
+  if (!slides || slides.length === 0) return;
 
-  setInterval(() => {
-    if (totalSeconds <= 0) return;
-    totalSeconds--;
+  let currentSlide = 0;
+  let autoplayTimer = null;
+  const AUTOPLAY_INTERVAL = 3500; // Loop bergantian tiap 3.5 detik (sesuai instruksi 3-4 detik)
 
-    const d = Math.floor(totalSeconds / (24 * 3600));
-    const h = Math.floor((totalSeconds % (24 * 3600)) / 3600);
-    const m = Math.floor((totalSeconds % 3600) / 60);
-    const s = totalSeconds % 60;
+  function goToSlide(index) {
+    if (slides.length <= 1) return;
 
-    dayEl.textContent = String(d).padStart(2, "0");
-    hourEl.textContent = String(h).padStart(2, "0");
-    minEl.textContent = String(m).padStart(2, "0");
-    secEl.textContent = String(s).padStart(2, "0");
-  }, 1000);
+    // Nonaktifkan slide lama
+    slides[currentSlide].classList.remove("active");
+    if (dots[currentSlide]) {
+      dots[currentSlide].classList.remove("active");
+    }
+
+    // Hitung slide baru (looping circular)
+    currentSlide = (index + slides.length) % slides.length;
+
+    // Aktifkan slide baru
+    slides[currentSlide].classList.add("active");
+    if (dots[currentSlide]) {
+      dots[currentSlide].classList.add("active");
+    }
+  }
+
+  function nextSlide() {
+    goToSlide(currentSlide + 1);
+  }
+
+  function prevSlide() {
+    goToSlide(currentSlide - 1);
+  }
+
+  function startAutoplay() {
+    stopAutoplay();
+    if (slides.length > 1) {
+      autoplayTimer = setInterval(nextSlide, AUTOPLAY_INTERVAL);
+    }
+  }
+
+  function stopAutoplay() {
+    if (autoplayTimer) {
+      clearInterval(autoplayTimer);
+      autoplayTimer = null;
+    }
+  }
+
+  // Event panah navigasi
+  if (nextBtn) {
+    nextBtn.addEventListener("click", () => {
+      nextSlide();
+      startAutoplay();
+    });
+  }
+
+  if (prevBtn) {
+    prevBtn.addEventListener("click", () => {
+      prevSlide();
+      startAutoplay();
+    });
+  }
+
+  // Event indikator dots
+  dots.forEach((dot, idx) => {
+    dot.addEventListener("click", () => {
+      goToSlide(idx);
+      startAutoplay();
+    });
+  });
+
+  // Pause autoplay saat kursor mouse berada di atas kartu slider
+  sliderEl.addEventListener("mouseenter", stopAutoplay);
+  sliderEl.addEventListener("mouseleave", startAutoplay);
+
+  // Dukungan gesture swipe layar sentuh (mobile/tablet)
+  let touchStartX = 0;
+  let touchEndX = 0;
+
+  sliderEl.addEventListener("touchstart", (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+    stopAutoplay();
+  }, { passive: true });
+
+  sliderEl.addEventListener("touchend", (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    const diff = touchStartX - touchEndX;
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) {
+        nextSlide();
+      } else {
+        prevSlide();
+      }
+    }
+    startAutoplay();
+  }, { passive: true });
+
+  // Jalankan autoplay pertama kali
+  startAutoplay();
 }
 
-// Jalankan countdown saat load
-document.addEventListener("DOMContentLoaded", initCountdown);
+// ==========================================
+// NOW TRENDING HORIZONTAL CAROUSEL (SWIPER INFINITE LOOP)
+// ==========================================
+function initTrendingCarousel() {
+  const swiperEl = document.getElementById("trending-swiper");
+  if (!swiperEl) return;
+
+  const startSwiper = () => {
+    if (typeof Swiper === "undefined") {
+      // Tunggu sejenak jika script swiper sedang dimuat
+      setTimeout(startSwiper, 100);
+      return;
+    }
+
+    new Swiper("#trending-swiper", {
+      loop: true,
+      loopAdditionalSlides: 4,
+      grabCursor: true,
+      watchSlidesProgress: true,
+      speed: 450,
+      spaceBetween: 16,
+      slidesPerView: 1.25,
+      navigation: {
+        prevEl: "#trending-prev",
+        nextEl: "#trending-next",
+      },
+      breakpoints: {
+        480: {
+          slidesPerView: 1.6,
+          spaceBetween: 16,
+        },
+        680: {
+          slidesPerView: 2.3,
+          spaceBetween: 18,
+        },
+        960: {
+          slidesPerView: 3.2,
+          spaceBetween: 20,
+        },
+        1280: {
+          slidesPerView: 4.2,
+          spaceBetween: 20,
+        },
+        1600: {
+          slidesPerView: 5.2,
+          spaceBetween: 22,
+        },
+      },
+      keyboard: {
+        enabled: true,
+      },
+      preventClicks: true,
+      preventClicksPropagation: true,
+    });
+  };
+
+  startSwiper();
+}
+
 
