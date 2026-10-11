@@ -14,31 +14,13 @@ include __DIR__ . '/includes/navbar.php';
 ?>
 
 <!-- ==========================================
-     BREADCRUMB & PROGRESS STEPPER
-     ========================================== -->
-<div style="background-color: var(--surface-plaster, #ecedee); border-bottom: 1px solid var(--color-fog, #d7d7d7); padding: 20px 0;">
-  <div class="container" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-    <div>
-      <h1 style="font-size: 24px; font-weight: 700; color: var(--color-ink-black, #111111); letter-spacing: -0.04em;">Keranjang Pesanan Pre-Order</h1>
-      <p style="font-size: 13px; color: var(--color-ash, #737780);">Periksa kembali rincian produk, ukuran, dan kuantitas sebelum checkout.</p>
-    </div>
-    <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-family: var(--font-space-mono);">
-      <span style="color: var(--color-electric-cobalt, #000aff); display: flex; align-items: center; gap: 4px; font-weight: 700;">
-        1. Keranjang
-      </span>
-      <span style="color: var(--color-slate, #a1a4aa);">&rarr;</span>
-      <span style="color: var(--color-ash, #737780);">2. Form Pemesanan PO</span>
-      <span style="color: var(--color-slate, #a1a4aa);">&rarr;</span>
-      <span style="color: var(--color-ash, #737780);">3. Konfirmasi</span>
-    </div>
-  </div>
-</div>
-
-<!-- ==========================================
      HALAMAN KERANJANG (LAYOUT 2 KOLOM)
      ========================================== -->
-<section class="section-padding">
+<section class="section-padding" style="padding-top: 28px;">
   <div class="container">
+    <div style="margin-bottom: 24px;">
+      <h1 style="font-size: 32px; font-weight: 800; color: var(--color-ink-black, #111111); letter-spacing: -0.04em; margin: 0;">Keranjang Pesanan Pre-Order</h1>
+    </div>
     
     <!-- Layout 2 Kolom -->
     <div class="cart-layout" id="cart-content-wrapper">
@@ -169,6 +151,7 @@ include __DIR__ . '/includes/navbar.php';
         return;
       }
 
+      saveCart(cart);
       cartWrapper.style.display = "grid";
       emptyView.style.display = "none";
 
@@ -178,9 +161,12 @@ include __DIR__ . '/includes/navbar.php';
       let dpTotal = 0;
 
       itemsContainer.innerHTML = cart.map((item, index) => {
-        const itemSubtotal = item.price * item.quantity;
+        const itemPrice = parsePriceInt(item.price);
+        const itemQty = Math.max(1, parseInt(item.quantity ?? item.qty ?? 1, 10) || 1);
+        const itemDp = parsePriceInt(item.dpPrice ?? item.dp_price) || Math.round(itemPrice * 0.5);
+        const itemSubtotal = itemPrice * itemQty;
         subtotal += itemSubtotal;
-        dpTotal += (item.dpPrice || item.price * 0.5) * item.quantity;
+        dpTotal += itemDp * itemQty;
 
         return `
           <div class="cart-item">
@@ -198,7 +184,7 @@ include __DIR__ . '/includes/navbar.php';
                 ${item.customText ? `<br><span style="color: var(--accent); font-weight: 500;">Custom: "${item.customText}"</span>` : ''}
               </div>
               <div style="font-size: 13px; color: var(--primary); font-weight: 700; margin-top: 4px;">
-                ${formatRupiah(item.price)} <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">/ pcs</span>
+                ${formatRupiah(itemPrice)} <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">/ pcs</span>
               </div>
             </div>
 
@@ -206,7 +192,7 @@ include __DIR__ . '/includes/navbar.php';
             <div>
               <div class="qty-control" style="transform: scale(0.9);">
                 <button type="button" class="qty-btn" onclick="updateItemQty(${index}, -1)">-</button>
-                <input type="text" class="qty-input" value="${item.quantity}" readonly>
+                <input type="text" class="qty-input" value="${itemQty}" readonly>
                 <button type="button" class="qty-btn" onclick="updateItemQty(${index}, 1)">+</button>
               </div>
             </div>

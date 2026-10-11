@@ -14,28 +14,13 @@ include __DIR__ . '/includes/navbar.php';
 ?>
 
 <!-- ==========================================
-     PROGRESS STEPPER
-     ========================================== -->
-<div style="background-color: var(--surface-plaster, #ecedee); border-bottom: 1px solid var(--color-fog, #d7d7d7); padding: 18px 0;">
-  <div class="container" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-    <div>
-      <h1 style="font-size: 24px; font-weight: 700; color: var(--color-ink-black, #111111); letter-spacing: -0.04em; margin: 0;">Form Pemesanan Pre-Order</h1>
-    </div>
-    <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-family: var(--font-space-mono);">
-      <span style="color: var(--color-ash, #737780);">1. Keranjang</span>
-      <span style="color: var(--color-slate, #a1a4aa);">&rarr;</span>
-      <span style="color: #619ae6; font-weight: 700;">2. Form Pemesanan</span>
-      <span style="color: var(--color-slate, #a1a4aa);">&rarr;</span>
-      <span style="color: var(--color-ash, #737780);">3. Konfirmasi</span>
-    </div>
-  </div>
-</div>
-
-<!-- ==========================================
      CHECKOUT CONTENT (LAYOUT 2 KOLOM)
      ========================================== -->
-<section class="section-padding">
+<section class="section-padding" style="padding-top: 28px;">
   <div class="container">
+    <div style="margin-bottom: 24px;">
+      <h1 style="font-size: 32px; font-weight: 800; color: var(--color-ink-black, #111111); letter-spacing: -0.04em; margin: 0;">Form Pemesanan Pre-Order</h1>
+    </div>
     
     <form id="checkout-form" onsubmit="handleCheckoutSubmit(event)">
       <div class="checkout-layout">
@@ -51,24 +36,13 @@ include __DIR__ . '/includes/navbar.php';
             </h2>
 
             <div class="form-grid-2">
-              <div class="form-group">
+              <div class="form-group" style="margin-bottom: 0;">
                 <label class="form-label" for="buyer-name">Nama Lengkap *</label>
                 <input type="text" id="buyer-name" class="form-control" placeholder="Contoh: Muhammad Fatah" required>
               </div>
-              <div class="form-group">
+              <div class="form-group" style="margin-bottom: 0;">
                 <label class="form-label" for="buyer-phone">Nomor HP / WhatsApp Aktif *</label>
                 <input type="tel" id="buyer-phone" class="form-control" placeholder="Contoh: 081234567890" required>
-              </div>
-            </div>
-
-            <div class="form-grid-2">
-              <div class="form-group">
-                <label class="form-label" for="buyer-email">Alamat Email *</label>
-                <input type="email" id="buyer-email" class="form-control" placeholder="nama@email.com" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="buyer-organization">Nama Organisasi / Angkatan / Jurusan</label>
-                <input type="text" id="buyer-organization" class="form-control" placeholder="Contoh: TI Angkatan 2026">
               </div>
             </div>
           </div>
@@ -101,16 +75,21 @@ include __DIR__ . '/includes/navbar.php';
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="ship-address">Alamat Lengkap (Jalan, No. Rumah, RT/RW, Kecamatan) *</label>
+              <div class="address-label-row">
+                <label class="form-label" for="ship-address" style="margin-bottom: 0;">Alamat Lengkap (Jalan, No. Rumah, RT/RW, Kecamatan) *</label>
+                <button type="button" class="btn-pickup-usma" onclick="selectPickupUSMA()">
+                  Ambil di Sekretariat USMA
+                </button>
+              </div>
               <textarea id="ship-address" class="form-control" rows="3" placeholder="Masukkan alamat pengiriman selengkap mungkin..." required>Jl. Sukabirus No. 45, RT 02 RW 05, Dayeuhkolot</textarea>
             </div>
 
             <div class="form-grid-2">
-              <div class="form-group">
+              <div class="form-group" style="margin-bottom: 0;">
                 <label class="form-label" for="ship-postal">Kode Pos</label>
                 <input type="text" id="ship-postal" class="form-control" placeholder="Contoh: 40257" value="40257">
               </div>
-              <div class="form-group">
+              <div class="form-group" style="margin-bottom: 0;">
                 <label class="form-label" for="ship-courier">Pilihan Ekspedisi *</label>
                 <select id="ship-courier" class="form-control" onchange="updateShippingCost()">
                   <option value="15000">JNE Reguler (Rp 15.000) - 2-3 hari</option>
@@ -277,6 +256,16 @@ include __DIR__ . '/includes/navbar.php';
   let currentShippingCost = 15000;
   let paymentScheme = "dp"; // "dp" atau "full"
 
+  function safeParseNumber(val, fallback = 0) {
+    if (typeof val === "number" && !isNaN(val)) return Math.round(val);
+    if (typeof val === "string") {
+      const cleaned = val.replace(/[^0-9]/g, "");
+      const parsed = parseInt(cleaned, 10);
+      return isNaN(parsed) ? fallback : parsed;
+    }
+    return fallback;
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     const cart = getCart();
     if (cart.length === 0) {
@@ -285,8 +274,37 @@ include __DIR__ . '/includes/navbar.php';
       return;
     }
 
+    // Pastikan data keranjang tersimpan dalam bentuk yang sudah ternormalisasi
+    saveCart(cart);
     renderCheckoutSummary();
   });
+
+  function selectPickupUSMA() {
+    const addressInput = document.getElementById("ship-address");
+    const courierSelect = document.getElementById("ship-courier");
+    const provinceSelect = document.getElementById("ship-province");
+    const cityInput = document.getElementById("ship-city");
+
+    if (addressInput) {
+      addressInput.value = "Sekretariat USMA (Gedung UKM Polinema)";
+    }
+    if (provinceSelect && !provinceSelect.value) {
+      provinceSelect.value = "Jawa Timur";
+    }
+    if (cityInput && !cityInput.value.trim()) {
+      cityInput.value = "Kota Malang";
+    }
+    if (courierSelect) {
+      courierSelect.value = "0";
+    }
+
+    currentShippingCost = 0;
+    renderCheckoutSummary();
+
+    if (typeof showToast === "function") {
+      showToast("Lokasi pengambilan diatur ke Sekretariat USMA (Bebas Ongkir Rp 0)", "success");
+    }
+  }
 
   function renderCheckoutSummary() {
     const cart = getCart();
@@ -296,18 +314,25 @@ include __DIR__ . '/includes/navbar.php';
     let dpTotal = 0;
 
     summaryContainer.innerHTML = cart.map(item => {
-      const itemSub = item.price * item.quantity;
+      const itemName = (item.name && item.name !== "undefined") ? item.name : "Produk Pre-Order Fastender";
+      const itemPrice = safeParseNumber(item.price, 0);
+      const itemQty = Math.max(1, safeParseNumber(item.quantity ?? item.qty, 1));
+      const itemDp = safeParseNumber(item.dpPrice ?? item.dp_price, Math.round(itemPrice * 0.5)) || Math.round(itemPrice * 0.5);
+      const itemSize = (item.size && item.size !== "undefined") ? item.size : "L";
+      const itemColor = (item.color && item.color !== "undefined") ? item.color : "Standar";
+
+      const itemSub = itemPrice * itemQty;
       subtotal += itemSub;
-      dpTotal += (item.dpPrice || item.price * 0.5) * item.quantity;
+      dpTotal += itemDp * itemQty;
 
       return `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 13px; padding-bottom: 8px; border-bottom: 1px solid var(--border-light);">
           <div style="display: flex; align-items: center; gap: 10px;">
-            ${item.image ? `<img src="${item.image}" alt="${item.name}" style="width: 38px; height: 38px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">` : ''}
+            ${item.image ? `<img src="${item.image}" alt="${itemName}" style="width: 38px; height: 38px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">` : ''}
             <div>
-              <div style="font-weight: 600; color: var(--text-main);">${item.name}</div>
+              <div style="font-weight: 600; color: var(--text-main);">${itemName}</div>
               <div style="font-size: 11px; color: var(--text-muted);">
-                ${item.size} &bull; ${item.color} &times; ${item.quantity} pcs
+                ${itemSize} &bull; ${itemColor} &times; ${itemQty} pcs
               </div>
             </div>
           </div>
@@ -318,11 +343,12 @@ include __DIR__ . '/includes/navbar.php';
       `;
     }).join("");
 
-    const orderTotal = subtotal + currentShippingCost;
-    const dueAmount = paymentScheme === "dp" ? (dpTotal + currentShippingCost) : orderTotal;
+    const shippingVal = safeParseNumber(currentShippingCost, 0);
+    const orderTotal = subtotal + shippingVal;
+    const dueAmount = paymentScheme === "dp" ? (dpTotal + shippingVal) : orderTotal;
 
     document.getElementById("chk-subtotal").textContent = formatRupiah(subtotal);
-    document.getElementById("chk-shipping").textContent = formatRupiah(currentShippingCost);
+    document.getElementById("chk-shipping").textContent = formatRupiah(shippingVal);
     document.getElementById("chk-order-total").textContent = formatRupiah(orderTotal);
     document.getElementById("chk-due-amount").textContent = formatRupiah(dueAmount);
 
@@ -335,7 +361,7 @@ include __DIR__ . '/includes/navbar.php';
 
   function updateShippingCost() {
     const courierSelect = document.getElementById("ship-courier");
-    currentShippingCost = Number(courierSelect.value);
+    currentShippingCost = safeParseNumber(courierSelect.value, 0);
     renderCheckoutSummary();
   }
 
@@ -364,29 +390,37 @@ include __DIR__ . '/includes/navbar.php';
 
     const buyerName = document.getElementById("buyer-name").value;
     const buyerPhone = document.getElementById("buyer-phone").value;
-    const buyerEmail = document.getElementById("buyer-email").value;
-    const buyerOrg = document.getElementById("buyer-organization").value;
     const shipCity = document.getElementById("ship-city").value;
     const shipAddress = document.getElementById("ship-address").value;
 
-    let subtotal = cart.reduce((acc, i) => acc + (i.price * i.quantity), 0);
-    let dpTotal = cart.reduce((acc, i) => acc + ((i.dpPrice || i.price * 0.5) * i.quantity), 0);
-    let total = subtotal + currentShippingCost;
-    let due = paymentScheme === "dp" ? (dpTotal + currentShippingCost) : total;
+    const shippingVal = safeParseNumber(currentShippingCost, 0);
+    const subtotal = cart.reduce((acc, i) => {
+      const p = safeParseNumber(i.price, 0);
+      const q = Math.max(1, safeParseNumber(i.quantity ?? i.qty, 1));
+      return acc + (p * q);
+    }, 0);
+    const dpTotal = cart.reduce((acc, i) => {
+      const p = safeParseNumber(i.price, 0);
+      const dp = safeParseNumber(i.dpPrice ?? i.dp_price, Math.round(p * 0.5)) || Math.round(p * 0.5);
+      const q = Math.max(1, safeParseNumber(i.quantity ?? i.qty, 1));
+      return acc + (dp * q);
+    }, 0);
+    const total = subtotal + shippingVal;
+    const due = paymentScheme === "dp" ? (dpTotal + shippingVal) : total;
 
     const orderRecord = {
       orderId: generatedOrderCode,
       date: new Date().toLocaleDateString("id-ID", { day: 'numeric', month: 'short', year: 'numeric' }),
       customerName: buyerName,
       customerPhone: buyerPhone,
-      customerEmail: buyerEmail,
-      org: buyerOrg || "-",
+      customerEmail: "-",
+      org: "-",
       city: shipCity,
       address: shipAddress,
       paymentScheme: paymentScheme,
       items: cart,
       subtotal: subtotal,
-      shipping: currentShippingCost,
+      shipping: shippingVal,
       total: total,
       due: due,
       paymentStatus: paymentScheme === "dp" ? "Menunggu Verifikasi DP" : "Menunggu Verifikasi Lunas",

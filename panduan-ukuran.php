@@ -20,22 +20,6 @@ include __DIR__ . '/includes/navbar.php';
 ?>
 
 <!-- ==========================================
-     BREADCRUMB BAR
-     ========================================== -->
-<div class="detail-breadcrumb-bar">
-  <div class="container">
-    <div class="breadcrumb-text">
-      <a href="index.php">Beranda</a> &nbsp;/&nbsp; 
-      <a href="katalog.php">Katalog</a> &nbsp;/&nbsp; 
-      <?php if ($product): ?>
-        <a href="detail.php?id=<?= (int)$product['id'] ?>"><?= htmlspecialchars($product['name']) ?></a> &nbsp;/&nbsp; 
-      <?php endif; ?>
-      <span>Panduan Ukuran</span>
-    </div>
-  </div>
-</div>
-
-<!-- ==========================================
      KONTEN UTAMA PANDUAN UKURAN
      ========================================== -->
 <section class="size-guide-section">

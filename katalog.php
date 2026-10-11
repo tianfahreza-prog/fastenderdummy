@@ -18,22 +18,11 @@ include __DIR__ . '/includes/navbar.php';
 ?>
 
 <!-- ==========================================
-     PAGE HEADER / BREADCRUMB & JUDUL
-     ========================================== -->
-<div class="katalog-header-banner">
-  <div class="katalog-container">
-    <div class="katalog-breadcrumb">
-      <a href="index.php">Beranda</a> &nbsp;/&nbsp; <span>Katalog</span>
-    </div>
-    <h1 class="katalog-page-title">Katalog</h1>
-  </div>
-</div>
-
-<!-- ==========================================
-     KATALOG SECTION (BAR KONTROL + POPUP FILTER + GRID PRODUK)
+     KATALOG SECTION (JUDUL + BAR KONTROL + POPUP FILTER + GRID PRODUK)
      ========================================== -->
 <section class="katalog-section">
   <div class="katalog-container">
+    <h1 class="katalog-page-title">Katalog</h1>
     
     <!-- 1 Baris Kontrol Rapi di Bawah Judul "Katalog" -->
     <div class="katalog-controls-bar">

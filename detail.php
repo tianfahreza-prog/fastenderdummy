@@ -29,22 +29,9 @@ include __DIR__ . '/includes/navbar.php';
 ?>
 
 <!-- ==========================================
-     BREADCRUMB
-     ========================================== -->
-<div class="detail-breadcrumb-bar">
-  <div class="container">
-    <div class="breadcrumb-text">
-      <a href="index.php">Beranda</a> &nbsp;/&nbsp; 
-      <a href="katalog.php">Katalog</a> &nbsp;/&nbsp; 
-      <span><?= htmlspecialchars($product['name']) ?></span>
-    </div>
-  </div>
-</div>
-
-<!-- ==========================================
      DETAIL PRODUK 2 KOLOM (Gambar Besar & Rincian)
      ========================================== -->
-<section class="section-padding">
+<section class="section-padding" style="padding-top: 28px;">
   <div class="container">
     <div class="detail-layout">
 
@@ -255,7 +242,7 @@ include __DIR__ . '/includes/navbar.php';
     const addBtn = document.getElementById("add-to-cart-btn");
     if (addBtn) {
       addBtn.addEventListener("click", () => {
-        addToCart(CURRENT_PRODUCT.id, quantity, selectedSize, "Standar", "");
+        addToCart(CURRENT_PRODUCT, quantity, selectedSize, "Standar", "");
       });
     }
 
@@ -263,7 +250,7 @@ include __DIR__ . '/includes/navbar.php';
     const buyNowBtn = document.getElementById("buy-now-btn");
     if (buyNowBtn) {
       buyNowBtn.addEventListener("click", () => {
-        addToCart(CURRENT_PRODUCT.id, quantity, selectedSize, "Standar", "");
+        addToCart(CURRENT_PRODUCT, quantity, selectedSize, "Standar", "");
         window.location.href = "checkout.php";
       });
     }

@@ -198,8 +198,21 @@ const PRODUCTS_DATA = DEFAULT_SAMPLE_PRODUCTS;
 // ==========================================
 // 2. HELPER FORMAT RUPIAH & ICONS SVG
 // ==========================================
+function parsePriceInt(val) {
+  if (typeof val === "number" && !isNaN(val)) {
+    return Math.round(val);
+  }
+  if (typeof val === "string") {
+    const cleaned = val.replace(/[^0-9]/g, "");
+    const parsed = parseInt(cleaned, 10);
+    return isNaN(parsed) ? 0 : parsed;
+  }
+  return 0;
+}
+
 function formatRupiah(amount) {
-  return "Rp " + Number(amount).toLocaleString("id-ID");
+  const safeAmount = parsePriceInt(amount);
+  return "Rp " + safeAmount.toLocaleString("id-ID");
 }
 
 function getProductSvg(type, color = "#111111") {
@@ -301,10 +314,79 @@ function getProductSvg(type, color = "#111111") {
 // ==========================================
 const CART_STORAGE_KEY = "fastender_po_cart";
 
+function findProductMetaById(productId) {
+  const numId = parseInt(productId, 10);
+  if (typeof window !== "undefined" && window.CURRENT_PRODUCT && parseInt(window.CURRENT_PRODUCT.id, 10) === numId) {
+    return window.CURRENT_PRODUCT;
+  }
+  if (typeof window !== "undefined" && Array.isArray(window.SERVER_PRODUCTS_CATALOG)) {
+    const serverProd = window.SERVER_PRODUCTS_CATALOG.find(p => parseInt(p.id, 10) === numId);
+    if (serverProd) return serverProd;
+  }
+  const allProds = getAllProducts();
+  if (Array.isArray(allProds)) {
+    const localProd = allProds.find(p => parseInt(p.id, 10) === numId && p.name && parsePriceInt(p.price) > 0);
+    if (localProd) return localProd;
+  }
+  return DEFAULT_SAMPLE_PRODUCTS.find(p => parseInt(p.id, 10) === numId) || DEFAULT_SAMPLE_PRODUCTS[0];
+}
+
+function normalizeCartItem(rawItem, index = 0) {
+  if (!rawItem || typeof rawItem !== "object") return null;
+
+  const rawId = parseInt(rawItem.id ?? rawItem.productId ?? (index + 1), 10) || 1;
+  const fallbackProd = findProductMetaById(rawId);
+
+  const rawName = String(rawItem.name ?? rawItem.title ?? rawItem.productName ?? "").trim();
+  const validName = (rawName && rawName !== "undefined" && rawName !== "null")
+    ? rawName
+    : (fallbackProd ? fallbackProd.name : "Varsity Jacket Angkatan 2026");
+
+  const parsedPrice = parsePriceInt(rawItem.price ?? rawItem.harga);
+  const validPrice = parsedPrice > 0
+    ? parsedPrice
+    : (fallbackProd ? parsePriceInt(fallbackProd.price) : 245000);
+
+  const parsedDp = parsePriceInt(rawItem.dpPrice ?? rawItem.dp_price ?? rawItem.dp);
+  const fallbackDp = fallbackProd ? parsePriceInt(fallbackProd.dpPrice ?? fallbackProd.dp_price) : 0;
+  const validDp = parsedDp > 0
+    ? parsedDp
+    : (fallbackDp > 0 ? fallbackDp : Math.round(validPrice * 0.5));
+
+  const validQty = Math.max(1, parseInt(rawItem.quantity ?? rawItem.qty ?? 1, 10) || 1);
+
+  const fallbackImages = (fallbackProd && Array.isArray(fallbackProd.images) && fallbackProd.images.length > 0)
+    ? fallbackProd.images[0]
+    : null;
+  const validImage = (rawItem.image && rawItem.image !== "undefined")
+    ? rawItem.image
+    : fallbackImages;
+
+  return {
+    id: rawId,
+    name: validName,
+    categoryName: rawItem.categoryName || rawItem.category_name || (fallbackProd ? (fallbackProd.categoryName || fallbackProd.category_name || "Apparel PO") : "Apparel PO"),
+    price: validPrice,
+    dpPrice: validDp,
+    iconType: rawItem.iconType || rawItem.icon_type || (fallbackProd ? (fallbackProd.iconType || fallbackProd.icon_type || "varsity") : "varsity"),
+    image: validImage,
+    size: (rawItem.size && rawItem.size !== "undefined") ? String(rawItem.size) : "L",
+    color: (rawItem.color && rawItem.color !== "undefined") ? String(rawItem.color) : "Standar",
+    customText: (rawItem.customText && rawItem.customText !== "undefined") ? String(rawItem.customText) : "",
+    quantity: validQty
+  };
+}
+
 function getCart() {
   try {
     const raw = localStorage.getItem(CART_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    const normalized = parsed
+      .map((item, idx) => normalizeCartItem(item, idx))
+      .filter(Boolean);
+    return normalized;
   } catch (e) {
     console.error("Gagal membaca cart dari localStorage", e);
     return [];
@@ -313,57 +395,61 @@ function getCart() {
 
 function saveCart(cart) {
   try {
-    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+    const normalized = Array.isArray(cart)
+      ? cart.map((item, idx) => normalizeCartItem(item, idx)).filter(Boolean)
+      : [];
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(normalized));
     updateCartBadge();
   } catch (e) {
     console.error("Gagal menyimpan cart ke localStorage", e);
   }
 }
 
-function addToCart(productId, quantity = 1, size = "L", color = "", customText = "") {
-  const allProds = getAllProducts();
-  let product = allProds.find(p => p.id === Number(productId));
-  if (!product) {
-    product = DEFAULT_SAMPLE_PRODUCTS.find(p => p.id === Number(productId));
-  }
+function addToCart(productId, quantity = 1, size = "L", color = "Standar", customText = "") {
+  const product = (typeof productId === "object" && productId !== null)
+    ? productId
+    : findProductMetaById(productId);
   if (!product) return false;
 
+  const normalizedNew = normalizeCartItem({
+    id: product.id,
+    name: product.name,
+    categoryName: product.categoryName || product.category_name,
+    price: product.price,
+    dpPrice: product.dpPrice || product.dp_price,
+    iconType: product.iconType || product.icon_type,
+    image: (product.images && product.images.length > 0) ? product.images[0] : product.image,
+    size: size || (product.sizes && product.sizes.length > 0 ? product.sizes[0] : "L"),
+    color: color || (product.colors && product.colors.length > 0 ? product.colors[0] : "Standar"),
+    customText: customText || "",
+    quantity: quantity
+  });
+
   const cart = getCart();
-  const existingIndex = cart.findIndex(item => 
-    item.id === product.id && item.size === size && item.color === color && item.customText === customText
+  const existingIndex = cart.findIndex(item =>
+    item.id === normalizedNew.id &&
+    item.size === normalizedNew.size &&
+    item.color === normalizedNew.color &&
+    item.customText === normalizedNew.customText
   );
 
-  const thumbImg = (product.images && product.images.length > 0) ? product.images[0] : null;
-
   if (existingIndex > -1) {
-    cart[existingIndex].quantity += Number(quantity);
-    if (!cart[existingIndex].image && thumbImg) {
-      cart[existingIndex].image = thumbImg;
+    cart[existingIndex].quantity = (parseInt(cart[existingIndex].quantity, 10) || 1) + normalizedNew.quantity;
+    if (!cart[existingIndex].image && normalizedNew.image) {
+      cart[existingIndex].image = normalizedNew.image;
     }
   } else {
-    cart.push({
-      id: product.id,
-      name: product.name,
-      categoryName: product.categoryName,
-      price: product.price,
-      dpPrice: product.dpPrice,
-      iconType: product.iconType,
-      image: thumbImg,
-      size: size || (product.sizes ? product.sizes[0] : "All Size"),
-      color: color || (product.colors ? product.colors[0] : "Standar"),
-      customText: customText,
-      quantity: Number(quantity)
-    });
+    cart.push(normalizedNew);
   }
 
   saveCart(cart);
-  showToast(`"${product.name}" berhasil ditambahkan ke keranjang!`, "success");
+  showToast(`"${normalizedNew.name}" berhasil ditambahkan ke keranjang!`, "success");
   return true;
 }
 
 function updateCartBadge() {
   const cart = getCart();
-  const totalCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const totalCount = cart.reduce((acc, item) => acc + (parseInt(item.quantity, 10) || 0), 0);
   const badgeEls = document.querySelectorAll(".cart-badge");
   badgeEls.forEach(badge => {
     badge.textContent = totalCount;

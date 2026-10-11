@@ -62,8 +62,12 @@
   </div>
 </footer>
 
+<!-- Data Katalog Server untuk Sinkronisasi Keranjang & Checkout -->
+<script>
+  window.SERVER_PRODUCTS_CATALOG = <?= json_encode(function_exists('getProductsList') ? getProductsList() : []) ?>;
+</script>
 <!-- Swiper Slider JS & Shared JavaScript -->
 <script src="js/swiper-bundle.min.js"></script>
-<script src="js/script.js"></script>
+<script src="js/script.js?v=<?= file_exists(__DIR__ . '/../js/script.js') ? filemtime(__DIR__ . '/../js/script.js') : '1' ?>"></script>
 </body>
 </html>
