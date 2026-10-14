@@ -9,6 +9,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Set zona waktu default ke Waktu Indonesia Barat (WIB)
+date_default_timezone_set('Asia/Jakarta');
+
 require_once __DIR__ . '/../config/database.php';
 
 // Path data JSON untuk fallback jika MySQL belum diimport/aktif
@@ -50,15 +53,125 @@ function requireAdminLogin() {
 // ----------------------------------------------------
 
 /**
- * Mengambil semua produk yang tersimpan (dari DB MySQL atau fallback file JSON)
+ * Daftar 9 kategori resmi produk Fastender
  */
-function getProductsList() {
+function getProductCategoriesMap() {
+    return [
+        'POLSTUFF' => 'POLSTUFF',
+        'POLNEEDS' => 'POLNEEDS',
+        'Workshirt' => 'Workshirt',
+        'Jas almamater' => 'Jas almamater',
+        'Jas Lab' => 'Jas Lab',
+        'Kaos' => 'Kaos',
+        'Keychain' => 'Keychain',
+        'Totebag' => 'Totebag',
+        'Sticker' => 'Sticker'
+    ];
+}
+
+/**
+ * Menentukan kategori induk (POLSTUFF / POLNEEDS) dari nama kategori produk
+ */
+function resolveParentCategory($category) {
+    $catLower = strtolower(trim((string)$category));
+    if (in_array($catLower, ['kaos', 'keychain', 'totebag', 'sticker', 'polstuff'], true)) {
+        return 'POLSTUFF';
+    }
+    if (in_array($catLower, ['workshirt', 'jas almamater', 'jas lab', 'polneeds'], true)) {
+        return 'POLNEEDS';
+    }
+    return '';
+}
+
+/**
+ * Mengecek apakah sebuah item produk cocok dengan filter kategori (termasuk kategori induk POLSTUFF & POLNEEDS)
+ */
+function isProductMatchingCategory($product, $kategori = '') {
+    $kategori = trim((string)$kategori);
+    if ($kategori === '' || strtolower($kategori) === 'all') {
+        return true;
+    }
+
+    $katLower = strtolower($kategori);
+    $pCat = strtolower(trim((string)($product['category'] ?? '')));
+    $pCatName = strtolower(trim((string)($product['category_name'] ?? '')));
+    $pParent = strtolower(trim((string)($product['parent_kategori'] ?? '')));
+
+    if ($katLower === 'polstuff') {
+        $polstuffSubs = ['kaos', 'keychain', 'totebag', 'sticker', 'polstuff'];
+        return in_array($pCat, $polstuffSubs, true) || in_array($pCatName, $polstuffSubs, true) || $pParent === 'polstuff';
+    }
+
+    if ($katLower === 'polneeds') {
+        $polneedsSubs = ['workshirt', 'jas almamater', 'jas lab', 'polneeds'];
+        return in_array($pCat, $polneedsSubs, true) || in_array($pCatName, $polneedsSubs, true) || $pParent === 'polneeds';
+    }
+
+    return ($pCat === $katLower || $pCatName === $katLower);
+}
+
+/**
+ * Memastikan kolom parent_kategori tersedia di tabel products MySQL
+ */
+function ensureProductsParentCategoryColumn($pdo) {
+    static $checked = false;
+    if ($checked || !$pdo) {
+        return;
+    }
+    $checked = true;
+    try {
+        $colCheck = $pdo->query("SHOW COLUMNS FROM products LIKE 'parent_kategori'");
+        if ($colCheck && $colCheck->rowCount() === 0) {
+            $pdo->exec("ALTER TABLE products ADD COLUMN parent_kategori VARCHAR(50) DEFAULT NULL AFTER category_name");
+        }
+    } catch (Exception $e) {
+        // Abaikan jika gagal
+    }
+}
+
+/**
+ * Mengambil semua produk yang tersimpan (dari DB MySQL atau fallback file JSON),
+ * mendukung filter kategori spesifik maupun pengelompokan kategori induk (POLSTUFF & POLNEEDS)
+ */
+function getProductsList($kategori = '') {
+    $kategori = trim((string)$kategori);
+    $hasCategoryFilter = ($kategori !== '' && strtolower($kategori) !== 'all');
+    $katUpper = strtoupper($kategori);
+
     $pdo = getDbConnection();
     if ($pdo) {
         try {
-            $stmt = $pdo->query("SELECT * FROM products ORDER BY id DESC");
-            $products = $stmt->fetchAll();
-            if (!empty($products)) {
+            ensureProductsParentCategoryColumn($pdo);
+            $totalStmt = $pdo->query("SELECT COUNT(*) FROM products");
+            $totalInDb = $totalStmt ? (int)$totalStmt->fetchColumn() : 0;
+
+            if ($totalInDb > 0) {
+                if (!$hasCategoryFilter) {
+                    $stmt = $pdo->query("SELECT * FROM products ORDER BY id DESC");
+                } elseif ($katUpper === 'POLSTUFF') {
+                    $stmt = $pdo->prepare("
+                        SELECT * FROM products
+                        WHERE category IN ('Kaos', 'Keychain', 'Totebag', 'Sticker', 'POLSTUFF')
+                           OR category_name IN ('Kaos', 'Keychain', 'Totebag', 'Sticker', 'POLSTUFF')
+                           OR parent_kategori = 'POLSTUFF'
+                        ORDER BY id DESC
+                    ");
+                    $stmt->execute();
+                } elseif ($katUpper === 'POLNEEDS') {
+                    $stmt = $pdo->prepare("
+                        SELECT * FROM products
+                        WHERE category IN ('Workshirt', 'Jas almamater', 'Jas Lab', 'POLNEEDS')
+                           OR category_name IN ('Workshirt', 'Jas almamater', 'Jas Lab', 'POLNEEDS')
+                           OR parent_kategori = 'POLNEEDS'
+                        ORDER BY id DESC
+                    ");
+                    $stmt->execute();
+                } else {
+                    $stmt = $pdo->prepare("SELECT * FROM products WHERE category = :kategori OR category_name = :kategori ORDER BY id DESC");
+                    $stmt->execute([':kategori' => $kategori]);
+                }
+
+                $products = $stmt->fetchAll();
                 foreach ($products as &$p) {
                     // Ambil foto-foto produk
                     $imgStmt = $pdo->prepare("SELECT image_path FROM product_images WHERE product_id = ? ORDER BY is_primary DESC, id ASC");
@@ -68,6 +181,9 @@ function getProductsList() {
                     $p['specs'] = !empty($p['specs']) ? explode(',', $p['specs']) : [];
                     $p['sizes'] = !empty($p['sizes']) ? explode(',', $p['sizes']) : ['S', 'M', 'L', 'XL', 'XXL', '3XL'];
                     $p['colors'] = !empty($p['colors']) ? explode(',', $p['colors']) : ['Navy', 'Hitam', 'Maroon', 'Putih'];
+                    if (empty($p['parent_kategori'])) {
+                        $p['parent_kategori'] = resolveParentCategory($p['category'] ?? ($p['category_name'] ?? ''));
+                    }
                 }
                 return $products;
             }
@@ -77,16 +193,34 @@ function getProductsList() {
     }
 
     // Fallback file JSON
+    $list = null;
     if (file_exists(DATA_PRODUCTS_FILE)) {
         $json = file_get_contents(DATA_PRODUCTS_FILE);
         $data = json_decode($json, true);
-        if (is_array($data) && !empty($data)) {
-            return $data;
+        if (is_array($data)) {
+            $list = $data;
         }
     }
 
-    // Default mode: Array dinamis katalog produk 2026
-    return getDefaultCatalogProducts();
+    if ($list === null) {
+        // Default mode: Array dinamis katalog produk 2026
+        $list = getDefaultCatalogProducts();
+    }
+
+    foreach ($list as &$item) {
+        if (empty($item['parent_kategori'])) {
+            $item['parent_kategori'] = resolveParentCategory($item['category'] ?? ($item['category_name'] ?? ''));
+        }
+    }
+    unset($item);
+
+    if ($hasCategoryFilter) {
+        $list = array_values(array_filter($list, function($p) use ($kategori) {
+            return isProductMatchingCategory($p, $kategori);
+        }));
+    }
+
+    return $list;
 }
 
 /**
@@ -96,60 +230,60 @@ function getDefaultCatalogProducts() {
     return [
         [
             'id' => 1,
-            'name' => 'Varsity Jacket Angkatan 2026',
-            'category' => 'jaket',
-            'category_name' => 'Jaket & Varsity',
-            'price' => 245000,
-            'dp_price' => 122500,
+            'name' => 'Workshirt Angkatan 2026',
+            'category' => 'Workshirt',
+            'category_name' => 'Workshirt',
+            'price' => 145000,
+            'dp_price' => 75000,
             'quota_target' => 100,
             'quota_current' => 64,
             'batch' => 'Batch 1',
             'badge' => 'Terpopuler',
             'images' => ['assets/images/gambar1.jpg'],
-            'specs' => ['Bahan Wol Tebal & Lengan Kulit Sintetis', 'Bordir Komputer High Density', 'Furing Despo Halus'],
+            'specs' => ['Bahan American Drill Grade A', 'Bordir Komputer High Density', 'Jahitan Rantai Kuat'],
             'sizes' => ['S', 'M', 'L', 'XL', 'XXL', '3XL'],
             'colors' => ['Navy & White', 'Black & Cream', 'Forest Green'],
-            'description' => 'Varsity jacket edisi angkatan 2026 dengan material wool fleece premium kombinasi lengan semi-kulit sintetis fleksibel.'
+            'description' => 'Workshirt edisi angkatan 2026 dengan material American drill premium kombinasi bordir komputer presisi tinggi.'
         ],
         [
             'id' => 2,
-            'name' => 'Kemeja PDH Drill Bordir Komputer',
-            'category' => 'pdh',
-            'category_name' => 'Kemeja PDH',
-            'price' => 135000,
-            'dp_price' => 70000,
+            'name' => 'Jas Almamater Kampus Polinema',
+            'category' => 'Jas almamater',
+            'category_name' => 'Jas almamater',
+            'price' => 185000,
+            'dp_price' => 95000,
             'quota_target' => 150,
             'quota_current' => 112,
             'batch' => 'Batch 1',
             'badge' => 'Best Seller',
             'images' => ['assets/images/gambar2.jpg'],
-            'specs' => ['Bahan American Drill Grade A', 'Bordir 4 Titik Presisi', 'Jahitan Rantai Kuat'],
+            'specs' => ['Bahan Twist Drill Tebal', 'Furing Dormeuil Adem', 'Kancing Kuningan Berlogo'],
             'sizes' => ['S', 'M', 'L', 'XL', 'XXL', '3XL'],
-            'colors' => ['Navy Blue', 'Hitam Elegan', 'Abu Khaki'],
-            'description' => 'Kemeja PDH dinas harian mahasiswa dan organisasi dengan bahan American drill dingin, tidak mudah kusut.'
+            'colors' => ['Navy Blue Resmi'],
+            'description' => 'Jas almamater resmi mahasiswa dengan bahan twist drill rapi, furing adem, dan potongan formal presisi.'
         ],
         [
             'id' => 3,
-            'name' => 'Heavyweight Hoodie 330gsm 2026',
-            'category' => 'hoodie',
-            'category_name' => 'Hoodie & Sweatshirt',
-            'price' => 185000,
-            'dp_price' => 95000,
+            'name' => 'Jas Lab Praktikum Lengan Panjang',
+            'category' => 'Jas Lab',
+            'category_name' => 'Jas Lab',
+            'price' => 125000,
+            'dp_price' => 65000,
             'quota_target' => 80,
             'quota_current' => 58,
             'batch' => 'Batch 1',
-            'badge' => 'Edisi Terbatas',
+            'badge' => 'Wajib Praktikum',
             'images' => ['assets/images/gambar3.jpg'],
-            'specs' => ['Cotton Fleece 330 GSM Super Tebal', 'Boxy Cut Silhouette', 'Tali Hood Tebal Anti Melar'],
-            'sizes' => ['M', 'L', 'XL', 'XXL'],
-            'colors' => ['Charcoal Grey', 'Deep Forest', 'Pure Black'],
-            'description' => 'Hoodie boxy fit berbahan katun fleece 330 gsm tebal, nyaman, dan hangat dengan sablon timbul grafis angkatan.'
+            'specs' => ['Bahan Oxford Tebal Standar Lab', 'Saku Depan & Samping', 'Mudah Dicuci & Setrika'],
+            'sizes' => ['S', 'M', 'L', 'XL', 'XXL'],
+            'colors' => ['Putih Bersih'],
+            'description' => 'Jas laboratorium standar praktikum kampus dan bengkel dengan bahan Oxford tebal dan nyaman dipakai.'
         ],
         [
             'id' => 4,
             'name' => 'T-Shirt Cotton Combed 24s Sablon',
-            'category' => 'kaos',
-            'category_name' => 'Kaos Angkatan',
+            'category' => 'Kaos',
+            'category_name' => 'Kaos',
             'price' => 95000,
             'dp_price' => 50000,
             'quota_target' => 200,
@@ -164,26 +298,26 @@ function getDefaultCatalogProducts() {
         ],
         [
             'id' => 5,
-            'name' => 'Coach Jacket Windbreaker 2026',
-            'category' => 'jaket',
-            'category_name' => 'Jaket & Varsity',
-            'price' => 195000,
-            'dp_price' => 100000,
+            'name' => 'Paket Starter Kit POLNEEDS 2026',
+            'category' => 'POLNEEDS',
+            'category_name' => 'POLNEEDS',
+            'price' => 115000,
+            'dp_price' => 60000,
             'quota_target' => 75,
             'quota_current' => 42,
             'batch' => 'Batch 1',
             'badge' => 'Baru',
             'images' => ['assets/images/gambar2.jpg'],
-            'specs' => ['Micro Taslan Water-Repellent', 'Kancing Snap Logam Anti Karat', 'Saku Dalam Rahasia'],
-            'sizes' => ['S', 'M', 'L', 'XL', 'XXL'],
-            'colors' => ['Hitam Onyx', 'Army Green', 'Navy Blue'],
-            'description' => 'Coach jacket tahan angin dan cipratan air dengan furing katun adem, sangat stylish untuk aktivitas lapangan.'
+            'specs' => ['Perlengkapan Mahasiswa Baru', 'Kualitas Original USMA', 'Kemasan Eksklusif'],
+            'sizes' => ['All Size'],
+            'colors' => ['Standar'],
+            'description' => 'Paket perlengkapan kebutuhan kuliah mahasiswa Polinema (POLNEEDS) praktis dan ekonomis.'
         ],
         [
             'id' => 6,
-            'name' => 'Canvas Totebag & Lanyard Merch Set',
-            'category' => 'merch',
-            'category_name' => 'Merchandise & Aksesoris',
+            'name' => 'Canvas Totebag & Keychain POLSTUFF',
+            'category' => 'Totebag',
+            'category_name' => 'Totebag',
             'price' => 75000,
             'dp_price' => 40000,
             'quota_target' => 120,
@@ -191,10 +325,10 @@ function getDefaultCatalogProducts() {
             'batch' => 'Batch 1',
             'badge' => 'Merch Resmi',
             'images' => ['assets/images/gambar3.jpg'],
-            'specs' => ['Kanvas Tebal 12oz dengan Resleting', 'Lanyard Tisu Cetak 2 Sisi', 'Bonus 3 Sticker Pack Vinyl'],
+            'specs' => ['Kanvas Tebal 12oz dengan Resleting', 'Sablon High Quality', 'Bonus Sticker Pack Vinyl'],
             'sizes' => ['One Size (All Sizes)'],
             'colors' => ['Off-White Canvas', 'Midnight Black'],
-            'description' => 'Paket aksesoris merchandise resmi angkatan 2026 berisi tote bag kanvas zipper kuat dan lanyard id card eksklusif.'
+            'description' => 'Totebag kanvas tebal 12oz dengan resleting kuat, cocok untuk kuliah dan aktivitas harian.'
         ]
     ];
 }
@@ -230,15 +364,9 @@ function saveNewProduct($postData, $filesData = null) {
     
     $name = sanitize($postData['name'] ?? '');
     $subtitle = sanitize($postData['subtitle'] ?? '');
-    $category = sanitize($postData['category'] ?? 'jaket');
-    $categoryNames = [
-        'jaket' => 'Jaket & Varsity',
-        'pdh' => 'Kemeja PDH',
-        'hoodie' => 'Hoodie & Sweatshirt',
-        'kaos' => 'Kaos Angkatan',
-        'merch' => 'Merchandise & Aksesoris'
-    ];
-    $categoryName = $categoryNames[$category] ?? 'Apparel PO';
+    $category = sanitize($postData['category'] ?? 'POLSTUFF');
+    $categoryNames = getProductCategoriesMap();
+    $categoryName = $categoryNames[$category] ?? $category;
     $price = (int)($postData['price'] ?? 0);
     $dpPrice = (int)($postData['dp_price'] ?? round($price * 0.5));
     $quotaTarget = (int)($postData['quota_target'] ?? 100);
@@ -276,8 +404,8 @@ function saveNewProduct($postData, $filesData = null) {
         }
     }
 
-    // 2. Cek juga jika ada base64 photos dari drag-and-drop / dropzone JS
-    if (!empty($postData['base64_images'])) {
+    // 2. Cek juga jika ada base64 photos dari drag-and-drop / dropzone JS (jika belum terproses dari $_FILES)
+    if (empty($savedImages) && !empty($postData['base64_images'])) {
         $b64List = json_decode($postData['base64_images'], true);
         if (is_array($b64List)) {
             if (!is_dir(UPLOAD_DIR)) {
@@ -299,6 +427,10 @@ function saveNewProduct($postData, $filesData = null) {
         }
     }
 
+    $specsArray = array_values(array_filter(array_map('trim', explode(',', $specs)), function($s) {
+        return $s !== '';
+    }));
+
     $newId = time();
 
     // Simpan ke MySQL jika PDO aktif
@@ -311,7 +443,7 @@ function saveNewProduct($postData, $filesData = null) {
             ");
             $stmt->execute([
                 $name, $subtitle, $category, $categoryName, $price, $dpPrice, 
-                $quotaCurrent, $quotaTarget, $badge, $batch, $desc, $specs, $iconType
+                $quotaCurrent, $quotaTarget, $badge, $batch, $desc, implode(', ', $specsArray), $iconType
             ]);
             $newId = (int)$pdo->lastInsertId();
 
@@ -343,7 +475,7 @@ function saveNewProduct($postData, $filesData = null) {
         'badge' => $badge,
         'batch' => $batch,
         'description' => $desc,
-        'specs' => explode(',', $specs),
+        'specs' => $specsArray,
         'sizes' => ['S', 'M', 'L', 'XL', 'XXL', '3XL'],
         'colors' => ['Navy', 'Hitam', 'Maroon', 'Putih'],
         'icon_type' => $iconType,
@@ -353,6 +485,179 @@ function saveNewProduct($postData, $filesData = null) {
     file_put_contents(DATA_PRODUCTS_FILE, json_encode($all, JSON_PRETTY_PRINT));
 
     return $newId;
+}
+
+/**
+ * Memperbarui data produk berdasarkan ID (Mode Edit) beserta penanganan ganti/pertahankan foto
+ */
+function updateProductById($id, $postData, $filesData = null) {
+    $id = (int)$id;
+    if ($id <= 0) {
+        return false;
+    }
+
+    $existingProduct = getProductById($id);
+    if (!$existingProduct) {
+        return false;
+    }
+
+    $pdo = getDbConnection();
+
+    $name = sanitize($postData['name'] ?? ($existingProduct['name'] ?? ''));
+    $subtitle = sanitize($postData['subtitle'] ?? ($existingProduct['subtitle'] ?? ''));
+    $category = sanitize($postData['category'] ?? ($existingProduct['category'] ?? 'POLSTUFF'));
+    $categoryNames = getProductCategoriesMap();
+    $categoryName = $categoryNames[$category] ?? $category;
+    $price = (int)($postData['price'] ?? ($existingProduct['price'] ?? 0));
+    $dpPrice = (int)($postData['dp_price'] ?? round($price * 0.5));
+    $quotaTarget = max(1, (int)($postData['quota_target'] ?? ($existingProduct['quota_target'] ?? 100)));
+    $quotaCurrent = max(0, (int)($postData['quota_current'] ?? ($existingProduct['quota_current'] ?? 0)));
+    $batch = sanitize($postData['batch'] ?? ($existingProduct['batch'] ?? 'Batch 1'));
+    $badge = sanitize($postData['badge'] ?? ($existingProduct['badge'] ?? 'PO Baru'));
+    $desc = sanitize($postData['description'] ?? ($existingProduct['description'] ?? ''));
+    $specsRaw = sanitize($postData['specs'] ?? '');
+    $specsArray = array_values(array_filter(array_map('trim', explode(',', $specsRaw)), function($s) {
+        return $s !== '';
+    }));
+    if (empty($specsArray) && !empty($existingProduct['specs'])) {
+        $specsArray = is_array($existingProduct['specs'])
+            ? $existingProduct['specs']
+            : array_map('trim', explode(',', (string)$existingProduct['specs']));
+    }
+    $iconType = sanitize($postData['icon_type'] ?? ($existingProduct['icon_type'] ?? 'varsity'));
+
+    // Cek apakah admin mengunggah file foto baru
+    $newUploadedImages = [];
+
+    // 1. Cek dari $_FILES['product_images']
+    if (!empty($filesData['name']) && is_array($filesData['name'])) {
+        if (!is_dir(UPLOAD_DIR)) {
+            mkdir(UPLOAD_DIR, 0777, true);
+        }
+        $totalFiles = count($filesData['name']);
+        for ($i = 0; $i < $totalFiles; $i++) {
+            if ($filesData['error'][$i] === UPLOAD_ERR_OK) {
+                $tmpName = $filesData['tmp_name'][$i];
+                $originalName = basename($filesData['name'][$i]);
+                $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+                if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true)) {
+                    $newFileName = 'prod_' . time() . '_' . uniqid() . '.' . $ext;
+                    $targetPath = UPLOAD_DIR . $newFileName;
+                    if (move_uploaded_file($tmpName, $targetPath)) {
+                        $newUploadedImages[] = 'uploads/products/' . $newFileName;
+                    }
+                }
+            }
+        }
+    }
+
+    // 2. Cek dari base64_images (jika user drag-and-drop foto baru dan $_FILES kosong)
+    if (empty($newUploadedImages) && !empty($postData['base64_images'])) {
+        $b64List = json_decode($postData['base64_images'], true);
+        if (is_array($b64List)) {
+            if (!is_dir(UPLOAD_DIR)) {
+                mkdir(UPLOAD_DIR, 0777, true);
+            }
+            foreach ($b64List as $b64) {
+                if (is_string($b64) && preg_match('/^data:image\/(\w+);base64,/', $b64, $type)) {
+                    $b64Data = substr($b64, strpos($b64, ',') + 1);
+                    $ext = strtolower($type[1]);
+                    if ($ext === 'jpeg') $ext = 'jpg';
+                    $decoded = base64_decode($b64Data);
+                    if ($decoded !== false) {
+                        $newFileName = 'prod_' . time() . '_' . uniqid() . '.' . $ext;
+                        file_put_contents(UPLOAD_DIR . $newFileName, $decoded);
+                        $newUploadedImages[] = 'uploads/products/' . $newFileName;
+                    }
+                }
+            }
+        }
+    }
+
+    $existingImages = is_array($existingProduct['images'] ?? null) ? $existingProduct['images'] : [];
+
+    // Jika ada foto baru yang diunggah, hapus file foto lama di uploads/products/ dan gunakan foto baru.
+    // Jika tidak ada foto baru yang diunggah, pertahankan foto lama tanpa menimpanya menjadi kosong/null.
+    if (!empty($newUploadedImages)) {
+        foreach ($existingImages as $oldImg) {
+            $cleanOld = ltrim(str_replace(['..', '\\'], ['', '/'], (string)$oldImg), '/');
+            if ($cleanOld !== '' && strpos($cleanOld, 'uploads/products/') === 0) {
+                $fullOldPath = __DIR__ . '/../' . $cleanOld;
+                if (is_file($fullOldPath)) {
+                    @unlink($fullOldPath);
+                }
+            }
+        }
+        $finalImages = $newUploadedImages;
+    } else {
+        $finalImages = $existingImages;
+    }
+
+    // Update ke MySQL jika PDO aktif
+    if ($pdo) {
+        try {
+            $stmt = $pdo->prepare("
+                UPDATE products
+                SET name = ?, subtitle = ?, category = ?, category_name = ?,
+                    price = ?, dp_price = ?, quota_current = ?, quota_target = ?,
+                    badge = ?, batch = ?, description = ?, specs = ?, icon_type = ?
+                WHERE id = ?
+            ");
+            $stmt->execute([
+                $name, $subtitle, $category, $categoryName,
+                $price, $dpPrice, $quotaCurrent, $quotaTarget,
+                $badge, $batch, $desc, implode(', ', $specsArray), $iconType,
+                $id
+            ]);
+
+            if (!empty($newUploadedImages)) {
+                $delImgStmt = $pdo->prepare("DELETE FROM product_images WHERE product_id = ?");
+                $delImgStmt->execute([$id]);
+
+                $insImgStmt = $pdo->prepare("INSERT INTO product_images (product_id, image_path, is_primary) VALUES (?, ?, ?)");
+                foreach ($finalImages as $idx => $path) {
+                    $isPrimary = ($idx === 0) ? 1 : 0;
+                    $insImgStmt->execute([$id, $path, $isPrimary]);
+                }
+            }
+        } catch (Exception $e) {
+            // Lanjutkan update ke JSON fallback
+        }
+    }
+
+    // Update ke file JSON data/products.json
+    $all = getProductsList();
+    $updatedInList = false;
+    foreach ($all as &$prodItem) {
+        if ((int)($prodItem['id'] ?? 0) === $id) {
+            $prodItem['name'] = $name;
+            $prodItem['subtitle'] = $subtitle;
+            $prodItem['category'] = $category;
+            $prodItem['category_name'] = $categoryName;
+            $prodItem['price'] = $price;
+            $prodItem['dp_price'] = $dpPrice;
+            $prodItem['quota_current'] = $quotaCurrent;
+            $prodItem['quota_target'] = $quotaTarget;
+            $prodItem['badge'] = $badge;
+            $prodItem['batch'] = $batch;
+            $prodItem['description'] = $desc;
+            $prodItem['specs'] = $specsArray;
+            $prodItem['icon_type'] = $iconType;
+            $prodItem['images'] = $finalImages;
+            $updatedInList = true;
+            break;
+        }
+    }
+    unset($prodItem);
+
+    if ($updatedInList) {
+        if (!is_dir(dirname(DATA_PRODUCTS_FILE))) {
+            mkdir(dirname(DATA_PRODUCTS_FILE), 0777, true);
+        }
+        file_put_contents(DATA_PRODUCTS_FILE, json_encode($all, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+    }
+
+    return true;
 }
 
 /**
@@ -664,6 +969,14 @@ function ensureOrdersTableSchema($pdo) {
  * Memproses checkout baru beserta validasi & penyimpanan bukti pembayaran
  */
 function processNewCheckoutOrder($postData, $fileData) {
+    // 0. Validasi Periode Pre-Order (Deadline Countdown)
+    if (!isPreOrderActive()) {
+        return [
+            'success' => false,
+            'message' => 'Periode Pre-Order Batch ini telah berakhir. Checkout saat ini ditutup.'
+        ];
+    }
+
     // 1. Validasi keberadaan dan error file bukti pembayaran
     if (empty($fileData) || !isset($fileData['error']) || $fileData['error'] === UPLOAD_ERR_NO_FILE) {
         return [
@@ -1066,6 +1379,505 @@ function getAllOrdersList() {
     ];
 }
 
+/**
+ * Mencari detail pesanan & riwayat timeline berdasarkan nomor resi dari database / file orders.json
+ */
+function findOrderByResi($resi) {
+    $resi = trim((string)$resi);
+    if ($resi === '') {
+        return null;
+    }
+
+    $foundRow = null;
+    $orderItems = [];
+
+    // 1. Cari di database MySQL (tabel orders / pesanan)
+    $pdo = getDbConnection();
+    if ($pdo) {
+        try {
+            $stmt = $pdo->prepare("SELECT * FROM orders WHERE UPPER(order_code) = UPPER(:resi) LIMIT 1");
+            $stmt->execute([':resi' => $resi]);
+            $row = $stmt->fetch();
+            if ($row) {
+                $foundRow = $row;
+                if (!empty($row['id'])) {
+                    $stmtItems = $pdo->prepare("SELECT * FROM order_items WHERE order_id = ? ORDER BY id ASC");
+                    $stmtItems->execute([(int)$row['id']]);
+                    $orderItems = $stmtItems->fetchAll();
+                }
+            } else {
+                $stmtP = $pdo->prepare("SELECT * FROM pesanan WHERE UPPER(order_code) = UPPER(:resi) LIMIT 1");
+                $stmtP->execute([':resi' => $resi]);
+                $rowP = $stmtP->fetch();
+                if ($rowP) {
+                    $foundRow = [
+                        'order_code' => $rowP['order_code'],
+                        'customer_name' => $rowP['nama_pemesan'] ?? '-',
+                        'jurusan' => $rowP['jurusan'] ?? '-',
+                        'organization' => $rowP['jurusan'] ?? '-',
+                        'shipping_address' => $rowP['alamat_pengiriman'] ?? '-',
+                        'province' => $rowP['provinsi'] ?? '-',
+                        'city' => $rowP['kota'] ?? '-',
+                        'courier' => $rowP['ekspedisi'] ?? '-',
+                        'payment_scheme' => $rowP['skema_pembayaran'] ?? 'dp',
+                        'payment_status' => ($rowP['skema_pembayaran'] ?? 'dp') === 'full' ? 'Lunas 100%' : 'DP 50%',
+                        'production_status' => $rowP['status_pesanan'] ?? 'Menunggu Konfirmasi Admin',
+                        'created_at' => $rowP['created_at'] ?? date('Y-m-d H:i:s')
+                    ];
+                }
+            }
+        } catch (Exception $e) {
+            // Lanjut cek JSON storage
+        }
+    }
+
+    // 2. Jika belum ditemukan di MySQL, cek di file JSON data/orders.json
+    if (!$foundRow && file_exists(DATA_ORDERS_FILE)) {
+        $rawJson = file_get_contents(DATA_ORDERS_FILE);
+        $decoded = json_decode($rawJson, true);
+        if (is_array($decoded)) {
+            foreach ($decoded as $item) {
+                $itemCode = trim((string)($item['order_code'] ?? ($item['orderId'] ?? '')));
+                if ($itemCode !== '' && strcasecmp($itemCode, $resi) === 0) {
+                    $foundRow = $item;
+                    if (!empty($item['items']) && is_array($item['items'])) {
+                        $orderItems = $item['items'];
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    if (!$foundRow) {
+        return null;
+    }
+
+    $orderCode = (string)($foundRow['order_code'] ?? ($foundRow['orderId'] ?? strtoupper($resi)));
+    $customerName = (string)($foundRow['customer_name'] ?? ($foundRow['customerName'] ?? '-'));
+    $org = (string)($foundRow['jurusan'] ?? ($foundRow['organization'] ?? ($foundRow['org'] ?? '-')));
+    if ($org === '') {
+        $org = '-';
+    }
+
+    $productName = 'Produk Pre-Order';
+    $productMeta = '1 pcs';
+    if (!empty($orderItems)) {
+        $first = $orderItems[0];
+        $productName = (string)($first['product_name'] ?? ($first['name'] ?? 'Produk Pre-Order'));
+        $size = (string)($first['size'] ?? 'L');
+        $color = (string)($first['color'] ?? 'Standar');
+        $totalQty = 0;
+        foreach ($orderItems as $it) {
+            $totalQty += (int)($it['quantity'] ?? 1);
+        }
+        $extraCount = count($orderItems) > 1 ? ' (+' . (count($orderItems) - 1) . ' item lainnya)' : '';
+        $productMeta = "Ukuran {$size}, Warna {$color} ({$totalQty} pcs){$extraCount}";
+    } elseif (!empty($foundRow['product_summary'])) {
+        $productName = (string)$foundRow['product_summary'];
+        $qty = (int)($foundRow['qty'] ?? 1);
+        $productMeta = "{$qty} pcs pesanan";
+    }
+
+    $city = trim((string)($foundRow['city'] ?? ''));
+    $province = trim((string)($foundRow['province'] ?? ''));
+    $shippingAddress = trim((string)($foundRow['shipping_address'] ?? ($foundRow['address'] ?? '')));
+    if (stripos($shippingAddress, 'Sekretariat USMA') !== false || ($city === '-' && $province === '-')) {
+        $destination = 'Ambil di Sekretariat USMA';
+    } elseif ($city !== '' && $city !== '-' && $province !== '' && $province !== '-') {
+        $destination = $city . ', ' . $province;
+    } elseif ($city !== '' && $city !== '-') {
+        $destination = $city;
+    } else {
+        $destination = $shippingAddress !== '' ? $shippingAddress : '-';
+    }
+
+    $paymentStatus = (string)($foundRow['payment_status'] ?? ($foundRow['paymentStatus'] ?? 'Menunggu Verifikasi'));
+    $productionStatus = (string)($foundRow['production_status'] ?? ($foundRow['productionStatus'] ?? 'Menunggu Konfirmasi Admin'));
+    $orderDate = !empty($foundRow['date'])
+        ? (string)$foundRow['date']
+        : (!empty($foundRow['created_at']) ? date('d M Y, H:i', strtotime($foundRow['created_at'])) . ' WIB' : date('d M Y'));
+
+    // Tentukan tahapan aktif berdasarkan status produksi
+    $prodLower = strtolower($productionStatus);
+    $currentStep = 1;
+    $estimatedDelivery = '14 - 21 Hari Kerja';
+    if (strpos($prodLower, 'selesai') !== false) {
+        $currentStep = 7; // Semua 6 langkah selesai
+        $estimatedDelivery = 'Pesanan Selesai Diterima';
+    } elseif (strpos($prodLower, 'pengiriman') !== false || strpos($prodLower, 'dikirim') !== false) {
+        $currentStep = 5;
+        $estimatedDelivery = 'Dalam Perjalanan Kurir';
+    } elseif (strpos($prodLower, 'quality') !== false || strpos($prodLower, 'qc') !== false) {
+        $currentStep = 4;
+        $estimatedDelivery = 'Segera Dikirim';
+    } elseif (strpos($prodLower, 'produksi') !== false) {
+        $currentStep = 3;
+        $estimatedDelivery = 'Estimasi 14 - 21 Hari';
+    } elseif (strpos($prodLower, 'kuota') !== false) {
+        $currentStep = 2;
+        $estimatedDelivery = 'Menunggu Penutupan Batch';
+    } else {
+        $currentStep = 1;
+    }
+
+    $rawSteps = [
+        [
+            'title' => 'Pesanan Masuk & Verifikasi Pembayaran',
+            'desc' => 'Status pembayaran: ' . $paymentStatus . '.',
+            'time' => $orderDate
+        ],
+        [
+            'title' => 'Penutupan Kuota Batch PO',
+            'desc' => 'Pengumpulan kuota pre-order batch angkatan dan penerbitan SPK produksi.',
+            'time' => $currentStep > 2 ? 'Terverifikasi' : ($currentStep === 2 ? 'Sedang Berlangsung' : 'Menunggu')
+        ],
+        [
+            'title' => 'Sedang Produksi Konveksi',
+            'desc' => 'Pemotongan bahan, penjahitan standar konveksi, dan proses bordir/sablon.',
+            'time' => $currentStep > 3 ? 'Selesai Produksi' : ($currentStep === 3 ? 'Sedang Dikerjakan' : 'Menunggu')
+        ],
+        [
+            'title' => 'Quality Check & Steam Ironing',
+            'desc' => 'Pemeriksaan kerapihan jahitan, detail bordir/sablon, dan kesesuaian ukuran.',
+            'time' => $currentStep > 4 ? 'Lolos QC' : ($currentStep === 4 ? 'Proses Pemeriksaan' : 'Menunggu')
+        ],
+        [
+            'title' => 'Packing & Pengiriman / Pengambilan',
+            'desc' => 'Pengemasan pesanan dan penyerahan ke kurir ekspedisi atau Sekretariat USMA.',
+            'time' => $currentStep > 5 ? 'Terkirim' : ($currentStep === 5 ? 'Dalam Pengiriman' : 'Menunggu')
+        ],
+        [
+            'title' => 'Pesanan Selesai Diterima',
+            'desc' => 'Pesanan telah diterima dengan baik oleh pemesan.',
+            'time' => $currentStep >= 6 ? 'Selesai' : 'Menunggu'
+        ]
+    ];
+
+    $timeline = [];
+    foreach ($rawSteps as $index => $stepItem) {
+        $stepNum = $index + 1;
+        $isDone = ($stepNum < $currentStep) || ($currentStep === 7);
+        $isCurrent = ($stepNum === $currentStep && $currentStep <= 6);
+        $isPending = !$isDone && !$isCurrent;
+        $timeline[] = [
+            'title' => $stepItem['title'],
+            'desc' => $stepItem['desc'],
+            'time' => $stepItem['time'],
+            'done' => $isDone,
+            'current' => $isCurrent,
+            'pending' => $isPending
+        ];
+    }
+
+    return [
+        'order_code' => $orderCode,
+        'customer_name' => $customerName,
+        'organization' => $org,
+        'product_name' => $productName,
+        'product_meta' => $productMeta,
+        'destination' => $destination,
+        'estimated_delivery' => $estimatedDelivery,
+        'payment_status' => $paymentStatus,
+        'production_status' => $productionStatus,
+        'timeline' => $timeline
+    ];
+}
+
+/**
+ * Menghapus pesanan berdasarkan kode resi / ID pesanan beserta file bukti pembayarannya
+ */
+function deleteOrderByCode($orderCode) {
+    $orderCode = trim((string)$orderCode);
+    if ($orderCode === '') {
+        return false;
+    }
+
+    $proofPathsToDelete = [];
+
+    // 1. Hapus dari MySQL jika koneksi tersedia
+    $pdo = getDbConnection();
+    if ($pdo) {
+        try {
+            $stmtFind = $pdo->prepare("SELECT id, bukti_pembayaran FROM orders WHERE order_code = ? OR id = ?");
+            $stmtFind->execute([$orderCode, $orderCode]);
+            while ($row = $stmtFind->fetch()) {
+                if (!empty($row['bukti_pembayaran'])) {
+                    $proofPathsToDelete[] = $row['bukti_pembayaran'];
+                }
+                if (!empty($row['id'])) {
+                    $delItems = $pdo->prepare("DELETE FROM order_items WHERE order_id = ?");
+                    $delItems->execute([(int)$row['id']]);
+                }
+            }
+
+            $stmtDelOrders = $pdo->prepare("DELETE FROM orders WHERE order_code = ? OR id = ?");
+            $stmtDelOrders->execute([$orderCode, $orderCode]);
+
+            $stmtFindPesanan = $pdo->prepare("SELECT bukti_pembayaran FROM pesanan WHERE order_code = ? OR id = ?");
+            $stmtFindPesanan->execute([$orderCode, $orderCode]);
+            while ($rowP = $stmtFindPesanan->fetch()) {
+                if (!empty($rowP['bukti_pembayaran'])) {
+                    $proofPathsToDelete[] = $rowP['bukti_pembayaran'];
+                }
+            }
+
+            $stmtDelPesanan = $pdo->prepare("DELETE FROM pesanan WHERE order_code = ? OR id = ?");
+            $stmtDelPesanan->execute([$orderCode, $orderCode]);
+        } catch (Exception $e) {
+            // Lanjutkan penghapusan pada JSON fallback
+        }
+    }
+
+    // 2. Hapus dari file JSON data/orders.json
+    $currentList = [];
+    if (file_exists(DATA_ORDERS_FILE)) {
+        $raw = file_get_contents(DATA_ORDERS_FILE);
+        $decoded = json_decode($raw, true);
+        if (is_array($decoded)) {
+            $currentList = $decoded;
+        }
+    } else {
+        $currentList = getAllOrdersList();
+    }
+
+    $filteredList = [];
+    foreach ($currentList as $item) {
+        $itemCode = (string)($item['order_code'] ?? ($item['orderId'] ?? ($item['id'] ?? '')));
+        if ($itemCode === $orderCode) {
+            if (!empty($item['bukti_pembayaran'])) {
+                $proofPathsToDelete[] = $item['bukti_pembayaran'];
+            }
+            continue;
+        }
+        $filteredList[] = $item;
+    }
+
+    if (!is_dir(dirname(DATA_ORDERS_FILE))) {
+        mkdir(dirname(DATA_ORDERS_FILE), 0777, true);
+    }
+    file_put_contents(DATA_ORDERS_FILE, json_encode(array_values($filteredList), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    // 3. Hapus file fisik bukti pembayaran jika ada di folder uploads/bukti_pembayaran/
+    $proofPathsToDelete = array_unique($proofPathsToDelete);
+    foreach ($proofPathsToDelete as $relPath) {
+        $cleanRel = ltrim(str_replace(['..', '\\'], ['', '/'], (string)$relPath), '/');
+        if ($cleanRel !== '' && strpos($cleanRel, 'uploads/bukti_pembayaran/') === 0) {
+            $fullFilePath = __DIR__ . '/../' . $cleanRel;
+            if (is_file($fullFilePath)) {
+                @unlink($fullFilePath);
+            }
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Memperbarui status pembayaran & status produksi pesanan di DB dan JSON
+ */
+function updateOrderStatusByCode($orderCode, $paymentStatus, $productionStatus) {
+    $orderCode = trim((string)$orderCode);
+    $paymentStatus = sanitize($paymentStatus);
+    $productionStatus = sanitize($productionStatus);
+    if ($orderCode === '') {
+        return false;
+    }
+
+    $pdo = getDbConnection();
+    if ($pdo) {
+        try {
+            $stmt = $pdo->prepare("UPDATE orders SET payment_status = ?, production_status = ? WHERE order_code = ?");
+            $stmt->execute([$paymentStatus, $productionStatus, $orderCode]);
+
+            $stmtP = $pdo->prepare("UPDATE pesanan SET status_pesanan = ? WHERE order_code = ?");
+            $stmtP->execute([$productionStatus, $orderCode]);
+        } catch (Exception $e) {}
+    }
+
+    $currentList = [];
+    if (file_exists(DATA_ORDERS_FILE)) {
+        $raw = file_get_contents(DATA_ORDERS_FILE);
+        $decoded = json_decode($raw, true);
+        if (is_array($decoded)) {
+            $currentList = $decoded;
+        }
+    } else {
+        $currentList = getAllOrdersList();
+    }
+
+    foreach ($currentList as &$item) {
+        $itemCode = (string)($item['order_code'] ?? ($item['orderId'] ?? ''));
+        if ($itemCode === $orderCode) {
+            $item['payment_status'] = $paymentStatus;
+            $item['paymentStatus'] = $paymentStatus;
+            $item['production_status'] = $productionStatus;
+            $item['productionStatus'] = $productionStatus;
+        }
+    }
+    unset($item);
+
+    if (!is_dir(dirname(DATA_ORDERS_FILE))) {
+        mkdir(dirname(DATA_ORDERS_FILE), 0777, true);
+    }
+    file_put_contents(DATA_ORDERS_FILE, json_encode($currentList, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    return true;
+}
+
+define('DATA_DASHBOARD_STATS_FILE', __DIR__ . '/../data/dashboard_stats.json');
+
+/**
+ * Mengambil metrik statistik dashboard secara dinamis dari pesanan & konfigurasi statistik
+ */
+function getDashboardStats($orders = null) {
+    if ($orders === null) {
+        $orders = getAllOrdersList();
+    }
+
+    $statsConfig = [
+        'is_reset' => false,
+        'base_orders' => 1420,
+        'base_revenue' => 184500000,
+        'base_production_pcs' => 540,
+        'base_completed_pcs' => 880
+    ];
+
+    // Cek dari file JSON data/dashboard_stats.json
+    if (file_exists(DATA_DASHBOARD_STATS_FILE)) {
+        $raw = file_get_contents(DATA_DASHBOARD_STATS_FILE);
+        $decoded = json_decode($raw, true);
+        if (is_array($decoded)) {
+            $statsConfig = array_merge($statsConfig, $decoded);
+        }
+    }
+
+    // Cek juga dari tabel site_settings jika MySQL aktif
+    $pdo = getDbConnection();
+    if ($pdo) {
+        try {
+            $stmt = $pdo->query("SELECT setting_key, setting_value FROM site_settings WHERE setting_key LIKE 'stats_%'");
+            if ($stmt) {
+                $rows = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+                if (!empty($rows) && isset($rows['stats_is_reset']) && $rows['stats_is_reset'] === '1') {
+                    $statsConfig['is_reset'] = true;
+                    $statsConfig['base_orders'] = (int)($rows['stats_base_orders'] ?? 0);
+                    $statsConfig['base_revenue'] = (int)($rows['stats_base_revenue'] ?? 0);
+                    $statsConfig['base_production_pcs'] = (int)($rows['stats_base_production_pcs'] ?? 0);
+                    $statsConfig['base_completed_pcs'] = (int)($rows['stats_base_completed_pcs'] ?? 0);
+                }
+            }
+        } catch (Exception $e) {}
+    }
+
+    $totalOrders = (int)$statsConfig['base_orders'] + count($orders);
+    $totalRevenue = (int)$statsConfig['base_revenue'];
+    $dynamicProductionPcs = 0;
+    $dynamicCompletedPcs = 0;
+
+    foreach ($orders as $ord) {
+        $totalRevenue += (int)($ord['total_price'] ?? ($ord['total'] ?? 0));
+
+        $qty = 0;
+        if (isset($ord['qty']) && (int)$ord['qty'] > 0) {
+            $qty = (int)$ord['qty'];
+        } elseif (!empty($ord['items']) && is_array($ord['items'])) {
+            foreach ($ord['items'] as $it) {
+                $qty += max(1, (int)($it['quantity'] ?? ($it['qty'] ?? 1)));
+            }
+        } else {
+            $qty = 1;
+        }
+
+        $status = strtolower(trim((string)($ord['production_status'] ?? ($ord['productionStatus'] ?? ''))));
+        if (in_array($status, ['selesai', 'dalam pengiriman', 'terkirim', 'completed', 'shipped'], true)) {
+            $dynamicCompletedPcs += $qty;
+        } elseif ($status !== 'dibatalkan' && $status !== 'cancel') {
+            $dynamicProductionPcs += $qty;
+        }
+    }
+
+    if (!empty($statsConfig['is_reset'])) {
+        $inProductionPcs = (int)$statsConfig['base_production_pcs'] + $dynamicProductionPcs;
+        $completedPcs = (int)$statsConfig['base_completed_pcs'] + $dynamicCompletedPcs;
+    } else {
+        $inProductionPcs = (int)$statsConfig['base_production_pcs'];
+        $completedPcs = (int)$statsConfig['base_completed_pcs'];
+    }
+
+    return [
+        'is_reset' => (bool)$statsConfig['is_reset'],
+        'base_orders' => (int)$statsConfig['base_orders'],
+        'base_revenue' => (int)$statsConfig['base_revenue'],
+        'base_production_pcs' => (int)$statsConfig['base_production_pcs'],
+        'base_completed_pcs' => (int)$statsConfig['base_completed_pcs'],
+        'total_orders' => $totalOrders,
+        'total_revenue' => $totalRevenue,
+        'in_production_pcs' => $inProductionPcs,
+        'completed_pcs' => $completedPcs
+    ];
+}
+
+/**
+ * Mereset seluruh data statistik pre-order & mengosongkan transaksi menjadi 0
+ */
+function resetAllPreOrderStatistics() {
+    // 1. Bersihkan tabel transaksi di database MySQL & simpan flag reset di site_settings
+    $pdo = getDbConnection();
+    if ($pdo) {
+        try {
+            $pdo->exec("DELETE FROM order_items");
+            $pdo->exec("DELETE FROM orders");
+            $pdo->exec("DELETE FROM pesanan");
+
+            $pdo->exec("
+                CREATE TABLE IF NOT EXISTS `site_settings` (
+                    `setting_key` VARCHAR(100) PRIMARY KEY,
+                    `setting_value` TEXT,
+                    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            ");
+
+            $stmt = $pdo->prepare("
+                INSERT INTO site_settings (setting_key, setting_value)
+                VALUES (?, ?)
+                ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)
+            ");
+            $resetSettings = [
+                'stats_is_reset' => '1',
+                'stats_base_orders' => '0',
+                'stats_base_revenue' => '0',
+                'stats_base_production_pcs' => '0',
+                'stats_base_completed_pcs' => '0'
+            ];
+            foreach ($resetSettings as $k => $v) {
+                $stmt->execute([$k, $v]);
+            }
+        } catch (Exception $e) {
+            // Lanjutkan reset pada file JSON
+        }
+    }
+
+    // 2. Kosongkan file data/orders.json menjadi array kosong []
+    if (!is_dir(dirname(DATA_ORDERS_FILE))) {
+        mkdir(dirname(DATA_ORDERS_FILE), 0777, true);
+    }
+    file_put_contents(DATA_ORDERS_FILE, json_encode([], JSON_PRETTY_PRINT));
+
+    // 3. Simpan state statistik 0 ke data/dashboard_stats.json
+    $resetData = [
+        'is_reset' => true,
+        'base_orders' => 0,
+        'base_revenue' => 0,
+        'base_production_pcs' => 0,
+        'base_completed_pcs' => 0,
+        'reset_at' => date('Y-m-d H:i:s')
+    ];
+    file_put_contents(DATA_DASHBOARD_STATS_FILE, json_encode($resetData, JSON_PRETTY_PRINT));
+
+    return true;
+}
+
 // ----------------------------------------------------
 // 6. SVG MOCKUP HELPER (PHP RENDER)
 // ----------------------------------------------------
@@ -1209,9 +2021,14 @@ function getHeroSettings() {
         'description' => 'Wujudkan identitas kebanggaan kelas, jurusan, dan organisasimu bersama Fastender. Bahan standar distro, gratis konsultasi desain bordir, sistem DP 50%, dan jaminan tepat waktu.',
         'countdown_label' => 'PO DITUTUP DALAM',
         'countdown_deadline' => date('Y-m-d\TH:i', strtotime('+14 days 23:59')),
-        'banner_image' => 'assets/images/hero-showcase.png',
+        'banner_image' => '',
         'cta_text' => 'Pesan Sekarang',
         'cta_link' => 'katalog.php',
+    ];
+
+    $legacyDefaultBanners = [
+        'assets/images/banner-po-default.svg',
+        'assets/images/hero-showcase.png'
     ];
 
     $pdo = getDbConnection();
@@ -1229,13 +2046,17 @@ function getHeroSettings() {
             $stmt = $pdo->query("SELECT setting_key, setting_value FROM site_settings WHERE setting_key LIKE 'hero_%'");
             $rows = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
             if (!empty($rows)) {
+                $dbBanner = trim((string)($rows['hero_banner_image'] ?? ''));
+                if (in_array($dbBanner, $legacyDefaultBanners, true)) {
+                    $dbBanner = '';
+                }
                 return [
                     'title' => $rows['hero_title'] ?? $defaults['title'],
                     'badge' => $rows['hero_badge'] ?? $defaults['badge'],
                     'description' => $rows['hero_description'] ?? $defaults['description'],
                     'countdown_label' => $rows['hero_countdown_label'] ?? $defaults['countdown_label'],
                     'countdown_deadline' => $rows['hero_countdown_deadline'] ?? $defaults['countdown_deadline'],
-                    'banner_image' => $rows['hero_banner_image'] ?? $defaults['banner_image'],
+                    'banner_image' => $dbBanner,
                     'cta_text' => $rows['hero_cta_text'] ?? $defaults['cta_text'],
                     'cta_link' => $rows['hero_cta_link'] ?? $defaults['cta_link'],
                 ];
@@ -1250,11 +2071,66 @@ function getHeroSettings() {
         $json = file_get_contents(DATA_HERO_SETTINGS_FILE);
         $data = json_decode($json, true);
         if (is_array($data)) {
-            return array_merge($defaults, $data);
+            $merged = array_merge($defaults, $data);
+            if (in_array(trim((string)($merged['banner_image'] ?? '')), $legacyDefaultBanners, true)) {
+                $merged['banner_image'] = '';
+            }
+            return $merged;
         }
     }
 
     return $defaults;
+}
+
+/**
+ * Mengecek apakah periode Pre-Order masih aktif berdasarkan target waktu countdown deadline
+ * @return bool True jika masih dalam periode PO (aktif), False jika deadline sudah habis (ditutup)
+ */
+function isPreOrderActive() {
+    $hero = getHeroSettings();
+    $deadlineStr = trim((string)($hero['countdown_deadline'] ?? ''));
+    if ($deadlineStr === '') {
+        return true;
+    }
+
+    $ts = strtotime($deadlineStr);
+    if ($ts === false) {
+        $ts = strtotime(str_replace('T', ' ', $deadlineStr));
+    }
+
+    if ($ts === false) {
+        return true;
+    }
+
+    return time() < $ts;
+}
+
+/**
+ * Mengambil informasi detail status Pre-Order saat ini
+ */
+function getPreOrderStatus() {
+    $hero = getHeroSettings();
+    $deadlineStr = trim((string)($hero['countdown_deadline'] ?? ''));
+    $isActive = true;
+    $deadlineTs = 0;
+
+    if ($deadlineStr !== '') {
+        $ts = strtotime($deadlineStr);
+        if ($ts === false) {
+            $ts = strtotime(str_replace('T', ' ', $deadlineStr));
+        }
+        if ($ts !== false) {
+            $deadlineTs = $ts;
+            $isActive = (time() < $deadlineTs);
+        }
+    }
+
+    return [
+        'is_active' => $isActive,
+        'deadline_str' => $deadlineStr,
+        'deadline_timestamp' => $deadlineTs,
+        'server_time' => time(),
+    ];
 }
 
 /**

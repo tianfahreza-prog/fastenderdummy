@@ -8,6 +8,7 @@ require_once __DIR__ . '/includes/functions.php';
 
 $pageTitle = 'Keranjang Pesanan Pre-Order - Fastender';
 $activePage = 'keranjang';
+$isPoActive = isPreOrderActive();
 
 include __DIR__ . '/includes/header.php';
 include __DIR__ . '/includes/navbar.php';
@@ -21,6 +22,26 @@ include __DIR__ . '/includes/navbar.php';
     <div style="margin-bottom: 24px;">
       <h1 style="font-size: 32px; font-weight: 800; color: var(--color-ink-black, #111111); letter-spacing: -0.04em; margin: 0;">Keranjang Pesanan Pre-Order</h1>
     </div>
+
+    <?php if (!$isPoActive): ?>
+      <!-- Banner / Alert Informasi Penutupan Pre-Order Batch -->
+      <div class="po-closed-alert-banner" style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 20px; padding: 18px 22px; margin-bottom: 24px; display: flex; align-items: flex-start; gap: 14px; box-shadow: 0 4px 14px rgba(234, 88, 12, 0.08);">
+        <div style="width: 36px; height: 36px; border-radius: 50%; background: #ffedd5; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #ea580c; margin-top: 2px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+        <div>
+          <h4 style="font-size: 15px; font-weight: 700; color: #9a3412; margin: 0 0 4px 0; letter-spacing: -0.02em;">
+            Periode Pre-Order Batch Ini Telah Berakhir
+          </h4>
+          <p style="font-size: 13.5px; color: #c2410c; margin: 0; line-height: 1.55; font-weight: 500;">
+            Periode Pre-Order Batch ini telah berakhir. Checkout saat ini ditutup, namun produk yang Anda simpan di keranjang akan tersimpan untuk batch berikutnya.
+          </p>
+        </div>
+      </div>
+    <?php endif; ?>
     
     <!-- Layout 2 Kolom -->
     <div class="cart-layout" id="cart-content-wrapper">
@@ -90,15 +111,28 @@ include __DIR__ . '/includes/navbar.php';
             <div id="summary-total" style="color: var(--primary);">Rp 0</div>
           </div>
 
-          <!-- Tombol Lebar "Lanjut ke Pembayaran" Warna Oranye Sesuai Spesifikasi -->
+          <!-- Tombol Lebar "Lanjut ke Pembayaran" Warna Oranye Sesuai Spesifikasi (Disabled saat PO Ditutup) -->
           <div style="margin-top: 24px;">
-            <a href="checkout.php" class="btn btn-accent btn-block btn-lg" id="checkout-cta-btn">
-              Lanjut ke Pembayaran
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-                <polyline points="12 5 19 12 12 19"></polyline>
-              </svg>
-            </a>
+            <?php if ($isPoActive): ?>
+              <a href="checkout.php" class="btn btn-accent btn-block btn-lg" id="checkout-cta-btn">
+                Lanjut ke Pembayaran
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </a>
+            <?php else: ?>
+              <button type="button" class="btn btn-block btn-lg btn-disabled-checkout" id="checkout-cta-btn" disabled style="background: #94a3b8; border: 1px solid #94a3b8; color: #ffffff; cursor: not-allowed; pointer-events: none; opacity: 0.85; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; border-radius: var(--radius-buttons, 28px); font-size: 14.5px; font-weight: 700;" title="Checkout ditutup karena batas waktu pre-order telah berakhir">
+                Checkout Ditutup
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                </svg>
+              </button>
+              <div style="font-size: 11.5px; color: #ea580c; text-align: center; margin-top: 8px; font-weight: 600;">
+                * Batas waktu countdown PO telah berakhir. Checkout tidak tersedia.
+              </div>
+            <?php endif; ?>
           </div>
         </div>
       </aside>
@@ -128,6 +162,13 @@ include __DIR__ . '/includes/navbar.php';
 <script>
   // Logika Khusus Halaman Keranjang Belanja
   document.addEventListener("DOMContentLoaded", () => {
+    const IS_PO_ACTIVE = <?= $isPoActive ? 'true' : 'false' ?>;
+    const HAS_PO_TUTUP_PARAM = <?= (isset($_GET['pesan']) && $_GET['pesan'] === 'po_tutup') ? 'true' : 'false' ?>;
+
+    if (HAS_PO_TUTUP_PARAM && typeof showToast === "function") {
+      showToast("Periode Pre-Order telah berakhir. Checkout saat ini ditutup.", "error");
+    }
+
     const itemsContainer = document.getElementById("cart-items-list");
     const subtotalEl = document.getElementById("summary-subtotal");
     const dpEl = document.getElementById("summary-dp");
@@ -139,6 +180,17 @@ include __DIR__ . '/includes/navbar.php';
     const voucherBtn = document.getElementById("apply-voucher-btn");
     const voucherInput = document.getElementById("voucher-input");
     const voucherFeedback = document.getElementById("voucher-feedback");
+    const checkoutBtn = document.getElementById("checkout-cta-btn");
+
+    if (!IS_PO_ACTIVE && checkoutBtn) {
+      checkoutBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (typeof showToast === "function") {
+          showToast("Periode Pre-Order Batch ini telah berakhir. Checkout saat ini ditutup.", "error");
+        }
+        return false;
+      });
+    }
 
     let discountAmount = 0;
 

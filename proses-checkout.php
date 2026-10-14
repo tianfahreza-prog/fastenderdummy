@@ -6,6 +6,24 @@
  */
 require_once __DIR__ . '/includes/functions.php';
 
+// Backend Guard: Tolak pembuatan pesanan jika batas waktu Pre-Order telah berakhir
+if (!isPreOrderActive()) {
+    $isAjax = (
+        (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') ||
+        !empty($_POST['is_ajax'])
+    );
+    if ($isAjax) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Periode Pre-Order Batch ini telah berakhir. Checkout saat ini ditutup.'
+        ]);
+        exit;
+    }
+    header('Location: keranjang.php?pesan=po_tutup');
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: checkout.php');
     exit;

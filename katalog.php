@@ -9,9 +9,55 @@ require_once __DIR__ . '/includes/functions.php';
 $pageTitle = 'Katalog - Fastender';
 $activePage = 'katalog';
 
+$rawCategoryParam = $_GET['kategori'] ?? ($_GET['cat'] ?? '');
+$selectedCat = sanitize($rawCategoryParam);
+if (strtolower($selectedCat) === 'all') {
+    $selectedCat = '';
+}
+$initialSearch = sanitize($_GET['search'] ?? ($_GET['q'] ?? ''));
+
+$sortOptions = [
+    'popular' => 'Paling Populer',
+    'price-low' => 'Harga: Rendah ke Tinggi',
+    'price-high' => 'Harga: Tinggi ke Rendah',
+    'quota' => 'Kuota Terbanyak',
+];
+$selectedSort = sanitize($_GET['sort'] ?? 'popular');
+if (!array_key_exists($selectedSort, $sortOptions)) {
+    $selectedSort = 'popular';
+}
+
+// Query filter via PHP & SQL (WHERE category = :kategori) serta daftar seluruh produk katalog
+$filteredProducts = getProductsList($selectedCat);
 $allProducts = getProductsList();
-$selectedCat = sanitize($_GET['cat'] ?? 'all');
-$initialSearch = sanitize($_GET['q'] ?? '');
+
+if ($selectedSort !== 'popular' && !empty($allProducts)) {
+    usort($allProducts, function ($a, $b) use ($selectedSort) {
+        $priceA = (int)($a['price'] ?? 0);
+        $priceB = (int)($b['price'] ?? 0);
+        $quotaA = (int)($a['quota_current'] ?? 0);
+        $quotaB = (int)($b['quota_current'] ?? 0);
+        if ($selectedSort === 'price-low') return $priceA <=> $priceB;
+        if ($selectedSort === 'price-high') return $priceB <=> $priceA;
+        if ($selectedSort === 'quota') return $quotaB <=> $quotaA;
+        return ((int)($b['id'] ?? 0)) <=> ((int)($a['id'] ?? 0));
+    });
+}
+
+$isPolstuffActive = (strcasecmp($selectedCat, 'POLSTUFF') === 0);
+$isPolneedsActive = (strcasecmp($selectedCat, 'POLNEEDS') === 0);
+$isAllActive = ($selectedCat === '');
+
+// Opsi sub-kategori spesifik di dalam modal Filter Produk (tanpa POLSTUFF & POLNEEDS)
+$categoryOptions = [
+    'Workshirt' => 'Workshirt',
+    'Jas almamater' => 'Jas almamater',
+    'Jas Lab' => 'Jas Lab',
+    'Kaos' => 'Kaos',
+    'Keychain' => 'Keychain',
+    'Totebag' => 'Totebag',
+    'Sticker' => 'Sticker',
+];
 
 include __DIR__ . '/includes/header.php';
 include __DIR__ . '/includes/navbar.php';
@@ -26,10 +72,10 @@ include __DIR__ . '/includes/navbar.php';
     
     <!-- 1 Baris Kontrol Rapi di Bawah Judul "Katalog" -->
     <div class="katalog-controls-bar">
-      <!-- Sisi Kiri: Informasi Jumlah Produk + Tombol Kapsul Kecil "Filter" -->
+      <!-- Sisi Kiri: Informasi Jumlah Produk + Tombol Kapsul Kecil "Filter" + Quick Category Nav -->
       <div class="controls-bar-left">
         <span class="product-count-badge">
-          Menampilkan <strong id="product-count-text"><?= count($allProducts) ?></strong> produk
+          Menampilkan <strong id="product-count-text"><?= count($filteredProducts) ?></strong> produk
         </span>
 
         <!-- Tombol Kapsul Filter & Popover Card -->
@@ -66,34 +112,20 @@ include __DIR__ . '/includes/navbar.php';
             </div>
 
             <div class="filter-popover-body">
-              <!-- Kategori Produk -->
+              <!-- Sub-Kategori Spesifik Produk -->
               <div class="filter-section-item">
                 <label class="filter-section-label">Kategori</label>
                 <div class="filter-radios-grid">
                   <label class="filter-radio-pill">
-                    <input type="radio" name="category-filter" value="all" <?= ($selectedCat === 'all' || empty($selectedCat)) ? 'checked' : '' ?>>
+                    <input type="radio" name="category-filter" value="" <?= ($selectedCat === '' || $isPolstuffActive || $isPolneedsActive) ? 'checked' : '' ?>>
                     <span>Semua Kategori</span>
                   </label>
-                  <label class="filter-radio-pill">
-                    <input type="radio" name="category-filter" value="jaket" <?= ($selectedCat === 'jaket') ? 'checked' : '' ?>>
-                    <span>Jaket &amp; Varsity</span>
-                  </label>
-                  <label class="filter-radio-pill">
-                    <input type="radio" name="category-filter" value="pdh" <?= ($selectedCat === 'pdh') ? 'checked' : '' ?>>
-                    <span>Kemeja PDH</span>
-                  </label>
-                  <label class="filter-radio-pill">
-                    <input type="radio" name="category-filter" value="hoodie" <?= ($selectedCat === 'hoodie') ? 'checked' : '' ?>>
-                    <span>Hoodie &amp; Sweatshirt</span>
-                  </label>
-                  <label class="filter-radio-pill">
-                    <input type="radio" name="category-filter" value="kaos" <?= ($selectedCat === 'kaos') ? 'checked' : '' ?>>
-                    <span>Kaos Angkatan</span>
-                  </label>
-                  <label class="filter-radio-pill">
-                    <input type="radio" name="category-filter" value="merch" <?= ($selectedCat === 'merch') ? 'checked' : '' ?>>
-                    <span>Merchandise</span>
-                  </label>
+                  <?php foreach ($categoryOptions as $catVal => $catLabel): ?>
+                    <label class="filter-radio-pill">
+                      <input type="radio" name="category-filter" value="<?= htmlspecialchars($catVal) ?>" <?= (strcasecmp($selectedCat, $catVal) === 0) ? 'checked' : '' ?>>
+                      <span><?= htmlspecialchars($catLabel) ?></span>
+                    </label>
+                  <?php endforeach; ?>
                 </div>
               </div>
 
@@ -122,20 +154,61 @@ include __DIR__ . '/includes/navbar.php';
           </div>
         </div>
 
+        <!-- Kelompok Tombol Navigasi Cepat Kategori (Sejajar dengan Tombol Filter, Posisi Tetap) -->
+        <div class="katalog-quick-nav" id="katalogQuickNav" role="navigation" aria-label="Navigasi Cepat Kategori">
+          <a href="katalog.php" class="btn-quick-cat-pill <?= $isAllActive ? 'active' : '' ?>" data-quick-cat="" <?= $isAllActive ? 'aria-current="page"' : '' ?>>
+            Semua
+          </a>
+          <a href="katalog.php?kategori=POLSTUFF" class="btn-quick-cat-pill <?= $isPolstuffActive ? 'active' : '' ?>" data-quick-cat="POLSTUFF" <?= $isPolstuffActive ? 'aria-current="page"' : '' ?>>
+            POLSTUFF
+          </a>
+          <a href="katalog.php?kategori=POLNEEDS" class="btn-quick-cat-pill <?= $isPolneedsActive ? 'active' : '' ?>" data-quick-cat="POLNEEDS" <?= $isPolneedsActive ? 'aria-current="page"' : '' ?>>
+            POLNEEDS
+          </a>
+        </div>
+
         <!-- Chips Filter Aktif -->
         <div id="active-filter-chips" class="active-chips-list"></div>
       </div>
 
-      <!-- Sisi Kanan: Dropdown "Urutkan: Paling Populer" (Rounded Pill) -->
+      <!-- Sisi Kanan: Custom Modern Dropdown "Urutkan" -->
       <div class="controls-bar-right">
         <div class="sort-pill-box">
-          <label for="sort-select" class="sort-label">Urutkan:</label>
-          <select id="sort-select" class="sort-select-pill">
-            <option value="popular">Paling Populer</option>
-            <option value="price-low">Harga: Rendah ke Tinggi</option>
-            <option value="price-high">Harga: Tinggi ke Rendah</option>
-            <option value="quota">Kuota Terbanyak</option>
-          </select>
+          <span class="sort-label" id="sort-dropdown-label">Urutkan:</span>
+          <div class="custom-sort-dropdown" id="customSortDropdown">
+            <button 
+              type="button" 
+              class="custom-sort-trigger" 
+              id="customSortTrigger" 
+              aria-haspopup="listbox" 
+              aria-expanded="false" 
+              aria-labelledby="sort-dropdown-label customSortLabel"
+            >
+              <span class="custom-sort-trigger-text" id="customSortLabel"><?= htmlspecialchars($sortOptions[$selectedSort]) ?></span>
+              <svg class="custom-sort-chevron" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+
+            <div class="custom-sort-menu" id="customSortMenu" role="listbox" aria-labelledby="sort-dropdown-label">
+              <?php foreach ($sortOptions as $sortVal => $sortLabel): 
+                $isSortActive = ($selectedSort === $sortVal);
+              ?>
+                <button 
+                  type="button" 
+                  class="custom-sort-option <?= $isSortActive ? 'active' : '' ?>" 
+                  role="option" 
+                  aria-selected="<?= $isSortActive ? 'true' : 'false' ?>" 
+                  data-sort-value="<?= htmlspecialchars($sortVal) ?>"
+                >
+                  <span><?= htmlspecialchars($sortLabel) ?></span>
+                  <svg class="custom-sort-check" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </button>
+              <?php endforeach; ?>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -146,6 +219,9 @@ include __DIR__ . '/includes/navbar.php';
         $quotaPct = min(100, round(($prod['quota_current'] / max(1, $prod['quota_target'])) * 100));
         $batchLabel = explode(' ', $prod['batch'])[0];
         $firstImg = !empty($prod['images']) ? $prod['images'][0] : 'assets/images/gambar1.jpg';
+        $prodCatRaw = trim((string)($prod['category'] ?? ($prod['category_name'] ?? '')));
+        $prodParentRaw = trim((string)($prod['parent_kategori'] ?? resolveParentCategory($prodCatRaw)));
+        $isInitialMatch = isProductMatchingCategory($prod, $selectedCat);
       ?>
         <article 
           class="product-card" 
@@ -153,7 +229,9 @@ include __DIR__ . '/includes/navbar.php';
           data-name="<?= htmlspecialchars(strtolower($prod['name'])) ?>"
           data-price="<?= (int)$prod['price'] ?>"
           data-quota="<?= (int)$prod['quota_current'] ?>"
-          data-category="<?= htmlspecialchars(strtolower($prod['category'] ?? '')) ?>"
+          data-category="<?= htmlspecialchars(strtolower($prodCatRaw)) ?>"
+          data-parent-category="<?= htmlspecialchars(strtolower($prodParentRaw)) ?>"
+          style="<?= $isInitialMatch ? '' : 'display: none;' ?>"
         >
           <div class="product-thumb-wrapper">
             <span class="product-card-badge"><?= htmlspecialchars($prod['badge']) ?></span>
@@ -193,7 +271,7 @@ include __DIR__ . '/includes/navbar.php';
       <div class="empty-state-icon">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#737780" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          <line x1="21" cy="21" x2="16.65" y2="16.65"></line>
         </svg>
       </div>
       <h3 class="empty-state-title">Produk Tidak Ditemukan</h3>
@@ -206,7 +284,7 @@ include __DIR__ . '/includes/navbar.php';
 <!-- Footer & Scripts -->
 <?php include __DIR__ . '/includes/footer.php'; ?>
 <script>
-  // Logika Interaksi Filter Popover, Live Search & Sortir Produk
+  // Logika Interaksi Filter Popover, Quick Category Pills, Live Search & Sortir Produk
   document.addEventListener("DOMContentLoaded", () => {
     const grid = document.getElementById("catalog-products-grid");
     const countText = document.getElementById("product-count-text");
@@ -215,10 +293,16 @@ include __DIR__ . '/includes/navbar.php';
     const minPriceInput = document.getElementById("price-min");
     const maxPriceInput = document.getElementById("price-max");
     const applyFilterBtn = document.getElementById("apply-filter-btn");
-    const sortSelect = document.getElementById("sort-select");
     const resetBtn = document.getElementById("reset-filter-btn");
     const resetEmptyBtn = document.getElementById("reset-empty-btn");
     
+    // Custom Sort Dropdown Elements
+    const customSortDropdown = document.getElementById("customSortDropdown");
+    const customSortTrigger = document.getElementById("customSortTrigger");
+    const customSortLabel = document.getElementById("customSortLabel");
+    const customSortMenu = document.getElementById("customSortMenu");
+    const customSortOptions = document.querySelectorAll(".custom-sort-option");
+
     // Filter Popover Elements
     const filterAnchor = document.getElementById("filterDropdownAnchor");
     const filterBtn = document.getElementById("btnFilterPill");
@@ -227,12 +311,76 @@ include __DIR__ . '/includes/navbar.php';
     const filterDot = document.getElementById("filterDotIndicator");
     const activeChipsContainer = document.getElementById("active-filter-chips");
 
+    const quickNavContainer = document.getElementById("katalogQuickNav");
     let currentSearchTerm = "<?= addslashes(strtolower($initialSearch)) ?>";
+    let currentParentCategory = "<?= ($isPolstuffActive || $isPolneedsActive) ? addslashes($selectedCat) : '' ?>";
+    let currentSortValue = "<?= addslashes($selectedSort) ?>";
+
+    // Pengelompokan sub-kategori sesuai kategori induk POLSTUFF & POLNEEDS
+    const polstuffSubCategories = ["kaos", "keychain", "totebag", "sticker", "polstuff"];
+    const polneedsSubCategories = ["workshirt", "jas almamater", "jas lab", "polneeds"];
+
+    function isCategoryMatch(cardCat, cardParentCat, targetCat) {
+      const target = (targetCat || "").toLowerCase().trim();
+      if (target === "" || target === "all") return true;
+      const cCat = (cardCat || "").toLowerCase().trim();
+      const cParent = (cardParentCat || "").toLowerCase().trim();
+
+      if (target === "polstuff") {
+        return polstuffSubCategories.includes(cCat) || cParent === "polstuff";
+      }
+      if (target === "polneeds") {
+        return polneedsSubCategories.includes(cCat) || cParent === "polneeds";
+      }
+      return cCat === target;
+    }
+
+    function syncQuickNavState(activeCat) {
+      if (!quickNavContainer) return;
+      const pills = quickNavContainer.querySelectorAll(".btn-quick-cat-pill");
+      const upperCat = (activeCat || "").toUpperCase();
+      pills.forEach(pill => {
+        const pillCat = (pill.getAttribute("data-quick-cat") || "").toUpperCase();
+        if (pillCat === upperCat) {
+          pill.classList.add("active");
+          pill.setAttribute("aria-current", "page");
+        } else {
+          pill.classList.remove("active");
+          pill.removeAttribute("aria-current");
+        }
+      });
+    }
+
+    // Interaksi klik tombol cepat ("Semua", "POLSTUFF", "POLNEEDS") tanpa layout shift / reload lompat
+    if (quickNavContainer) {
+      const quickPills = quickNavContainer.querySelectorAll(".btn-quick-cat-pill");
+      quickPills.forEach(pill => {
+        pill.addEventListener("click", (e) => {
+          if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+          e.preventDefault();
+          const targetQuickCat = (pill.getAttribute("data-quick-cat") || "").trim();
+          currentParentCategory = targetQuickCat;
+          const allRadio = document.querySelector('input[name="category-filter"][value=""]');
+          if (allRadio) allRadio.checked = true;
+          syncQuickNavState(targetQuickCat);
+          runCatalogFilter(true);
+        });
+      });
+    }
+
+    // Helper tutup custom sort dropdown
+    function closeCustomSortMenu() {
+      if (!customSortDropdown || !customSortTrigger) return;
+      customSortDropdown.classList.remove("open");
+      customSortTrigger.classList.remove("active");
+      customSortTrigger.setAttribute("aria-expanded", "false");
+    }
 
     // Toggle Popover Filter
     if (filterBtn && filterCard) {
       filterBtn.addEventListener("click", (e) => {
         e.stopPropagation();
+        closeCustomSortMenu();
         const isOpen = filterCard.style.display === "block";
         if (isOpen) {
           filterCard.style.display = "none";
@@ -257,7 +405,7 @@ include __DIR__ . '/includes/navbar.php';
       });
     }
 
-    // Klik di luar popover filter untuk menutup
+    // Klik di luar popover filter & custom sort dropdown untuk menutup
     document.addEventListener("click", (e) => {
       if (filterAnchor && !filterAnchor.contains(e.target)) {
         if (filterCard) filterCard.style.display = "none";
@@ -265,6 +413,16 @@ include __DIR__ . '/includes/navbar.php';
           filterBtn.classList.remove("active");
           filterBtn.setAttribute("aria-expanded", "false");
         }
+      }
+      if (customSortDropdown && !customSortDropdown.contains(e.target)) {
+        closeCustomSortMenu();
+      }
+    });
+
+    // Tutup dropdown saat tombol Escape ditekan
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closeCustomSortMenu();
       }
     });
 
@@ -275,25 +433,69 @@ include __DIR__ . '/includes/navbar.php';
       });
     }
 
-    // Fungsi Global Live Search (Sinkronisasi dengan Navbar Floating Search)
+    // Fungsi Global Live Search (Sinkronisasi dengan Navbar Inline Search)
     window.triggerCatalogSearch = function(query) {
       currentSearchTerm = (query || "").toLowerCase().trim();
-      runCatalogFilter();
+      runCatalogFilter(true);
     };
 
-    function runCatalogFilter() {
+    function getEffectiveCategory() {
+      const selectedRadio = document.querySelector('input[name="category-filter"]:checked');
+      const radioCat = selectedRadio ? selectedRadio.value.trim() : "";
+      return radioCat !== "" ? radioCat : currentParentCategory;
+    }
+
+    function syncUrlQueryParam(selectedCat) {
+      if (!window.history || !window.history.replaceState) return;
+      const url = new URL(window.location.href);
+      url.searchParams.delete("cat");
+      url.searchParams.delete("q");
+      if (selectedCat && selectedCat !== "") {
+        url.searchParams.set("kategori", selectedCat);
+      } else {
+        url.searchParams.delete("kategori");
+      }
+      if (currentSearchTerm && currentSearchTerm !== "") {
+        url.searchParams.set("search", currentSearchTerm);
+      } else {
+        url.searchParams.delete("search");
+      }
+      if (currentSortValue && currentSortValue !== "popular") {
+        url.searchParams.set("sort", currentSortValue);
+      } else {
+        url.searchParams.delete("sort");
+      }
+      window.history.replaceState({}, "", url.toString());
+    }
+
+    function runCatalogFilter(syncUrl = false) {
       const cards = grid.querySelectorAll(".product-card");
-      if (cards.length === 0) return;
+      if (cards.length === 0) {
+        if (countText) countText.textContent = "0";
+        if (emptyState) emptyState.style.display = "block";
+        return;
+      }
 
       const selectedRadio = document.querySelector('input[name="category-filter"]:checked');
-      const selectedCat = selectedRadio ? selectedRadio.value : "all";
+      const radioCat = selectedRadio ? selectedRadio.value.trim() : "";
+
+      if (radioCat !== "") {
+        currentParentCategory = "";
+      }
+
+      const effectiveCat = radioCat !== "" ? radioCat : currentParentCategory;
       const minP = Number(minPriceInput.value) || 0;
       const maxP = Number(maxPriceInput.value) || Infinity;
+
+      if (syncUrl) {
+        syncUrlQueryParam(effectiveCat);
+        syncQuickNavState(effectiveCat);
+      }
 
       let visibleCount = 0;
       let isFilterActive = false;
 
-      if (selectedCat !== 'all' || minP > 0 || maxP < 300000 || currentSearchTerm !== "") {
+      if (radioCat !== "" || minP > 0 || maxP < 300000 || currentSearchTerm !== "") {
         isFilterActive = true;
       }
 
@@ -301,11 +503,12 @@ include __DIR__ . '/includes/navbar.php';
         filterDot.style.display = isFilterActive ? "inline-block" : "none";
       }
 
-      renderFilterChips(selectedCat, minP, maxP, currentSearchTerm);
+      renderFilterChips(radioCat, minP, maxP, currentSearchTerm);
 
       cards.forEach(card => {
-        const title = card.getAttribute("data-name") || "";
-        const cat = card.getAttribute("data-category") || "";
+        const title = (card.getAttribute("data-name") || "").toLowerCase();
+        const cat = (card.getAttribute("data-category") || "").toLowerCase().trim();
+        const parentCat = (card.getAttribute("data-parent-category") || "").toLowerCase().trim();
         const price = Number(card.getAttribute("data-price")) || 0;
 
         let match = true;
@@ -314,7 +517,7 @@ include __DIR__ . '/includes/navbar.php';
           match = false;
         }
 
-        if (selectedCat !== "all" && cat !== selectedCat && !cat.includes(selectedCat)) {
+        if (!isCategoryMatch(cat, parentCat, effectiveCat)) {
           match = false;
         }
 
@@ -338,11 +541,12 @@ include __DIR__ . '/includes/navbar.php';
       if (!activeChipsContainer) return;
       activeChipsContainer.innerHTML = "";
 
-      if (cat !== 'all') {
-        const chip = createChip(`Kategori: ${cat.toUpperCase()}`, () => {
-          const allRadio = document.querySelector('input[name="category-filter"][value="all"]');
+      if (cat !== "") {
+        const chip = createChip(`Kategori: ${cat}`, () => {
+          const allRadio = document.querySelector('input[name="category-filter"][value=""]');
           if (allRadio) allRadio.checked = true;
-          runCatalogFilter();
+          currentParentCategory = "";
+          runCatalogFilter(true);
         });
         activeChipsContainer.appendChild(chip);
       }
@@ -351,7 +555,7 @@ include __DIR__ . '/includes/navbar.php';
         const chip = createChip(`Rp ${minP.toLocaleString('id-ID')} - ${maxP.toLocaleString('id-ID')}`, () => {
           minPriceInput.value = "0";
           maxPriceInput.value = "300000";
-          runCatalogFilter();
+          runCatalogFilter(true);
         });
         activeChipsContainer.appendChild(chip);
       }
@@ -374,37 +578,88 @@ include __DIR__ . '/includes/navbar.php';
       return span;
     }
 
-    // Sort Handler
-    if (sortSelect) {
-      sortSelect.addEventListener("change", () => {
-        const val = sortSelect.value;
-        const cards = Array.from(grid.querySelectorAll(".product-card"));
+    // Fungsi Sortir Kartu Produk
+    function sortCatalogCards(val) {
+      if (!grid) return;
+      const cards = Array.from(grid.querySelectorAll(".product-card"));
+      if (cards.length === 0) return;
 
-        cards.sort((a, b) => {
-          const priceA = Number(a.getAttribute("data-price")) || 0;
-          const priceB = Number(b.getAttribute("data-price")) || 0;
-          const quotaA = Number(a.getAttribute("data-quota")) || 0;
-          const quotaB = Number(b.getAttribute("data-quota")) || 0;
+      cards.sort((a, b) => {
+        const priceA = Number(a.getAttribute("data-price")) || 0;
+        const priceB = Number(b.getAttribute("data-price")) || 0;
+        const quotaA = Number(a.getAttribute("data-quota")) || 0;
+        const quotaB = Number(b.getAttribute("data-quota")) || 0;
 
-          if (val === "price-low") return priceA - priceB;
-          if (val === "price-high") return priceB - priceA;
-          if (val === "quota") return quotaB - quotaA;
-          return Number(b.getAttribute("data-id")) - Number(a.getAttribute("data-id"));
+        if (val === "price-low") return priceA - priceB;
+        if (val === "price-high") return priceB - priceA;
+        if (val === "quota") return quotaB - quotaA;
+        return Number(b.getAttribute("data-id")) - Number(a.getAttribute("data-id"));
+      });
+
+      cards.forEach(c => grid.appendChild(c));
+    }
+
+    // Interaksi Custom Sort Dropdown
+    if (customSortDropdown && customSortTrigger && customSortMenu) {
+      customSortTrigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        // Tutup filter popover jika sedang terbuka
+        if (filterCard) filterCard.style.display = "none";
+        if (filterBtn) {
+          filterBtn.classList.remove("active");
+          filterBtn.setAttribute("aria-expanded", "false");
+        }
+
+        const isOpen = customSortDropdown.classList.contains("open");
+        if (isOpen) {
+          closeCustomSortMenu();
+        } else {
+          customSortDropdown.classList.add("open");
+          customSortTrigger.classList.add("active");
+          customSortTrigger.setAttribute("aria-expanded", "true");
+        }
+      });
+
+      customSortOptions.forEach(optionBtn => {
+        optionBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const val = optionBtn.getAttribute("data-value") || "popular";
+          const label = optionBtn.getAttribute("data-label") || optionBtn.textContent.trim();
+
+          currentSortValue = val;
+
+          // Update label tombol trigger
+          if (customSortLabel) {
+            customSortLabel.textContent = label;
+          }
+
+          // Tandai item aktif & aria-selected
+          customSortOptions.forEach(btn => {
+            const isSelected = btn.getAttribute("data-value") === val;
+            btn.classList.toggle("active", isSelected);
+            btn.setAttribute("aria-selected", isSelected ? "true" : "false");
+          });
+
+          // Sortir kartu produk & sinkronkan URL tanpa merusak filter kategori
+          sortCatalogCards(val);
+          syncUrlQueryParam(getEffectiveCategory());
+          closeCustomSortMenu();
         });
-
-        cards.forEach(c => grid.appendChild(c));
       });
     }
 
     categoryRadios.forEach(r => {
       r.addEventListener("change", () => {
-        runCatalogFilter();
+        if (r.value.trim() !== "") {
+          currentParentCategory = "";
+        }
+        runCatalogFilter(true);
       });
     });
 
     if (applyFilterBtn) {
       applyFilterBtn.addEventListener("click", () => {
-        runCatalogFilter();
+        runCatalogFilter(true);
         if (filterCard) filterCard.style.display = "none";
         if (filterBtn) {
           filterBtn.classList.remove("active");
@@ -414,14 +669,15 @@ include __DIR__ . '/includes/navbar.php';
     }
 
     function resetAllFilters() {
-      const defaultRadio = document.querySelector('input[name="category-filter"][value="all"]');
+      const defaultRadio = document.querySelector('input[name="category-filter"][value=""]');
       if (defaultRadio) defaultRadio.checked = true;
+      currentParentCategory = "";
       if (minPriceInput) minPriceInput.value = "0";
       if (maxPriceInput) maxPriceInput.value = "300000";
       currentSearchTerm = "";
       const navInput = document.getElementById("navbarSearchInput");
       if (navInput) navInput.value = "";
-      runCatalogFilter();
+      runCatalogFilter(true);
       if (filterCard) filterCard.style.display = "none";
       if (filterBtn) {
         filterBtn.classList.remove("active");
@@ -433,6 +689,6 @@ include __DIR__ . '/includes/navbar.php';
     if (resetEmptyBtn) resetEmptyBtn.addEventListener("click", resetAllFilters);
 
     // Initial Filter Run
-    runCatalogFilter();
+    runCatalogFilter(false);
   });
 </script>

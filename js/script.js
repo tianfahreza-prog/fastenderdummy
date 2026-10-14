@@ -631,7 +631,13 @@ function initHeroCountdown() {
   const deadlineStr = container.getAttribute("data-deadline");
   if (!deadlineStr) return;
 
-  // Tangani format cross-browser ISO / MySQL
+  const labelEl = document.querySelector(".hero-countdown-label") || document.getElementById("hero-countdown-label");
+  const elDays = document.getElementById("cd-days");
+  const elHours = document.getElementById("cd-hours");
+  const elMins = document.getElementById("cd-mins");
+  const elSecs = document.getElementById("cd-secs");
+
+  // Tangani format cross-browser ISO / MySQL (misal: 2026-10-13T13:00)
   let targetTime = new Date(deadlineStr).getTime();
   if (isNaN(targetTime)) {
     targetTime = new Date(deadlineStr.replace(" ", "T")).getTime();
@@ -642,27 +648,30 @@ function initHeroCountdown() {
     targetTime = Date.now() + 14 * 24 * 60 * 60 * 1000;
   }
 
-  const elDays = document.getElementById("cd-days");
-  const elHours = document.getElementById("cd-hours");
-  const elMins = document.getElementById("cd-mins");
-  const elSecs = document.getElementById("cd-secs");
+  function setClosedState() {
+    if (elDays) elDays.textContent = "00";
+    if (elHours) elHours.textContent = "00";
+    if (elMins) elMins.textContent = "00";
+    if (elSecs) elSecs.textContent = "00";
+    if (labelEl) {
+      labelEl.textContent = "PRE-ORDER BATCH INI TELAH DITUTUP";
+    }
+    container.classList.add("countdown-closed");
+  }
 
   function updateTimer() {
     const now = Date.now();
     const distance = targetTime - now;
 
     if (distance <= 0) {
-      if (elDays) elDays.textContent = "00";
-      if (elHours) elHours.textContent = "00";
-      if (elMins) elMins.textContent = "00";
-      if (elSecs) elSecs.textContent = "00";
+      setClosedState();
       return;
     }
 
-    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+    const days = Math.max(0, Math.floor(distance / (1000 * 60 * 60 * 24)));
+    const hours = Math.max(0, Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)));
+    const minutes = Math.max(0, Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)));
+    const seconds = Math.max(0, Math.floor((distance % (1000 * 60)) / 1000));
 
     if (elDays) elDays.textContent = String(days).padStart(2, "0");
     if (elHours) elHours.textContent = String(hours).padStart(2, "0");
@@ -882,17 +891,32 @@ function initTrendingCarousel() {
       return;
     }
 
-    new Swiper("#trending-swiper", {
+    const totalSlides = swiperEl.querySelectorAll(".swiper-slide").length;
+    const MARQUEE_SPEED = 6000;
+    const MANUAL_SPEED = 700;
+    let resumeMarqueeTimer = null;
+
+    const trendingSwiper = new Swiper("#trending-swiper", {
       loop: true,
-      loopAdditionalSlides: 4,
+      loopPreventsSliding: false,
+      loopedSlides: totalSlides,
+      loopAdditionalSlides: 6,
+      slidesPerGroup: 1,
+      speed: MARQUEE_SPEED,
+      autoplay: {
+        delay: 0,
+        disableOnInteraction: false,
+        pauseOnMouseEnter: true,
+      },
+      freeMode: true,
+      allowTouchMove: true,
       grabCursor: true,
       watchSlidesProgress: true,
-      speed: 450,
       spaceBetween: 16,
       slidesPerView: 1.25,
       navigation: {
-        prevEl: "#trending-prev",
-        nextEl: "#trending-next",
+        nextEl: ".btn-next-terpopuler",
+        prevEl: ".btn-prev-terpopuler",
       },
       breakpoints: {
         480: {
@@ -919,9 +943,63 @@ function initTrendingCarousel() {
       keyboard: {
         enabled: true,
       },
-      preventClicks: true,
-      preventClicksPropagation: true,
+      preventClicks: false,
+      preventClicksPropagation: false,
     });
+
+    // Pastikan klik tombol panah kiri/kanan bergeser empuk (700ms) & melanjutkan marquee setelah selesai
+    const prevBtn = document.querySelector(".btn-prev-terpopuler");
+    const nextBtn = document.querySelector(".btn-next-terpopuler");
+
+    const prepareManualSlide = () => {
+      if (resumeMarqueeTimer) {
+        clearTimeout(resumeMarqueeTimer);
+        resumeMarqueeTimer = null;
+      }
+
+      if (trendingSwiper.autoplay && trendingSwiper.autoplay.running) {
+        trendingSwiper.autoplay.stop();
+      }
+
+      // Jika sedang dalam transisi marquee panjang (6000ms), hentikan secara halus di posisi saat ini
+      if (trendingSwiper.animating && !swiperEl.classList.contains("is-manual-nav")) {
+        const currentTranslate = trendingSwiper.getTranslate();
+        trendingSwiper.setTransition(0);
+        trendingSwiper.setTranslate(currentTranslate);
+        trendingSwiper.updateActiveIndex();
+        trendingSwiper.updateSlidesClasses();
+        trendingSwiper.animating = false;
+      } else {
+        trendingSwiper.animating = false;
+      }
+
+      swiperEl.classList.add("is-manual-nav");
+      trendingSwiper.params.speed = MANUAL_SPEED;
+    };
+
+    const scheduleResumeMarquee = () => {
+      if (resumeMarqueeTimer) {
+        clearTimeout(resumeMarqueeTimer);
+      }
+      resumeMarqueeTimer = setTimeout(() => {
+        swiperEl.classList.remove("is-manual-nav");
+        trendingSwiper.params.speed = MARQUEE_SPEED;
+        if (trendingSwiper.autoplay) {
+          trendingSwiper.autoplay.start();
+        }
+      }, MANUAL_SPEED + 350);
+    };
+
+    [prevBtn, nextBtn].forEach((btn) => {
+      if (!btn) return;
+      btn.addEventListener("pointerdown", prepareManualSlide);
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        scheduleResumeMarquee();
+      });
+    });
+
+    return trendingSwiper;
   };
 
   startSwiper();

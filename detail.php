@@ -238,6 +238,8 @@ include __DIR__ . '/includes/navbar.php';
       });
     }
 
+    const IS_PO_ACTIVE = <?= isPreOrderActive() ? 'true' : 'false' ?>;
+
     // Action: Tambah ke Keranjang
     const addBtn = document.getElementById("add-to-cart-btn");
     if (addBtn) {
@@ -251,7 +253,11 @@ include __DIR__ . '/includes/navbar.php';
     if (buyNowBtn) {
       buyNowBtn.addEventListener("click", () => {
         addToCart(CURRENT_PRODUCT, quantity, selectedSize, "Standar", "");
-        window.location.href = "checkout.php";
+        if (IS_PO_ACTIVE) {
+          window.location.href = "checkout.php";
+        } else {
+          window.location.href = "keranjang.php?pesan=po_tutup";
+        }
       });
     }
   });

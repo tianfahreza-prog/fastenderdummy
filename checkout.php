@@ -6,6 +6,12 @@
  */
 require_once __DIR__ . '/includes/functions.php';
 
+// Backend Guard: Batasi akses checkout jika batas waktu Pre-Order telah berakhir
+if (!isPreOrderActive()) {
+    header('Location: keranjang.php?pesan=po_tutup');
+    exit;
+}
+
 // Jika form di-submit langsung ke checkout.php via POST tradisional
 $flashSuccessOrder = $_SESSION['checkout_success_order'] ?? null;
 $flashErrorMessage = $_SESSION['checkout_error_message'] ?? '';

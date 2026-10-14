@@ -4,6 +4,7 @@
  * Admin Sidebar Component (includes/admin-sidebar.php)
  */
 $adminPage = $adminPage ?? 'dashboard';
+$sidebarOrderCount = function_exists('getAllOrdersList') ? count(getAllOrdersList()) : 0;
 ?>
 <!-- ==========================================
      SIDEBAR NAVIGASI VERTIKAL (Sisi Kiri Admin)
@@ -37,7 +38,7 @@ $adminPage = $adminPage ?? 'dashboard';
     </a>
 
     <!-- Menu 2: Pesanan PO -->
-    <a href="admin-dashboard.php#orders-section" class="sidebar-link">
+    <a href="admin-pesanan.php" class="sidebar-link <?= ($adminPage === 'pesanan') ? 'active' : '' ?>">
       <div class="sidebar-link-content">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
           <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
@@ -46,7 +47,7 @@ $adminPage = $adminPage ?? 'dashboard';
         </svg>
         <span>Pesanan PO</span>
       </div>
-      <span class="sidebar-counter" id="sidebar-order-count">5</span>
+      <span class="sidebar-counter" id="sidebar-order-count"><?= $sidebarOrderCount ?></span>
     </a>
 
     <!-- Menu 3: Input Produk PO -->
@@ -61,7 +62,7 @@ $adminPage = $adminPage ?? 'dashboard';
     </a>
 
     <!-- Menu 4: Pengaturan Hero & Countdown PO -->
-    <a href="admin-dashboard.php#hero-banner-section" class="sidebar-link">
+    <a href="admin-hero.php" class="sidebar-link <?= ($adminPage === 'hero') ? 'active' : '' ?>">
       <div class="sidebar-link-content">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
           <circle cx="12" cy="12" r="10"></circle>

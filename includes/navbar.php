@@ -22,40 +22,37 @@ $activePage = $activePage ?? 'beranda';
     <span class="brand-text">Fast<span>ender</span></span>
   </a>
 
-  <!-- Kanan: Floating Group (Tombol Search Bulat Terpisah + Navbar Pill) -->
+  <!-- Kanan: Floating Group (Expandable Inline Search + Navbar Pill) -->
   <div class="navbar-floating-group">
-    <!-- Tombol Search Bulat Frosted Glass (Circle Button Melayang) -->
+    <?php
+      $currentSearchVal = trim((string)($_GET['search'] ?? ($_GET['q'] ?? '')));
+      $isSearchExpanded = ($currentSearchVal !== '');
+    ?>
+    <!-- Tombol & Input Search Inline (Melebar ke Kiri di Tempat) -->
     <div class="navbar-search-wrapper" id="navbarSearchWrapper">
-      <button type="button" class="navbar-search-circle-btn" id="navbarSearchBtn" aria-label="Cari Produk">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-      </button>
-
-      <!-- Dropdown Popover Pencarian (Tersembunyi secara default) -->
-      <div class="navbar-search-popover" id="navbarSearchPopover" style="display: none;">
-        <form action="katalog.php" method="GET" class="navbar-search-popover-form" id="navbarSearchForm">
-          <div class="navbar-search-input-wrap">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#737780" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <input 
-              type="text" 
-              name="q" 
-              id="navbarSearchInput" 
-              class="navbar-search-input" 
-              placeholder="Cari produk apparel..." 
-              value="<?= htmlspecialchars($_GET['q'] ?? '') ?>" 
-              autocomplete="off"
-            >
-          </div>
-          <button type="submit" class="btn btn-accent btn-sm navbar-search-submit-btn">
-            Cari
-          </button>
-        </form>
-      </div>
+      <form action="katalog.php" method="GET" class="navbar-search-expandable <?= $isSearchExpanded ? 'expanded' : '' ?>" id="navbarSearchForm" role="search">
+        <button type="button" class="navbar-search-icon-btn" id="navbarSearchBtn" aria-label="Cari Produk" aria-expanded="<?= $isSearchExpanded ? 'true' : 'false' ?>">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </button>
+        <input 
+          type="text" 
+          name="search" 
+          id="navbarSearchInput" 
+          class="navbar-search-inline-input" 
+          placeholder="Cari produk apparel..." 
+          value="<?= htmlspecialchars($currentSearchVal) ?>" 
+          autocomplete="off"
+        >
+        <button type="button" class="navbar-search-close-btn" id="navbarSearchCloseBtn" aria-label="Tutup pencarian">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </form>
     </div>
 
     <!-- Floating Pill Navigasi & Aksi -->
@@ -113,40 +110,71 @@ $activePage = $activePage ?? 'beranda';
 </header>
 
 <script>
-  // Interaksi Floating Search Popover
+  // Interaksi Expandable Inline Search Bar
   document.addEventListener('DOMContentLoaded', () => {
     const searchWrapper = document.getElementById('navbarSearchWrapper');
+    const searchForm = document.getElementById('navbarSearchForm');
     const searchBtn = document.getElementById('navbarSearchBtn');
-    const searchPopover = document.getElementById('navbarSearchPopover');
     const searchInput = document.getElementById('navbarSearchInput');
+    const searchCloseBtn = document.getElementById('navbarSearchCloseBtn');
 
-    if (!searchBtn || !searchPopover) return;
+    if (!searchForm || !searchBtn || !searchInput) return;
+
+    function expandSearch() {
+      searchForm.classList.add('expanded');
+      searchBtn.setAttribute('aria-expanded', 'true');
+      setTimeout(() => searchInput.focus(), 50);
+    }
+
+    function collapseSearch() {
+      searchForm.classList.remove('expanded');
+      searchBtn.setAttribute('aria-expanded', 'false');
+      searchInput.blur();
+    }
 
     searchBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      const isVisible = searchPopover.style.display === 'block';
-      if (isVisible) {
-        searchPopover.style.display = 'none';
-        searchBtn.classList.remove('active');
+      const isExpanded = searchForm.classList.contains('expanded');
+      if (!isExpanded) {
+        expandSearch();
+      } else if (searchInput.value.trim() !== '') {
+        searchForm.submit();
       } else {
-        searchPopover.style.display = 'block';
-        searchBtn.classList.add('active');
-        setTimeout(() => searchInput && searchInput.focus(), 100);
+        searchInput.focus();
       }
     });
 
-    if (searchInput) {
-      searchInput.addEventListener('input', (e) => {
-        if (typeof window.triggerCatalogSearch === 'function') {
-          window.triggerCatalogSearch(e.target.value);
+    if (searchCloseBtn) {
+      searchCloseBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const hadValue = searchInput.value.trim() !== '';
+        searchInput.value = '';
+        if (hadValue && typeof window.triggerCatalogSearch === 'function') {
+          window.triggerCatalogSearch('');
         }
+        collapseSearch();
       });
     }
 
+    searchInput.addEventListener('input', (e) => {
+      if (typeof window.triggerCatalogSearch === 'function') {
+        window.triggerCatalogSearch(e.target.value);
+      }
+    });
+
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (searchInput.value.trim() === '') {
+          collapseSearch();
+        }
+      }
+    });
+
     document.addEventListener('click', (e) => {
       if (searchWrapper && !searchWrapper.contains(e.target)) {
-        searchPopover.style.display = 'none';
-        searchBtn.classList.remove('active');
+        if (searchInput.value.trim() === '') {
+          collapseSearch();
+        }
       }
     });
   });

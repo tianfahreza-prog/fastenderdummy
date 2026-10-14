@@ -1,7 +1,7 @@
 <?php
 /**
  * Fastender Pre-Order Platform
- * Form Input Produk PO & Multi-Image Upload (admin-input-produk.php)
+ * Form Input & Edit Produk PO & Multi-Image Upload (admin-input-produk.php)
  * PHP Native
  */
 require_once __DIR__ . '/includes/functions.php';
@@ -12,6 +12,11 @@ $adminTitle = 'Input Produk Pre-Order';
 
 $flashSuccess = '';
 $flashError = '';
+
+// Handle pesan sukses dari redirect
+if (isset($_GET['msg']) && $_GET['msg'] === 'updated') {
+    $flashSuccess = 'Data produk berhasil diperbarui';
+}
 
 // Handle aksi cepat via GET
 if (isset($_GET['action'])) {
@@ -27,25 +32,68 @@ if (isset($_GET['action'])) {
     }
 }
 
-// Handle submit form produk baru via POST
+// Handle submit form produk (Tambah Baru atau Edit Produk) via POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $filesPayload = $_FILES['product_images'] ?? null;
-        $newId = saveNewProduct($_POST, $filesPayload);
-        $flashSuccess = 'Produk "' . sanitize($_POST['name'] ?? 'PO') . '" berhasil disimpan dan langsung mengisi slot katalog!';
+        $postEditId = isset($_POST['edit_id']) ? (int)$_POST['edit_id'] : 0;
+
+        if ($postEditId > 0) {
+            $updated = updateProductById($postEditId, $_POST, $filesPayload);
+            if ($updated) {
+                header('Location: admin-input-produk.php?msg=updated');
+                exit;
+            } else {
+                $flashError = 'Gagal memperbarui data produk: Produk tidak ditemukan.';
+            }
+        } else {
+            $newId = saveNewProduct($_POST, $filesPayload);
+            $flashSuccess = 'Produk "' . sanitize($_POST['name'] ?? 'PO') . '" berhasil disimpan dan langsung mengisi slot katalog!';
+        }
     } catch (Exception $e) {
         $flashError = 'Gagal menyimpan produk: ' . $e->getMessage();
     }
 }
 
+// Cek apakah halaman sedang dalam Mode Edit (parameter edit_id)
+$editId = isset($_GET['edit_id']) ? (int)$_GET['edit_id'] : 0;
+$editProduct = ($editId > 0) ? getProductById($editId) : null;
+$isEditMode = ($editProduct !== null);
+
+if ($isEditMode) {
+    $adminTitle = 'Edit Produk Pre-Order';
+}
+
 $storedProducts = getProductsList();
+
+// Nilai field form (Pre-fill saat mode edit, atau default saat mode input baru)
+$formName = $isEditMode ? ($editProduct['name'] ?? '') : '';
+$formSubtitle = $isEditMode ? ($editProduct['subtitle'] ?? '') : '';
+$formCategory = $isEditMode ? ($editProduct['category'] ?? 'POLSTUFF') : 'POLSTUFF';
+$formIconType = $isEditMode ? ($editProduct['icon_type'] ?? 'varsity') : 'varsity';
+$formPrice = $isEditMode ? (int)($editProduct['price'] ?? 0) : '';
+$formDpPrice = $isEditMode ? (int)($editProduct['dp_price'] ?? 0) : '';
+$formQuotaTarget = $isEditMode ? (int)($editProduct['quota_target'] ?? 100) : 100;
+$formQuotaCurrent = $isEditMode ? (int)($editProduct['quota_current'] ?? 0) : 0;
+$formBatch = $isEditMode ? ($editProduct['batch'] ?? 'Batch 1') : 'Batch 1 (Tutup 25 Nov 2026)';
+$formBadge = $isEditMode ? ($editProduct['badge'] ?? 'PO Baru') : 'PO Baru';
+$formDesc = $isEditMode ? ($editProduct['description'] ?? '') : '';
+if ($isEditMode) {
+    $rawSpecs = $editProduct['specs'] ?? [];
+    $formSpecs = is_array($rawSpecs) ? implode(', ', $rawSpecs) : (string)$rawSpecs;
+} else {
+    $formSpecs = 'Bahan Cotton Fleece 330gsm, Bordir Komputer HD, Jahitan Rantai Standar Distro, Estimasi Produksi 14-21 Hari';
+}
+$formImages = ($isEditMode && !empty($editProduct['images']) && is_array($editProduct['images']))
+    ? array_values($editProduct['images'])
+    : [];
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Input Produk Pre-Order - Admin Fastender</title>
+  <title><?= $isEditMode ? 'Edit Produk Pre-Order' : 'Input Produk Pre-Order' ?> - Admin Fastender</title>
   
   <!-- Google Fonts: Montserrat & Fira Code -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -80,13 +128,25 @@ $storedProducts = getProductsList();
         <!-- Header Halaman & Tombol Demo Cepat -->
         <div class="admin-page-title-box">
           <div>
-            <h1 class="admin-page-title">Form Input Produk Pre-Order (PO)</h1>
+            <h1 class="admin-page-title">
+              <?= $isEditMode ? 'Edit Produk Pre-Order (PO)' : 'Form Input Produk Pre-Order (PO)' ?>
+            </h1>
             <p class="admin-page-sub">
-              Produk yang Anda inputkan di halaman ini akan langsung mengisi <strong>space kosongan</strong> pada halaman Beranda dan Katalog Pengguna.
+              <?php if ($isEditMode): ?>
+                Perbarui informasi produk <strong><?= htmlspecialchars($formName) ?></strong>. Perubahan akan langsung tersinkronisasi di Beranda dan Katalog.
+              <?php else: ?>
+                Produk yang Anda inputkan di halaman ini akan langsung mengisi <strong>space kosongan</strong> pada halaman Beranda dan Katalog Pengguna.
+              <?php endif; ?>
             </p>
           </div>
           
           <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <?php if ($isEditMode): ?>
+              <a href="admin-input-produk.php" class="btn btn-outline-primary btn-sm">
+                Batal Edit
+              </a>
+            <?php endif; ?>
+
             <!-- Tombol Kosongkan Produk (Kembali ke Mode Space Kosongan) -->
             <a href="admin-input-produk.php?action=clear_empty" class="btn btn-outline-primary btn-sm" onclick="return confirm('Kosongkan semua produk untuk mengaktifkan Space Kosongan di Beranda &amp; Katalog?')">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -104,8 +164,11 @@ $storedProducts = getProductsList();
         </div>
 
         <?php if (!empty($flashSuccess)): ?>
-          <div style="background: #dcfce7; border: 1px solid #86efac; color: #15803d; padding: 14px 18px; border-radius: var(--radius-md); font-size: 14px; margin-bottom: 24px; font-weight: 500;">
-            <?= htmlspecialchars($flashSuccess) ?>
+          <div style="background: #dcfce7; border: 1px solid #86efac; color: #15803d; padding: 14px 18px; border-radius: var(--radius-md); font-size: 14px; margin-bottom: 24px; font-weight: 500; display: flex; align-items: center; gap: 8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span><?= htmlspecialchars($flashSuccess) ?></span>
           </div>
         <?php endif; ?>
 
@@ -115,8 +178,20 @@ $storedProducts = getProductsList();
           </div>
         <?php endif; ?>
 
-        <!-- FORM INPUT PRODUK (2 KOLOM: FORMULIR + LIVE PREVIEW) -->
-        <form id="admin-product-form" method="POST" action="admin-input-produk.php" enctype="multipart/form-data" onsubmit="handleFormPreSubmit(event)">
+        <?php if ($isEditMode): ?>
+          <div style="background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 12px 16px; border-radius: var(--radius-md); font-size: 13px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+            <div>
+              <strong>Mode Edit Aktif:</strong> Anda sedang mengedit produk <strong>#<?= (int)$editProduct['id'] ?> — <?= htmlspecialchars($formName) ?></strong>. Jika tidak memilih foto baru, foto produk saat ini akan tetap dipertahankan.
+            </div>
+            <a href="admin-input-produk.php" style="font-weight: 700; color: #1d4ed8; text-decoration: underline;">Batal Edit &amp; Input Baru</a>
+          </div>
+        <?php endif; ?>
+
+        <!-- FORM INPUT / EDIT PRODUK (2 KOLOM: FORMULIR + LIVE PREVIEW) -->
+        <form id="admin-product-form" method="POST" action="admin-input-produk.php<?= $isEditMode ? '?edit_id=' . (int)$editProduct['id'] : '' ?>" enctype="multipart/form-data" onsubmit="handleFormPreSubmit(event)">
+          <?php if ($isEditMode): ?>
+            <input type="hidden" name="edit_id" value="<?= (int)$editProduct['id'] ?>">
+          <?php endif; ?>
           <!-- Hidden input untuk menampung base64 array gambar dari drag and drop jika ada -->
           <input type="hidden" name="base64_images" id="inp-base64-images">
 
@@ -129,41 +204,39 @@ $storedProducts = getProductsList();
               <div class="form-card">
                 <h2 class="form-section-title">
                   <span class="step-badge">1</span>
-                  Informasi Dasar &amp; Multi-Foto Produk PO
+                  <?= $isEditMode ? 'Edit Informasi Dasar &amp; Foto Produk PO' : 'Informasi Dasar &amp; Multi-Foto Produk PO' ?>
                 </h2>
 
                 <div class="form-group">
                   <label class="form-label" for="inp-name">Nama Produk Pre-Order *</label>
-                  <input type="text" name="name" id="inp-name" class="form-control" placeholder="Contoh: Varsity Jacket Premium Angkatan 2026" required oninput="updateLivePreview()">
+                  <input type="text" name="name" id="inp-name" class="form-control" placeholder="Contoh: Varsity Jacket Premium Angkatan 2026" value="<?= htmlspecialchars($formName) ?>" required oninput="updateLivePreview()">
                 </div>
 
                 <div class="form-group">
                   <label class="form-label" for="inp-subtitle">Sub-judul / Keterangan Singkat</label>
-                  <input type="text" name="subtitle" id="inp-subtitle" class="form-control" placeholder="Contoh: Custom Bordir Komputer Nama, NIM &amp; Logo Jurusan" oninput="updateLivePreview()">
+                  <input type="text" name="subtitle" id="inp-subtitle" class="form-control" placeholder="Contoh: Custom Bordir Komputer Nama, NIM &amp; Logo Jurusan" value="<?= htmlspecialchars($formSubtitle) ?>" oninput="updateLivePreview()">
                 </div>
 
                 <div class="form-grid-2">
                   <div class="form-group">
                     <label class="form-label" for="inp-category">Kategori Apparel *</label>
                     <select name="category" id="inp-category" class="form-control" onchange="updateLivePreview()">
-                      <option value="jaket">Jaket &amp; Varsity</option>
-                      <option value="pdh">Kemeja PDH</option>
-                      <option value="hoodie">Hoodie &amp; Sweatshirt</option>
-                      <option value="kaos">Kaos Angkatan</option>
-                      <option value="merch">Merchandise &amp; Aksesoris</option>
+                      <?php foreach (getProductCategoriesMap() as $catValue => $catLabel): ?>
+                        <option value="<?= htmlspecialchars($catValue) ?>" <?= strcasecmp($formCategory, $catValue) === 0 ? 'selected' : '' ?>><?= htmlspecialchars($catLabel) ?></option>
+                      <?php endforeach; ?>
                     </select>
                   </div>
 
                   <div class="form-group">
                     <label class="form-label" for="inp-icon-type">Model Ilustrasi Mockup *</label>
                     <select name="icon_type" id="inp-icon-type" class="form-control" onchange="updateLivePreview()">
-                      <option value="varsity">Varsity Jacket</option>
-                      <option value="shirt">Kemeja PDH Drill</option>
-                      <option value="hoodie">Hoodie Fleece</option>
-                      <option value="tshirt">Kaos Distro</option>
-                      <option value="windbreaker">Jaket Windbreaker</option>
-                      <option value="totebag">Tote Bag Canvas</option>
-                      <option value="lanyard">Tali Lanyard &amp; ID Card</option>
+                      <option value="varsity" <?= $formIconType === 'varsity' ? 'selected' : '' ?>>Varsity Jacket</option>
+                      <option value="shirt" <?= $formIconType === 'shirt' ? 'selected' : '' ?>>Kemeja PDH Drill</option>
+                      <option value="hoodie" <?= $formIconType === 'hoodie' ? 'selected' : '' ?>>Hoodie Fleece</option>
+                      <option value="tshirt" <?= $formIconType === 'tshirt' ? 'selected' : '' ?>>Kaos Distro</option>
+                      <option value="windbreaker" <?= $formIconType === 'windbreaker' ? 'selected' : '' ?>>Jaket Windbreaker</option>
+                      <option value="totebag" <?= $formIconType === 'totebag' ? 'selected' : '' ?>>Tote Bag Canvas</option>
+                      <option value="lanyard" <?= $formIconType === 'lanyard' ? 'selected' : '' ?>>Tali Lanyard &amp; ID Card</option>
                     </select>
                   </div>
                 </div>
@@ -171,8 +244,8 @@ $storedProducts = getProductsList();
                 <!-- Bagian Upload Foto Produk (Bisa Lebih Dari 1 Gambar) -->
                 <div class="form-group" style="margin-top: 20px;">
                   <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
-                    <span>Upload Foto Produk PO (Bisa Multi-Foto &gt; 1)</span>
-                    <span id="upload-count-badge" style="font-size: 11px; color: var(--accent); font-weight: 600; background: var(--accent-light); padding: 2px 8px; border-radius: var(--radius-sm);">0 Foto Terpilih</span>
+                    <span><?= $isEditMode ? 'Foto Produk Saat Ini / Upload Foto Baru (Opsional)' : 'Upload Foto Produk PO (Bisa Multi-Foto &gt; 1)' ?></span>
+                    <span id="upload-count-badge" style="font-size: 11px; color: var(--accent); font-weight: 600; background: var(--accent-light); padding: 2px 8px; border-radius: var(--radius-sm);"><?= count($formImages) ?> Foto Terpilih</span>
                   </label>
                   
                   <div class="upload-dropzone" id="upload-dropzone">
@@ -184,12 +257,22 @@ $storedProducts = getProductsList();
                         <polyline points="21 15 16 10 5 21"></polyline>
                       </svg>
                     </div>
-                    <h4>Pilih atau Tarik File Foto Produk ke Sini</h4>
-                    <p>Format JPG, PNG, WEBP. Anda bisa memilih lebih dari 1 foto sekaligus.<br><strong>Foto pertama otomatis menjadi Foto Utama (Cover)</strong> di katalog.</p>
+                    <h4><?= $isEditMode ? 'Klik atau Tarik Foto Baru untuk Mengganti Foto Produk' : 'Pilih atau Tarik File Foto Produk ke Sini' ?></h4>
+                    <p>
+                      <?php if ($isEditMode): ?>
+                        Biarkan kosong jika tidak ingin mengubah foto produk saat ini.<br><strong>Jika memilih foto baru, foto lama akan digantikan secara otomatis.</strong>
+                      <?php else: ?>
+                        Format JPG, PNG, WEBP. Anda bisa memilih lebih dari 1 foto sekaligus.<br><strong>Foto pertama otomatis menjadi Foto Utama (Cover)</strong> di katalog.
+                      <?php endif; ?>
+                    </p>
                   </div>
 
                   <!-- Container Pratinjau Foto dengan Tombol Hapus per Foto -->
-                  <div id="image-preview-grid" class="image-preview-grid"></div>
+                  <div id="image-preview-grid" class="image-preview-grid">
+                    <div class="admin-empty-preview-box" style="aspect-ratio: 1 / 1; border-radius: var(--radius-cards, 10px);">
+                      <span class="admin-empty-preview-text">preview</span>
+                    </div>
+                  </div>
                 </div>
 
               </div>
@@ -204,36 +287,36 @@ $storedProducts = getProductsList();
                 <div class="form-grid-2">
                   <div class="form-group">
                     <label class="form-label" for="inp-price">Harga Satuan (Rp) *</label>
-                    <input type="number" name="price" id="inp-price" class="form-control" placeholder="245000" required oninput="calculateDp(); updateLivePreview()">
+                    <input type="number" name="price" id="inp-price" class="form-control" placeholder="245000" value="<?= htmlspecialchars((string)$formPrice) ?>" required oninput="calculateDp(); updateLivePreview()">
                   </div>
 
                   <div class="form-group">
                     <label class="form-label" for="inp-dp">Minimal Pembayaran DP 50% (Rp)</label>
-                    <input type="number" name="dp_price" id="inp-dp" class="form-control" placeholder="122500" readonly style="background: var(--bg-muted);">
+                    <input type="number" name="dp_price" id="inp-dp" class="form-control" placeholder="122500" value="<?= htmlspecialchars((string)$formDpPrice) ?>" readonly style="background: var(--bg-muted);">
                   </div>
                 </div>
 
                 <div class="form-grid-2">
                   <div class="form-group">
                     <label class="form-label" for="inp-quota-target">Target Kuota Minimal (Pcs) *</label>
-                    <input type="number" name="quota_target" id="inp-quota-target" class="form-control" value="100" min="1" required oninput="updateLivePreview()">
+                    <input type="number" name="quota_target" id="inp-quota-target" class="form-control" value="<?= (int)$formQuotaTarget ?>" min="1" required oninput="updateLivePreview()">
                   </div>
 
                   <div class="form-group">
                     <label class="form-label" for="inp-quota-current">Kuota Terisi Saat Ini (Pcs)</label>
-                    <input type="number" name="quota_current" id="inp-quota-current" class="form-control" value="0" min="0" oninput="updateLivePreview()">
+                    <input type="number" name="quota_current" id="inp-quota-current" class="form-control" value="<?= (int)$formQuotaCurrent ?>" min="0" oninput="updateLivePreview()">
                   </div>
                 </div>
 
                 <div class="form-grid-2">
                   <div class="form-group">
                     <label class="form-label" for="inp-batch">Nama Batch &amp; Batas Tutup PO</label>
-                    <input type="text" name="batch" id="inp-batch" class="form-control" placeholder="Batch 1 (Tutup 25 Nov 2026)" value="Batch 1 (Tutup 25 Nov 2026)" oninput="updateLivePreview()">
+                    <input type="text" name="batch" id="inp-batch" class="form-control" placeholder="Batch 1 (Tutup 25 Nov 2026)" value="<?= htmlspecialchars($formBatch) ?>" oninput="updateLivePreview()">
                   </div>
 
                   <div class="form-group">
                     <label class="form-label" for="inp-badge">Label Badge Produk</label>
-                    <input type="text" name="badge" id="inp-badge" class="form-control" placeholder="PO Baru / Best Seller / Kuota Terbatas" value="PO Baru" oninput="updateLivePreview()">
+                    <input type="text" name="badge" id="inp-badge" class="form-control" placeholder="PO Baru / Best Seller / Kuota Terbatas" value="<?= htmlspecialchars($formBadge) ?>" oninput="updateLivePreview()">
                   </div>
                 </div>
               </div>
@@ -247,12 +330,12 @@ $storedProducts = getProductsList();
 
                 <div class="form-group">
                   <label class="form-label" for="inp-desc">Deskripsi Lengkap Produk</label>
-                  <textarea name="description" id="inp-desc" class="form-control" rows="3" placeholder="Jelaskan kenyamanan bahan, ketebalan, dan alasan mengapa angkatan harus ikut PO ini..."></textarea>
+                  <textarea name="description" id="inp-desc" class="form-control" rows="3" placeholder="Jelaskan kenyamanan bahan, ketebalan, dan alasan mengapa angkatan harus ikut PO ini..."><?= htmlspecialchars($formDesc) ?></textarea>
                 </div>
 
                 <div class="form-group">
                   <label class="form-label" for="inp-specs">Spesifikasi Material (Pisahkan dengan tanda koma)</label>
-                  <input type="text" name="specs" id="inp-specs" class="form-control" placeholder="Bahan Cotton Fleece 330gsm, Bordir Komputer HD, Furing Quilting, Jahitan Rantai" value="Bahan Cotton Fleece 330gsm, Bordir Komputer HD, Jahitan Rantai Standar Distro, Estimasi Produksi 14-21 Hari">
+                  <input type="text" name="specs" id="inp-specs" class="form-control" placeholder="Bahan Cotton Fleece 330gsm, Bordir Komputer HD, Furing Quilting, Jahitan Rantai" value="<?= htmlspecialchars($formSpecs) ?>">
                 </div>
               </div>
 
@@ -276,12 +359,14 @@ $storedProducts = getProductsList();
                     <div class="product-thumb-wrapper">
                       <span class="product-card-badge" id="prev-badge">PO Baru</span>
                       <span class="product-batch-tag" id="prev-batch">Batch 1</span>
-                      <div id="prev-svg-container" style="width: 100%; height: 100%; padding: 20px;">
-                        <!-- SVG / Foto Live Preview -->
+                      <div id="prev-svg-container" style="width: 100%; height: 100%; padding: 12px; background: #ffffff;">
+                        <div class="admin-empty-preview-box" style="width: 100%; height: 100%; border-radius: var(--radius-md, 8px);">
+                          <span class="admin-empty-preview-text">preview</span>
+                        </div>
                       </div>
                     </div>
                     <div class="product-content">
-                      <span class="product-category" id="prev-category">Jaket &amp; Varsity</span>
+                      <span class="product-category" id="prev-category"><?= htmlspecialchars($formCategory) ?></span>
                       <h3 class="product-title" id="prev-title">Varsity Jacket Premium Angkatan 2026</h3>
                       
                       <div class="po-quota-box">
@@ -306,16 +391,22 @@ $storedProducts = getProductsList();
                     </div>
                   </div>
 
-                  <!-- Tombol Simpan Aksi Oranye Sesuai Spesifikasi -->
+                  <!-- Tombol Simpan / Perbarui Aksi -->
                   <button type="submit" class="btn btn-accent btn-block btn-lg" style="margin-top: 20px;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
-                    Simpan &amp; Terbitkan ke Katalog
+                    <?= $isEditMode ? 'Perbarui Data Produk' : 'Simpan &amp; Publikasikan Produk PO' ?>
                   </button>
 
+                  <?php if ($isEditMode): ?>
+                    <a href="admin-input-produk.php" class="btn btn-outline-primary btn-block" style="margin-top: 10px; text-align: center;">
+                      Batal Edit
+                    </a>
+                  <?php endif; ?>
+
                   <p style="font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 10px; line-height: 1.4;">
-                    Produk akan langsung tampil mengisi slot di Beranda dan Katalog Toko.
+                    <?= $isEditMode ? 'Perubahan data produk akan langsung diperbarui di Beranda dan Katalog Toko.' : 'Produk akan langsung tampil mengisi slot di Beranda dan Katalog Toko.' ?>
                   </p>
                 </div>
 
@@ -363,7 +454,7 @@ $storedProducts = getProductsList();
                   </tr>
                 <?php else: ?>
                   <?php foreach ($storedProducts as $idx => $prod): ?>
-                    <tr>
+                    <tr style="<?= ($isEditMode && (int)$prod['id'] === (int)$editProduct['id']) ? 'background-color: #eff6ff;' : '' ?>">
                       <td style="font-weight: 700; color: var(--text-muted);"><?= $idx + 1 ?></td>
                       <td>
                         <?php if (!empty($prod['images'])): ?>
@@ -376,8 +467,8 @@ $storedProducts = getProductsList();
                             <?php endif; ?>
                           </div>
                         <?php else: ?>
-                          <div style="width: 44px; height: 44px; padding: 4px; background: #eff6ff; border-radius: var(--radius-sm);">
-                            <?= getProductSvgPhp($prod['icon_type'] ?? 'varsity') ?>
+                          <div class="admin-empty-preview-box" style="width: 48px; height: 48px; border-radius: var(--radius-sm);">
+                            <span class="admin-empty-preview-text" style="font-size: 10px;">preview</span>
                           </div>
                         <?php endif; ?>
                       </td>
@@ -391,9 +482,14 @@ $storedProducts = getProductsList();
                       <td><?= $prod['quota_current'] ?> / <?= $prod['quota_target'] ?> pcs</td>
                       <td style="font-size: 12px; color: var(--text-muted);"><?= htmlspecialchars($prod['batch']) ?></td>
                       <td>
-                        <a href="admin-input-produk.php?action=delete&id=<?= $prod['id'] ?>" class="btn btn-outline-primary btn-sm" style="color: var(--danger); border-color: var(--border-color);" onclick="return confirm('Hapus produk ini dari katalog?')">
-                          Hapus
-                        </a>
+                        <div class="action-btn-group">
+                          <a href="admin-input-produk.php?edit_id=<?= (int)$prod['id'] ?>" class="action-icon-btn btn-edit-product">
+                            Edit
+                          </a>
+                          <a href="admin-input-produk.php?action=delete&id=<?= (int)$prod['id'] ?>" class="action-icon-btn btn-delete-order" onclick="return confirm('Hapus produk ini dari katalog?')">
+                            Hapus
+                          </a>
+                        </div>
                       </td>
                     </tr>
                   <?php endforeach; ?>
@@ -412,12 +508,22 @@ $storedProducts = getProductsList();
   <!-- Scripts -->
   <script src="js/script.js"></script>
   <script>
-    let uploadedImages = []; // Menyimpan array data URL foto yang diupload secara interaktif
+    const IS_EDIT_MODE = <?= json_encode($isEditMode) ?>;
+    const INITIAL_PRODUCT_IMAGES = <?= json_encode($formImages) ?>;
+    let uploadedImages = Array.isArray(INITIAL_PRODUCT_IMAGES) ? [...INITIAL_PRODUCT_IMAGES] : [];
+    let hasReplacedImagesInEdit = false;
 
     document.addEventListener("DOMContentLoaded", () => {
       calculateDp();
+      renderImagePreviews();
       updateLivePreview();
       setupDropzone();
+
+      <?php if (isset($_GET['msg']) && $_GET['msg'] === 'updated'): ?>
+      if (typeof showToast === "function") {
+        showToast("Data produk berhasil diperbarui", "success");
+      }
+      <?php endif; ?>
 
       // Mobile sidebar toggle
       const sidebarToggle = document.getElementById("toggle-admin-sidebar");
@@ -503,6 +609,12 @@ $storedProducts = getProductsList();
 
       showToast(`Sedang memproses ${files.length} foto...`, "info");
 
+      // Dalam mode edit, saat user memilih foto baru pertama kali, ganti preview foto lama dengan foto baru
+      if (IS_EDIT_MODE && !hasReplacedImagesInEdit) {
+        uploadedImages = [];
+        hasReplacedImagesInEdit = true;
+      }
+
       let addedCount = 0;
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -528,7 +640,7 @@ $storedProducts = getProductsList();
       uploadedImages.splice(index, 1);
       renderImagePreviews();
       updateLivePreview();
-      showToast("Foto berhasil dihapus", "info");
+      showToast("Foto berhasil dihapus dari pratinjau", "info");
     }
 
     function renderImagePreviews() {
@@ -541,7 +653,11 @@ $storedProducts = getProductsList();
       }
 
       if (uploadedImages.length === 0) {
-        grid.innerHTML = "";
+        grid.innerHTML = `
+          <div class="admin-empty-preview-box" style="aspect-ratio: 1 / 1; border-radius: var(--radius-cards, 10px);">
+            <span class="admin-empty-preview-text">preview</span>
+          </div>
+        `;
         return;
       }
 
@@ -555,16 +671,18 @@ $storedProducts = getProductsList();
     }
 
     function calculateDp() {
-      const price = Number(document.getElementById("inp-price").value) || 0;
+      const priceInput = document.getElementById("inp-price");
+      const dpInput = document.getElementById("inp-dp");
+      if (!priceInput || !dpInput) return;
+      const price = Number(priceInput.value) || 0;
       const dp = Math.round(price * 0.5);
-      document.getElementById("inp-dp").value = dp;
+      dpInput.value = price > 0 ? dp : "";
     }
 
     function updateLivePreview() {
       const name = document.getElementById("inp-name").value.trim() || "Nama Produk Pre-Order";
       const catSelect = document.getElementById("inp-category");
       const catText = catSelect.options[catSelect.selectedIndex].text;
-      const iconType = document.getElementById("inp-icon-type").value;
       const price = Number(document.getElementById("inp-price").value) || 0;
       const dp = Number(document.getElementById("inp-dp").value) || 0;
       const quotaTarget = Number(document.getElementById("inp-quota-target").value) || 100;
@@ -590,14 +708,21 @@ $storedProducts = getProductsList();
           <img src="${uploadedImages[0]}" alt="Live Preview" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-md);">
         `;
       } else {
-        previewContainer.innerHTML = getProductSvg(iconType);
+        previewContainer.innerHTML = `
+          <div class="admin-empty-preview-box" style="width: 100%; height: 100%; border-radius: var(--radius-md, 8px);">
+            <span class="admin-empty-preview-text">preview</span>
+          </div>
+        `;
       }
     }
 
-    // Sebelum form di-submit ke PHP POST, masukkan base64 photos ke hidden input
+    // Sebelum form di-submit ke PHP POST, masukkan base64 photos baru ke hidden input
     function handleFormPreSubmit(e) {
-      if (uploadedImages.length > 0) {
-        document.getElementById("inp-base64-images").value = JSON.stringify(uploadedImages);
+      const newBase64List = uploadedImages.filter(src => typeof src === "string" && src.startsWith("data:image/"));
+      if (newBase64List.length > 0) {
+        document.getElementById("inp-base64-images").value = JSON.stringify(newBase64List);
+      } else {
+        document.getElementById("inp-base64-images").value = "";
       }
       return true;
     }

@@ -13,11 +13,12 @@ $allProducts = getProductsList();
 $hero = getHeroSettings();
 $sliderImages = getHeroSliderImages();
 $trendingProducts = getTrendingProducts();
+$isPoActive = isPreOrderActive();
 
-// Gandakan produk jika kurang dari 8 untuk menjamin infinite loop Swiper tanpa jeda visual
+// Gandakan produk minimal 3x lipat (18 slide) untuk menjamin seamless infinite loop Swiper tanpa jeda visual atau ruang kosong di layar lebar
 $displayTrendingProducts = $trendingProducts;
-if (count($displayTrendingProducts) > 0 && count($displayTrendingProducts) < 8) {
-    while (count($displayTrendingProducts) < 8) {
+if (count($displayTrendingProducts) > 0 && count($displayTrendingProducts) < 18) {
+    while (count($displayTrendingProducts) < 18) {
         $displayTrendingProducts = array_merge($displayTrendingProducts, $trendingProducts);
     }
 }
@@ -44,11 +45,11 @@ include __DIR__ . '/includes/navbar.php';
 
           <!-- Komponen Realtime Countdown Timer -->
           <div class="hero-countdown-wrapper">
-            <div class="hero-countdown-label">
-              <?= htmlspecialchars($hero['countdown_label'] ?? 'PO DITUTUP DALAM') ?>
+            <div class="hero-countdown-label" id="hero-countdown-label">
+              <?= !$isPoActive ? 'PRE-ORDER BATCH INI TELAH DITUTUP' : htmlspecialchars($hero['countdown_label'] ?? 'PO DITUTUP DALAM') ?>
             </div>
             
-            <div class="hero-countdown-timer" id="hero-countdown" data-deadline="<?= htmlspecialchars($hero['countdown_deadline'] ?? '') ?>">
+            <div class="hero-countdown-timer <?= !$isPoActive ? 'countdown-closed' : '' ?>" id="hero-countdown" data-deadline="<?= htmlspecialchars($hero['countdown_deadline'] ?? '') ?>" data-is-closed="<?= !$isPoActive ? '1' : '0' ?>">
               <!-- Kotak DAYS -->
               <div class="countdown-card">
                 <span class="countdown-value" id="cd-days">00</span>
@@ -148,12 +149,12 @@ include __DIR__ . '/includes/navbar.php';
 
       <!-- Tombol Navigasi Panah Kiri (<) dan Kanan (>) -->
       <div class="trending-nav-controls">
-        <button type="button" class="trending-nav-btn" id="trending-prev" aria-label="Geser ke produk sebelumnya">
+        <button type="button" class="trending-nav-btn btn-prev-terpopuler" id="trending-prev" aria-label="Geser ke produk sebelumnya">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
         </button>
-        <button type="button" class="trending-nav-btn" id="trending-next" aria-label="Geser ke produk berikutnya">
+        <button type="button" class="trending-nav-btn btn-next-terpopuler" id="trending-next" aria-label="Geser ke produk berikutnya">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="9 18 15 12 9 6"></polyline>
           </svg>
@@ -172,7 +173,8 @@ include __DIR__ . '/includes/navbar.php';
                   src="<?= htmlspecialchars($tProd['image']) ?>" 
                   alt="<?= htmlspecialchars($tProd['name']) ?>" 
                   class="trending-card-img" 
-                  loading="lazy" 
+                  loading="eager" 
+                  decoding="async"
                   draggable="false"
                 >
               </div>
