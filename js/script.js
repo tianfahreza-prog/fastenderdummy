@@ -780,26 +780,51 @@ function initHeroSlider() {
   if (!slides || slides.length === 0) return;
 
   let currentSlide = 0;
+  let isTransitioning = false;
   let autoplayTimer = null;
-  const AUTOPLAY_INTERVAL = 3500; // Loop bergantian tiap 3.5 detik (sesuai instruksi 3-4 detik)
+  const AUTOPLAY_INTERVAL = 3800; // Loop bergantian tiap 3.8 detik
+  const TRANSITION_DURATION = 850; // Durasi sinkron dengan CSS transition 0.85s (850ms)
 
   function goToSlide(index) {
     if (slides.length <= 1) return;
+    if (isTransitioning) return; // Mencegah glitch saat klik bertubi-tubi
 
-    // Nonaktifkan slide lama
-    slides[currentSlide].classList.remove("active");
-    if (dots[currentSlide]) {
-      dots[currentSlide].classList.remove("active");
+    const prevIndex = currentSlide;
+    const nextIndex = (index + slides.length) % slides.length;
+    if (prevIndex === nextIndex) return;
+
+    isTransitioning = true;
+
+    const oldSlide = slides[prevIndex];
+    const newSlide = slides[nextIndex];
+
+    // Bersihkan sisa class fade-out dari semua slide selain slide aktif sebelumnya
+    slides.forEach((s, i) => {
+      if (i !== prevIndex) {
+        s.classList.remove("fade-out");
+      }
+    });
+
+    // 1. Slide lama memudar keluar secara bertahap (fade-out) dari opacity 1 ke 0
+    oldSlide.classList.remove("active");
+    oldSlide.classList.add("fade-out");
+    if (dots[prevIndex]) {
+      dots[prevIndex].classList.remove("active");
     }
 
-    // Hitung slide baru (looping circular)
-    currentSlide = (index + slides.length) % slides.length;
-
-    // Aktifkan slide baru
-    slides[currentSlide].classList.add("active");
-    if (dots[currentSlide]) {
-      dots[currentSlide].classList.add("active");
+    // 2. Slide baru memudar masuk secara simultan (fade-in) dari opacity 0 ke 1
+    currentSlide = nextIndex;
+    newSlide.classList.remove("fade-out");
+    newSlide.classList.add("active");
+    if (dots[nextIndex]) {
+      dots[nextIndex].classList.add("active");
     }
+
+    // 3. Setelah transisi selesai (850ms), bersihkan class fade-out
+    setTimeout(() => {
+      oldSlide.classList.remove("fade-out");
+      isTransitioning = false;
+    }, TRANSITION_DURATION);
   }
 
   function nextSlide() {
@@ -827,6 +852,7 @@ function initHeroSlider() {
   // Event panah navigasi
   if (nextBtn) {
     nextBtn.addEventListener("click", () => {
+      if (isTransitioning) return;
       nextSlide();
       startAutoplay();
     });
@@ -834,6 +860,7 @@ function initHeroSlider() {
 
   if (prevBtn) {
     prevBtn.addEventListener("click", () => {
+      if (isTransitioning) return;
       prevSlide();
       startAutoplay();
     });
@@ -842,6 +869,7 @@ function initHeroSlider() {
   // Event indikator dots
   dots.forEach((dot, idx) => {
     dot.addEventListener("click", () => {
+      if (isTransitioning || idx === currentSlide) return;
       goToSlide(idx);
       startAutoplay();
     });
@@ -863,7 +891,7 @@ function initHeroSlider() {
   sliderEl.addEventListener("touchend", (e) => {
     touchEndX = e.changedTouches[0].screenX;
     const diff = touchStartX - touchEndX;
-    if (Math.abs(diff) > 40) {
+    if (Math.abs(diff) > 40 && !isTransitioning) {
       if (diff > 0) {
         nextSlide();
       } else {
@@ -878,7 +906,7 @@ function initHeroSlider() {
 }
 
 // ==========================================
-// NOW TRENDING HORIZONTAL CAROUSEL (SWIPER INFINITE LOOP)
+// NOW TRENDING HORIZONTAL CAROUSEL (SWIPER INFINITE LOOP MARQUEE)
 // ==========================================
 function initTrendingCarousel() {
   const swiperEl = document.getElementById("trending-swiper");
@@ -886,38 +914,34 @@ function initTrendingCarousel() {
 
   const startSwiper = () => {
     if (typeof Swiper === "undefined") {
-      // Tunggu sejenak jika script swiper sedang dimuat
       setTimeout(startSwiper, 100);
       return;
     }
 
-    const totalSlides = swiperEl.querySelectorAll(".swiper-slide").length;
-    const MARQUEE_SPEED = 6000;
-    const MANUAL_SPEED = 700;
-    let resumeMarqueeTimer = null;
+    const MARQUEE_SPEED = 7000; // Kecepatan pelan, stabil, dan rileks (7000ms per rotasi slide)
+    const MANUAL_SPEED = 650;   // Kecepatan empuk saat tombol navigasi manual ditekan
+    let manualNavTimer = null;
 
     const trendingSwiper = new Swiper("#trending-swiper", {
       loop: true,
       loopPreventsSliding: false,
-      loopedSlides: totalSlides,
       loopAdditionalSlides: 6,
       slidesPerGroup: 1,
       speed: MARQUEE_SPEED,
       autoplay: {
         delay: 0,
         disableOnInteraction: false,
-        pauseOnMouseEnter: true,
+        pauseOnMouseEnter: true, // Jeda halus saat cursor diarahkan ke kartu produk
       },
-      freeMode: true,
+      freeMode: {
+        enabled: true,
+        momentum: false,
+      },
       allowTouchMove: true,
       grabCursor: true,
       watchSlidesProgress: true,
       spaceBetween: 16,
       slidesPerView: 1.25,
-      navigation: {
-        nextEl: ".btn-next-terpopuler",
-        prevEl: ".btn-prev-terpopuler",
-      },
       breakpoints: {
         480: {
           slidesPerView: 1.6,
@@ -945,59 +969,86 @@ function initTrendingCarousel() {
       },
       preventClicks: false,
       preventClicksPropagation: false,
+      on: {
+        init: function (swiper) {
+          if (swiper.wrapperEl) {
+            swiper.wrapperEl.style.transitionTimingFunction = "linear";
+          }
+        },
+        setTransition: function (swiper, transition) {
+          if (!swiperEl.classList.contains("is-manual-nav") && swiper.wrapperEl) {
+            swiper.wrapperEl.style.transitionTimingFunction = "linear";
+          }
+        },
+        touchEnd: function (swiper) {
+          if (!swiperEl.classList.contains("is-manual-nav")) {
+            setTimeout(() => {
+              if (swiper.wrapperEl) {
+                swiper.wrapperEl.style.transitionTimingFunction = "linear";
+              }
+              swiper.params.speed = MARQUEE_SPEED;
+              if (swiper.autoplay && !swiper.autoplay.running) {
+                swiper.autoplay.start();
+              }
+            }, 50);
+          }
+        },
+      },
     });
 
-    // Pastikan klik tombol panah kiri/kanan bergeser empuk (700ms) & melanjutkan marquee setelah selesai
+    // Sinkronisasi dengan Tombol Navigasi Manual (< dan >)
     const prevBtn = document.querySelector(".btn-prev-terpopuler");
     const nextBtn = document.querySelector(".btn-next-terpopuler");
 
-    const prepareManualSlide = () => {
-      if (resumeMarqueeTimer) {
-        clearTimeout(resumeMarqueeTimer);
-        resumeMarqueeTimer = null;
+    function executeManualSlide(direction) {
+      if (manualNavTimer) {
+        clearTimeout(manualNavTimer);
+        manualNavTimer = null;
       }
 
+      // Aktifkan mode navigasi manual sementara
+      swiperEl.classList.add("is-manual-nav");
       if (trendingSwiper.autoplay && trendingSwiper.autoplay.running) {
         trendingSwiper.autoplay.stop();
       }
 
-      // Jika sedang dalam transisi marquee panjang (6000ms), hentikan secara halus di posisi saat ini
-      if (trendingSwiper.animating && !swiperEl.classList.contains("is-manual-nav")) {
-        const currentTranslate = trendingSwiper.getTranslate();
-        trendingSwiper.setTransition(0);
-        trendingSwiper.setTranslate(currentTranslate);
-        trendingSwiper.updateActiveIndex();
-        trendingSwiper.updateSlidesClasses();
-        trendingSwiper.animating = false;
-      } else {
-        trendingSwiper.animating = false;
-      }
-
-      swiperEl.classList.add("is-manual-nav");
       trendingSwiper.params.speed = MANUAL_SPEED;
-    };
-
-    const scheduleResumeMarquee = () => {
-      if (resumeMarqueeTimer) {
-        clearTimeout(resumeMarqueeTimer);
+      if (trendingSwiper.wrapperEl) {
+        trendingSwiper.wrapperEl.style.transitionTimingFunction = "cubic-bezier(0.25, 1, 0.5, 1)";
       }
-      resumeMarqueeTimer = setTimeout(() => {
+
+      if (direction === "next") {
+        trendingSwiper.slideNext(MANUAL_SPEED);
+      } else {
+        trendingSwiper.slidePrev(MANUAL_SPEED);
+      }
+
+      // Setelah geser manual selesai, kembalikan ke linear marquee santai
+      manualNavTimer = setTimeout(() => {
         swiperEl.classList.remove("is-manual-nav");
         trendingSwiper.params.speed = MARQUEE_SPEED;
+        if (trendingSwiper.wrapperEl) {
+          trendingSwiper.wrapperEl.style.transitionTimingFunction = "linear";
+        }
         if (trendingSwiper.autoplay) {
           trendingSwiper.autoplay.start();
         }
-      }, MANUAL_SPEED + 350);
-    };
+      }, MANUAL_SPEED + 150);
+    }
 
-    [prevBtn, nextBtn].forEach((btn) => {
-      if (!btn) return;
-      btn.addEventListener("pointerdown", prepareManualSlide);
-      btn.addEventListener("click", (e) => {
+    if (prevBtn) {
+      prevBtn.addEventListener("click", (e) => {
         e.preventDefault();
-        scheduleResumeMarquee();
+        executeManualSlide("prev");
       });
-    });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        executeManualSlide("next");
+      });
+    }
 
     return trendingSwiper;
   };

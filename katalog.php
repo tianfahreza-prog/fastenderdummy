@@ -216,7 +216,10 @@ include __DIR__ . '/includes/navbar.php';
     <!-- Grid Card Produk (Responsif Presisi repeat(auto-fill, minmax(260px, 1fr)), Rounded 28px) -->
     <div id="catalog-products-grid" class="product-grid">
       <?php foreach ($allProducts as $prod): 
-        $quotaPct = min(100, round(($prod['quota_current'] / max(1, $prod['quota_target'])) * 100));
+        $quotaInfo = getProductQuotaInfo($prod);
+        $isQuotaFull = $quotaInfo['is_full'];
+        $badgeText = $isQuotaFull ? 'Kuota Penuh' : $prod['badge'];
+        $badgeClass = $isQuotaFull ? 'badge-danger' : '';
         $batchLabel = explode(' ', $prod['batch'])[0];
         $firstImg = !empty($prod['images']) ? $prod['images'][0] : 'assets/images/gambar1.jpg';
         $prodCatRaw = trim((string)($prod['category'] ?? ($prod['category_name'] ?? '')));
@@ -224,17 +227,17 @@ include __DIR__ . '/includes/navbar.php';
         $isInitialMatch = isProductMatchingCategory($prod, $selectedCat);
       ?>
         <article 
-          class="product-card" 
+          class="product-card <?= $isQuotaFull ? 'product-quota-full' : '' ?>" 
           data-id="<?= $prod['id'] ?>"
           data-name="<?= htmlspecialchars(strtolower($prod['name'])) ?>"
           data-price="<?= (int)$prod['price'] ?>"
-          data-quota="<?= (int)$prod['quota_current'] ?>"
+          data-quota="<?= (int)$quotaInfo['current'] ?>"
           data-category="<?= htmlspecialchars(strtolower($prodCatRaw)) ?>"
           data-parent-category="<?= htmlspecialchars(strtolower($prodParentRaw)) ?>"
           style="<?= $isInitialMatch ? '' : 'display: none;' ?>"
         >
           <div class="product-thumb-wrapper">
-            <span class="product-card-badge"><?= htmlspecialchars($prod['badge']) ?></span>
+            <span class="product-card-badge" style="<?= $isQuotaFull ? 'background: #ef4444; color: #ffffff;' : '' ?>"><?= htmlspecialchars($badgeText) ?></span>
             <span class="product-batch-tag"><?= htmlspecialchars($batchLabel) ?></span>
             <img src="<?= htmlspecialchars($firstImg) ?>" alt="<?= htmlspecialchars($prod['name']) ?>" class="product-thumb" loading="lazy">
           </div>
@@ -242,15 +245,7 @@ include __DIR__ . '/includes/navbar.php';
             <span class="product-category"><?= htmlspecialchars($prod['category_name'] ?? $prod['category']) ?></span>
             <h3 class="product-title" title="<?= htmlspecialchars($prod['name']) ?>"><?= htmlspecialchars($prod['name']) ?></h3>
             
-            <div class="po-quota-box">
-              <div class="po-quota-info">
-                <span>Kuota Terisi: <strong><?= $prod['quota_current'] ?>/<?= $prod['quota_target'] ?> pcs</strong></span>
-                <span><?= $quotaPct ?>%</span>
-              </div>
-              <div class="po-progress-bar">
-                <div class="po-progress-fill" style="width: <?= $quotaPct ?>%;"></div>
-              </div>
-            </div>
+            <?php /* Milestone & progress bar kuota disembunyikan dari sisi publik sesuai permintaan */ ?>
 
             <div class="product-footer">
               <div class="product-price-row">

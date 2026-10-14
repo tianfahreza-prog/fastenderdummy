@@ -41,8 +41,13 @@
           <div class="footer-contact-item">
             <span>Jl. Industri Konveksi Kreatif No. 88, Kampus Terpadu, Indonesia</span>
           </div>
+          <?php
+            $footerStoreSettings = function_exists('getStoreSettings') ? getStoreSettings() : [];
+            $footerWaNumber = $footerStoreSettings['nomor_whatsapp'] ?? '081234567890';
+            $footerWaLink = function_exists('formatWhatsAppUrl') ? formatWhatsAppUrl($footerWaNumber, 'Halo CS Fastender, saya ingin bertanya tentang pre-order apparel.') : 'https://wa.me/6281234567890';
+          ?>
           <div class="footer-contact-item">
-            <span>WhatsApp: +62 812-3456-7890 (CS Pre-Order)</span>
+            <span>WhatsApp: <a href="<?= htmlspecialchars($footerWaLink) ?>" target="_blank" style="color: #ffffff; text-decoration: underline; font-weight: 600;"><?= htmlspecialchars($footerWaNumber) ?></a> (CS Pre-Order)</span>
           </div>
           <div class="footer-contact-item">
             <span>Email: support@fastender.id</span>

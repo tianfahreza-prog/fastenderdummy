@@ -108,9 +108,6 @@ include __DIR__ . '/includes/navbar.php';
           <?php endforeach; ?>
         </div>
 
-        <!-- Overlay Halus Gradient Bawah -->
-        <div class="slider-gradient-overlay"></div>
-
         <!-- Indikator Dots -->
         <div class="slider-controls">
           <div class="slider-dots" id="slider-dots">
@@ -167,7 +164,7 @@ include __DIR__ . '/includes/navbar.php';
       <div class="swiper-wrapper">
         <?php foreach ($displayTrendingProducts as $tProd): ?>
           <div class="swiper-slide trending-slide">
-            <a href="<?= htmlspecialchars($tProd['link']) ?>" class="trending-card">
+            <a href="<?= htmlspecialchars($tProd['link']) ?>" class="trending-card" title="<?= htmlspecialchars($tProd['name']) ?>">
               <div class="trending-card-img-wrap">
                 <img 
                   src="<?= htmlspecialchars($tProd['image']) ?>" 
@@ -178,8 +175,9 @@ include __DIR__ . '/includes/navbar.php';
                   draggable="false"
                 >
               </div>
+              <div class="trending-card-divider"></div>
               <div class="trending-card-footer">
-                <span class="trending-card-name" title="<?= htmlspecialchars($tProd['name']) ?>">
+                <span class="trending-card-name">
                   <?= htmlspecialchars($tProd['name']) ?>
                 </span>
                 <span class="trending-card-price">
@@ -196,7 +194,7 @@ include __DIR__ . '/includes/navbar.php';
 </section>
 
 <!-- ==========================================
-     ALUR PRE-ORDER (HOW IT WORKS - ROUNDED SQUARE CARDS)
+     ALUR PRE-ORDER (HOW IT WORKS - VISUAL STEP CARDS)
      ========================================== -->
 <section class="po-steps-section" id="po-steps-section">
   <div class="hero-split-container">
@@ -206,31 +204,62 @@ include __DIR__ . '/includes/navbar.php';
       <h2 class="po-steps-title">Alur Pre-Order</h2>
     </div>
 
-    <!-- 4 Kolom Statis Grid Card Persegi (Rounded Square) -->
+    <!-- 4 Kolom Grid Card Alur PO dengan Visual Gambar -->
     <div class="po-steps-grid">
+      <!-- Step 01 -->
       <div class="step-card">
-        <div class="step-num">01</div>
+        <div class="step-card-header">
+          <span class="step-num">01</span>
+          <span class="step-badge-label">LANGKAH 1</span>
+        </div>
+        <div class="alur-po-img-wrap">
+          <img src="assets/gambar alur po/2.png" alt="Pilih Produk &amp; Varian" class="alur-po-img" loading="lazy">
+        </div>
         <div class="step-content">
           <h3 class="step-title">Pilih Produk &amp; Varian</h3>
           <p class="step-desc">Tentukan model, ukuran (S - 3XL), warna, dan masukkan detail custom nama atau logo angkatanmu.</p>
         </div>
       </div>
+
+      <!-- Step 02 -->
       <div class="step-card">
-        <div class="step-num">02</div>
+        <div class="step-card-header">
+          <span class="step-num">02</span>
+          <span class="step-badge-label">LANGKAH 2</span>
+        </div>
+        <div class="alur-po-img-wrap">
+          <img src="assets/gambar alur po/3.png" alt="Checkout &amp; Bayar DP" class="alur-po-img" loading="lazy">
+        </div>
         <div class="step-content">
           <h3 class="step-title">Checkout &amp; Bayar DP</h3>
           <p class="step-desc">Pilih skema pembayaran DP 50% atau lunas melalui transfer bank, QRIS, maupun dompet digital.</p>
         </div>
       </div>
+
+      <!-- Step 03 -->
       <div class="step-card">
-        <div class="step-num">03</div>
+        <div class="step-card-header">
+          <span class="step-num">03</span>
+          <span class="step-badge-label">LANGKAH 3</span>
+        </div>
+        <div class="alur-po-img-wrap">
+          <img src="assets/gambar alur po/4.png" alt="Produksi &amp; Pantau Status" class="alur-po-img" loading="lazy">
+        </div>
         <div class="step-content">
           <h3 class="step-title">Produksi &amp; Pantau Status</h3>
           <p class="step-desc">Vendor mulai proses jahit dan bordir. Kamu dapat melacak nomor pesananmu secara real-time kapan saja.</p>
         </div>
       </div>
+
+      <!-- Step 04 -->
       <div class="step-card">
-        <div class="step-num">04</div>
+        <div class="step-card-header">
+          <span class="step-num">04</span>
+          <span class="step-badge-label">LANGKAH 4</span>
+        </div>
+        <div class="alur-po-img-wrap">
+          <img src="assets/gambar alur po/5.png" alt="Pengiriman Sampai Lokasi" class="alur-po-img" loading="lazy">
+        </div>
         <div class="step-content">
           <h3 class="step-title">Pengiriman Sampai Lokasi</h3>
           <p class="step-desc">Setelah lolos quality check, barang langsung dikirim ke alamat rumah atau titik kumpul kampusmu.</p>
@@ -244,7 +273,7 @@ include __DIR__ . '/includes/navbar.php';
 <!-- ==========================================
      FLOATING ACTION BUTTON (WHATSAPP CHAT - ICON ONLY)
      ========================================== -->
-<a href="https://wa.me/6281234567890?text=Halo%20Fastender,%20saya%20ingin%20konsultasi%20PO%20Angkatan" 
+<a href="<?= htmlspecialchars(formatWhatsAppUrl(null, 'Halo Fastender, saya ingin konsultasi PO Angkatan')) ?>" 
    target="_blank" 
    rel="noopener noreferrer" 
    class="fab-whatsapp" 

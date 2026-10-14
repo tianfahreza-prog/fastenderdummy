@@ -6,6 +6,14 @@
  */
 require_once __DIR__ . '/includes/functions.php';
 
+// Backend Guard: Batasi akses checkout jika toko ditutup oleh admin
+$storeSettings = getStoreSettings();
+$status_toko = $storeSettings['status_toko'] ?? 'buka';
+if ($status_toko === 'tutup' || !isStoreOpen()) {
+    header('Location: keranjang.php?status=toko_tutup');
+    exit;
+}
+
 // Backend Guard: Batasi akses checkout jika batas waktu Pre-Order telah berakhir
 if (!isPreOrderActive()) {
     header('Location: keranjang.php?pesan=po_tutup');
@@ -28,6 +36,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['bukti_pembayaran']))
 
 $pageTitle = 'Form Pemesanan Pre-Order - Fastender';
 $activePage = 'keranjang';
+
+$storeSettings = getStoreSettings();
+$bcaNo = htmlspecialchars($storeSettings['rekening_bca_no'] ?? '828-091-2334');
+$bcaNama = htmlspecialchars($storeSettings['rekening_bca_nama'] ?? 'Fastender Konveksi');
+$mandiriNo = htmlspecialchars($storeSettings['rekening_mandiri_no'] ?? '144-00-2026889-1');
+$mandiriNama = htmlspecialchars($storeSettings['rekening_mandiri_nama'] ?? 'Fastender Konveksi');
+$qrisImg = trim((string)($storeSettings['qris_image'] ?? ''));
+$hasQrisFile = ($qrisImg !== '' && is_file(__DIR__ . '/' . ltrim($qrisImg, '/')));
 
 include __DIR__ . '/includes/header.php';
 include __DIR__ . '/includes/navbar.php';
@@ -202,9 +218,44 @@ include __DIR__ . '/includes/navbar.php';
               </label>
             </div>
 
-            <div style="margin-top: 16px; background: #ffffff; border: 1px solid var(--color-fog, #d7d7d7); border-radius: 14px; padding: 12px 16px; font-size: 12.5px; color: var(--color-ink-black, #111111); line-height: 1.5;">
-              <strong>Rekening Tujuan Transfer:</strong><br>
-              BCA <strong>828-091-2334</strong> / Mandiri <strong>144-00-2026889-1</strong> (a.n. <strong>Fastender Konveksi</strong>)
+            <!-- Detail Rekening Tujuan Dinamis dari Pengaturan Toko -->
+            <div id="pay-detail-container" style="margin-top: 16px;">
+              <!-- Detail BCA -->
+              <div id="pay-detail-bca" class="pay-method-detail-box" style="background: #ffffff; border: 1px solid var(--color-fog, #d7d7d7); border-radius: 14px; padding: 14px 16px; font-size: 13px; color: var(--color-ink-black, #111111); line-height: 1.5;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                  <span style="font-weight: 700; color: #00529c; font-size: 12px; background: #e0f2fe; padding: 2px 8px; border-radius: 4px;">Bank Central Asia (BCA)</span>
+                  <button type="button" onclick="navigator.clipboard.writeText('<?= $bcaNo ?>'); alert('Nomor Rekening BCA disalin!');" style="background: none; border: none; color: #2563eb; font-size: 11px; font-weight: 600; cursor: pointer; text-decoration: underline;">Salin No. Rek</button>
+                </div>
+                <div style="font-size: 15px; font-weight: 700; font-family: var(--font-space-mono); letter-spacing: 0.02em;"><?= $bcaNo ?></div>
+                <div style="font-size: 12px; color: var(--color-ash, #737780);">Atas Nama: <strong><?= $bcaNama ?></strong></div>
+              </div>
+
+              <!-- Detail Mandiri -->
+              <div id="pay-detail-mandiri" class="pay-method-detail-box" style="display: none; background: #ffffff; border: 1px solid var(--color-fog, #d7d7d7); border-radius: 14px; padding: 14px 16px; font-size: 13px; color: var(--color-ink-black, #111111); line-height: 1.5;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                  <span style="font-weight: 700; color: #002d62; font-size: 12px; background: #fef3c7; padding: 2px 8px; border-radius: 4px;">Bank Mandiri</span>
+                  <button type="button" onclick="navigator.clipboard.writeText('<?= $mandiriNo ?>'); alert('Nomor Rekening Mandiri disalin!');" style="background: none; border: none; color: #2563eb; font-size: 11px; font-weight: 600; cursor: pointer; text-decoration: underline;">Salin No. Rek</button>
+                </div>
+                <div style="font-size: 15px; font-weight: 700; font-family: var(--font-space-mono); letter-spacing: 0.02em;"><?= $mandiriNo ?></div>
+                <div style="font-size: 12px; color: var(--color-ash, #737780);">Atas Nama: <strong><?= $mandiriNama ?></strong></div>
+              </div>
+
+              <!-- Detail QRIS -->
+              <div id="pay-detail-qris" class="pay-method-detail-box" style="display: none; background: #ffffff; border: 1px solid var(--color-fog, #d7d7d7); border-radius: 14px; padding: 16px; font-size: 13px; color: var(--color-ink-black, #111111); text-align: center;">
+                <div style="font-weight: 700; color: #7c3aed; font-size: 13px; margin-bottom: 8px;">Scan Kode QRIS Fastender</div>
+                <?php if ($hasQrisFile): ?>
+                  <div style="background: #f8fafc; padding: 10px; border-radius: 10px; display: inline-block; border: 1px solid #e2e8f0; margin-bottom: 8px;">
+                    <img src="<?= htmlspecialchars($qrisImg) ?>" alt="QRIS Barcode" style="max-width: 180px; max-height: 180px; display: block; margin: 0 auto; border-radius: 6px;">
+                  </div>
+                  <div style="font-size: 11.5px; color: var(--color-ash, #737780);">
+                    Bisa dibayar dengan BCA Mobile, Livin, GoPay, OVO, ShopeePay, DANA, dll.
+                  </div>
+                <?php else: ?>
+                  <div style="background: #f1f5f9; padding: 16px; border-radius: 10px; color: #64748b; font-size: 12px;">
+                    Barcode QRIS akan diverifikasi langsung oleh Admin. Silakan lanjutkan upload bukti transaksi.
+                  </div>
+                <?php endif; ?>
+              </div>
             </div>
           </div>
 
@@ -215,6 +266,8 @@ include __DIR__ . '/includes/navbar.php';
           <!-- Card Ringkasan Pesanan & Upload Bukti -->
           <div class="checkout-summary-card">
             <h3 class="summary-title" style="margin-bottom: 16px;">Ringkasan Pesanan</h3>
+            <!-- Alert Banner jika Ada Produk Kuota Penuh -->
+            <div id="checkout-quota-alert" style="display: none; background: #fef2f2; border: 1px solid #fecaca; border-radius: 14px; padding: 12px 14px; margin-bottom: 18px; font-size: 12.5px; color: #b91c1c; line-height: 1.45;"></div>
 
             <!-- Item Mini List -->
             <div id="checkout-items-summary" style="margin-bottom: 20px;">
@@ -376,6 +429,7 @@ include __DIR__ . '/includes/navbar.php';
 <?php include __DIR__ . '/includes/footer.php'; ?>
 
 <script>
+  const FULL_QUOTA_PRODUCT_IDS = <?= json_encode(getFullQuotaProductIds()) ?>;
   let currentShippingCost = 15000;
   let paymentScheme = "dp"; // "dp" atau "full"
   let selectedProofFile = null;
@@ -415,6 +469,19 @@ include __DIR__ . '/includes/navbar.php';
     if (!container) return;
     container.querySelectorAll(".radio-card").forEach(card => card.classList.remove("active"));
     labelEl.classList.add("active");
+
+    const input = labelEl.querySelector("input[name='pay_method']");
+    if (input) {
+      input.checked = true;
+      const method = input.value;
+      const bcaBox = document.getElementById("pay-detail-bca");
+      const mandiriBox = document.getElementById("pay-detail-mandiri");
+      const qrisBox = document.getElementById("pay-detail-qris");
+
+      if (bcaBox) bcaBox.style.display = (method === "BCA") ? "block" : "none";
+      if (mandiriBox) mandiriBox.style.display = (method === "Mandiri") ? "block" : "none";
+      if (qrisBox) qrisBox.style.display = (method === "QRIS") ? "block" : "none";
+    }
   }
 
   // ==========================================
@@ -526,9 +593,21 @@ include __DIR__ . '/includes/navbar.php';
       statusBadge.classList.add("ready");
     }
 
+    const fullQuotaItems = (typeof hasFullQuotaInCart === "function") ? hasFullQuotaInCart() : [];
     if (confirmBtn) {
-      confirmBtn.disabled = false;
-      confirmBtn.classList.remove("btn-confirm-disabled");
+      if (fullQuotaItems.length > 0) {
+        confirmBtn.disabled = true;
+        confirmBtn.classList.add("btn-confirm-disabled");
+        confirmBtn.style.cursor = "not-allowed";
+        const confirmBtnText = document.getElementById("confirm-btn-text");
+        if (confirmBtnText) confirmBtnText.textContent = "Kuota Produk Habis";
+      } else {
+        confirmBtn.disabled = false;
+        confirmBtn.classList.remove("btn-confirm-disabled");
+        confirmBtn.style.cursor = "";
+        const confirmBtnText = document.getElementById("confirm-btn-text");
+        if (confirmBtnText) confirmBtnText.textContent = "Konfirmasi Pesanan";
+      }
     }
 
     if (file.type === "application/pdf" || ext === "pdf") {
@@ -703,6 +782,14 @@ include __DIR__ . '/includes/navbar.php';
     }
   }
 
+  function hasFullQuotaInCart() {
+    const cart = getCart();
+    return cart.filter(item => {
+      const itemId = safeParseNumber(item.id || item.productId, 0);
+      return FULL_QUOTA_PRODUCT_IDS.includes(itemId);
+    });
+  }
+
   function renderCheckoutSummary() {
     const cart = getCart();
     const summaryContainer = document.getElementById("checkout-items-summary");
@@ -726,12 +813,20 @@ include __DIR__ . '/includes/navbar.php';
       subtotal += itemSub;
       dpTotal += itemDp * itemQty;
 
+      const itemId = safeParseNumber(item.id || item.productId, 0);
+      const isQuotaFull = FULL_QUOTA_PRODUCT_IDS.includes(itemId);
+
       return `
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 13px; padding-bottom: 8px; border-bottom: 1px solid var(--border-light);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 13px; padding-bottom: 8px; border-bottom: 1px solid var(--border-light); ${isQuotaFull ? 'background: #fffdfd; padding: 6px; border-radius: 8px; border: 1px solid #fecaca;' : ''}">
           <div style="display: flex; align-items: center; gap: 10px;">
             ${item.image ? `<img src="${item.image}" alt="${itemName}" style="width: 38px; height: 38px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">` : ''}
             <div>
               <div style="font-weight: 600; color: var(--text-main);">${itemName}</div>
+              ${isQuotaFull ? `
+                <div style="display: inline-block; background: #fee2e2; color: #dc2626; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; margin: 2px 0;">
+                  ⚠️ Kuota Habis
+                </div>
+              ` : ''}
               <div style="font-size: 11px; color: var(--text-muted);">
                 ${itemSize} &bull; ${itemColor} &times; ${itemQty} pcs
               </div>
@@ -757,6 +852,50 @@ include __DIR__ . '/includes/navbar.php';
       document.getElementById("chk-due-label").textContent = "Nominal DP Harus Dibayar:";
     } else {
       document.getElementById("chk-due-label").textContent = "Total Lunas Harus Dibayar:";
+    }
+
+    const fullQuotaItems = hasFullQuotaInCart();
+    const quotaAlertEl = document.getElementById("checkout-quota-alert");
+    const confirmBtn = document.getElementById("confirm-order-btn");
+    const confirmBtnText = document.getElementById("confirm-btn-text");
+
+    if (quotaAlertEl) {
+      if (fullQuotaItems.length > 0) {
+        const itemNames = fullQuotaItems.map(i => i.name || "Produk").join(", ");
+        quotaAlertEl.style.display = "block";
+        quotaAlertEl.innerHTML = `
+          <div style="display: flex; gap: 8px; align-items: flex-start;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top: 2px;">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <div>
+              <strong style="color: #991b1b;">Pesanan Tidak Dapat Diproses:</strong><br>
+              Pesanan gagal diproses karena kuota produk <strong>${itemNames}</strong> telah habis. Silakan kembali ke keranjang untuk menghapus produk ini sebelum melanjutkan.
+            </div>
+          </div>
+        `;
+        if (confirmBtn) {
+          confirmBtn.disabled = true;
+          confirmBtn.classList.add("btn-confirm-disabled");
+          confirmBtn.style.cursor = "not-allowed";
+        }
+        if (confirmBtnText) {
+          confirmBtnText.textContent = "Kuota Produk Habis";
+        }
+      } else {
+        quotaAlertEl.style.display = "none";
+        quotaAlertEl.innerHTML = "";
+        if (confirmBtn && selectedProofFile) {
+          confirmBtn.disabled = false;
+          confirmBtn.classList.remove("btn-confirm-disabled");
+          confirmBtn.style.cursor = "";
+          if (confirmBtnText) {
+            confirmBtnText.textContent = "Konfirmasi Pesanan";
+          }
+        }
+      }
     }
   }
 
@@ -797,6 +936,17 @@ include __DIR__ . '/includes/navbar.php';
     e.preventDefault();
     const cart = getCart();
     if (cart.length === 0) return;
+
+    const fullQuotaItems = (typeof hasFullQuotaInCart === "function") ? hasFullQuotaInCart() : [];
+    if (fullQuotaItems.length > 0) {
+      const itemNames = fullQuotaItems.map(i => i.name || "Produk").join(", ");
+      const errorMsg = `Pesanan gagal diproses karena kuota produk ${itemNames} telah habis.`;
+      showProofError(errorMsg);
+      if (typeof showToast === "function") {
+        showToast(errorMsg, "error");
+      }
+      return;
+    }
 
     const fileInput = document.getElementById("bukti_pembayaran");
     const proofFile = selectedProofFile || (fileInput && fileInput.files && fileInput.files[0] ? fileInput.files[0] : null);

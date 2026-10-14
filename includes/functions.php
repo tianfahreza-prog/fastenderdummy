@@ -18,9 +18,11 @@ require_once __DIR__ . '/../config/database.php';
 define('DATA_PRODUCTS_FILE', __DIR__ . '/../data/products.json');
 define('DATA_ORDERS_FILE', __DIR__ . '/../data/orders.json');
 define('DATA_HERO_SETTINGS_FILE', __DIR__ . '/../data/hero_settings.json');
+define('DATA_STORE_SETTINGS_FILE', __DIR__ . '/../data/store_settings.json');
 define('UPLOAD_DIR', __DIR__ . '/../uploads/products/');
 define('UPLOAD_HERO_DIR', __DIR__ . '/../uploads/hero/');
 define('UPLOAD_BUKTI_DIR', __DIR__ . '/../uploads/bukti_pembayaran/');
+define('UPLOAD_QRIS_DIR', __DIR__ . '/../uploads/qris/');
 
 
 // ----------------------------------------------------
@@ -969,7 +971,19 @@ function ensureOrdersTableSchema($pdo) {
  * Memproses checkout baru beserta validasi & penyimpanan bukti pembayaran
  */
 function processNewCheckoutOrder($postData, $fileData) {
-    // 0. Validasi Periode Pre-Order (Deadline Countdown)
+    // 0a. Validasi Status Operasional Toko (Buka / Tutup)
+    if (!isStoreOpen()) {
+        $storeSettings = getStoreSettings();
+        $msg = !empty($storeSettings['pesan_toko_tutup']) 
+            ? $storeSettings['pesan_toko_tutup'] 
+            : 'Pre-Order sedang ditutup sementara untuk persiapan produksi batch berikutnya.';
+        return [
+            'success' => false,
+            'message' => $msg
+        ];
+    }
+
+    // 0b. Validasi Periode Pre-Order (Deadline Countdown)
     if (!isPreOrderActive()) {
         return [
             'success' => false,
@@ -1124,6 +1138,25 @@ function processNewCheckoutOrder($postData, $fileData) {
         ];
     }
 
+    // 5b. Validasi Limit Kuota Produk Pre-Order (Cegah jika kuota penuh atau melebihi batas)
+    foreach ($normalizedItems as $nItem) {
+        $pId = (int)$nItem['id'];
+        $prod = getProductById($pId);
+        $quotaInfo = getProductQuotaInfo($prod ?: $pId);
+        if ($quotaInfo['is_full']) {
+            return [
+                'success' => false,
+                'message' => 'Pesanan gagal diproses karena kuota produk "' . $nItem['name'] . '" telah habis.'
+            ];
+        }
+        if ($quotaInfo['target'] > 0 && ($quotaInfo['current'] + $nItem['quantity']) > $quotaInfo['target']) {
+            return [
+                'success' => false,
+                'message' => 'Pesanan gagal diproses karena kuota produk "' . $nItem['name'] . '" telah habis atau tidak mencukupi (Sisa kuota: ' . $quotaInfo['remaining'] . ' pcs).'
+            ];
+        }
+    }
+
     if ($subtotal <= 0 && !empty($postData['subtotal'])) {
         $subtotal = max(0, (int)$postData['subtotal']);
         $dpTotal = (int)round($subtotal * 0.5);
@@ -1181,6 +1214,7 @@ function processNewCheckoutOrder($postData, $fileData) {
                     (`order_id`, `product_id`, `product_name`, `size`, `color`, `custom_text`, `quantity`, `price`, `subtotal`)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ");
+                $updQuota = $pdo->prepare("UPDATE `products` SET `quota_current` = `quota_current` + ? WHERE `id` = ?");
                 foreach ($normalizedItems as $nItem) {
                     $itemStmt->execute([
                         $insertedOrderId,
@@ -1193,6 +1227,9 @@ function processNewCheckoutOrder($postData, $fileData) {
                         $nItem['price'],
                         $nItem['subtotal']
                     ]);
+                    try {
+                        $updQuota->execute([(int)$nItem['quantity'], (int)$nItem['id']]);
+                    } catch (Exception $e) {}
                 }
             }
 
@@ -2250,5 +2287,369 @@ function getHeroSliderImages() {
     return $images;
 }
 
+// ----------------------------------------------------
+// 9. PENGELOLAAN PENGATURAN TOKO (STATUS, KONTAK, REKENING & QRIS)
+// ----------------------------------------------------
 
+/**
+ * Mengambil data pengaturan toko (status buka/tutup, nomor WA, rekening BCA & Mandiri, QRIS)
+ */
+function getStoreSettings() {
+    $defaults = [
+        'status_toko' => 'buka',
+        'pesan_toko_tutup' => 'Pre-Order sedang ditutup sementara untuk persiapan produksi batch berikutnya. Anda tetap dapat menyimpan produk di keranjang.',
+        'nomor_whatsapp' => '081234567890',
+        'rekening_bca_no' => '828-091-2334',
+        'rekening_bca_nama' => 'Fastender Konveksi',
+        'rekening_mandiri_no' => '144-00-2026889-1',
+        'rekening_mandiri_nama' => 'Fastender Konveksi',
+        'qris_image' => '',
+    ];
 
+    $pdo = getDbConnection();
+    if ($pdo) {
+        try {
+            // Pastikan tabel pengaturan_toko tersedia
+            $pdo->exec("
+                CREATE TABLE IF NOT EXISTS `pengaturan_toko` (
+                    `id` INT PRIMARY KEY AUTO_INCREMENT,
+                    `status_toko` ENUM('buka', 'tutup') NOT NULL DEFAULT 'buka',
+                    `pesan_toko_tutup` TEXT,
+                    `nomor_whatsapp` VARCHAR(20) DEFAULT '081234567890',
+                    `rekening_bca_no` VARCHAR(50) DEFAULT '828-091-2334',
+                    `rekening_bca_nama` VARCHAR(100) DEFAULT 'Fastender Konveksi',
+                    `rekening_mandiri_no` VARCHAR(50) DEFAULT '144-00-2026889-1',
+                    `rekening_mandiri_nama` VARCHAR(100) DEFAULT 'Fastender Konveksi',
+                    `qris_image` VARCHAR(255) DEFAULT '',
+                    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            ");
+
+            $stmt = $pdo->query("SELECT * FROM `pengaturan_toko` ORDER BY id ASC LIMIT 1");
+            $row = $stmt->fetch();
+            if ($row) {
+                return array_merge($defaults, $row);
+            } else {
+                // Inisialisasi baris pertama default
+                $initStmt = $pdo->prepare("
+                    INSERT INTO `pengaturan_toko` (`id`, `status_toko`, `pesan_toko_tutup`, `nomor_whatsapp`, `rekening_bca_no`, `rekening_bca_nama`, `rekening_mandiri_no`, `rekening_mandiri_nama`, `qris_image`)
+                    VALUES (1, :status_toko, :pesan_toko_tutup, :nomor_whatsapp, :rekening_bca_no, :rekening_bca_nama, :rekening_mandiri_no, :rekening_mandiri_nama, :qris_image)
+                    ON DUPLICATE KEY UPDATE `id` = 1
+                ");
+                $initStmt->execute($defaults);
+                return $defaults;
+            }
+        } catch (Exception $e) {
+            // Fallback ke JSON jika DB bermasalah
+        }
+    }
+
+    // Fallback file JSON
+    if (file_exists(DATA_STORE_SETTINGS_FILE)) {
+        $json = file_get_contents(DATA_STORE_SETTINGS_FILE);
+        $data = json_decode($json, true);
+        if (is_array($data)) {
+            return array_merge($defaults, $data);
+        }
+    }
+
+    return $defaults;
+}
+
+/**
+ * Memperbarui status operasional toko ('buka' atau 'tutup') secara independen (AJAX/Fetch)
+ */
+function updateStoreStatus($status) {
+    $cleanStatus = (strtolower(trim((string)$status)) === 'tutup') ? 'tutup' : 'buka';
+    $pdo = getDbConnection();
+    if ($pdo) {
+        try {
+            getStoreSettings(); // memastikan tabel dan baris pertama telah ada
+            $stmt = $pdo->prepare("UPDATE `pengaturan_toko` SET `status_toko` = :status WHERE id = 1");
+            $stmt->execute(['status' => $cleanStatus]);
+        } catch (Exception $e) {
+            // Fallback ke penyimpanan JSON
+        }
+    }
+
+    $current = getStoreSettings();
+    $current['status_toko'] = $cleanStatus;
+    if (!is_dir(dirname(DATA_STORE_SETTINGS_FILE))) {
+        mkdir(dirname(DATA_STORE_SETTINGS_FILE), 0777, true);
+    }
+    file_put_contents(DATA_STORE_SETTINGS_FILE, json_encode($current, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    return $cleanStatus;
+}
+
+/**
+ * Menyimpan data pengaturan toko
+ */
+function saveStoreSettings($postData, $filesData = null) {
+    $current = getStoreSettings();
+
+    // Penentuan status_toko yang robust baik via checkbox, AJAX, maupun parameter eksplisit
+    if (isset($postData['status_toko'])) {
+        $val = strtolower(trim((string)$postData['status_toko']));
+        $statusToko = in_array($val, ['tutup', 'closed', '0', 'off'], true) ? 'tutup' : 'buka';
+    } elseif (isset($postData['status_toko_present'])) {
+        // Checkbox status_toko ada di formulir, namun tidak dikirim oleh browser (berarti toggle uncheck/tutup)
+        $statusToko = 'tutup';
+    } else {
+        $statusToko = $current['status_toko'] ?? 'buka';
+    }
+    $pesanTokoTutup = sanitize($postData['pesan_toko_tutup'] ?? $current['pesan_toko_tutup']);
+    $nomorWhatsapp = sanitize($postData['nomor_whatsapp'] ?? $current['nomor_whatsapp']);
+    $rekeningBcaNo = sanitize($postData['rekening_bca_no'] ?? $current['rekening_bca_no']);
+    $rekeningBcaNama = sanitize($postData['rekening_bca_nama'] ?? $current['rekening_bca_nama']);
+    $rekeningMandiriNo = sanitize($postData['rekening_mandiri_no'] ?? $current['rekening_mandiri_no']);
+    $rekeningMandiriNama = sanitize($postData['rekening_mandiri_nama'] ?? $current['rekening_mandiri_nama']);
+    $qrisImage = $current['qris_image'];
+
+    // Cek jika ada request hapus gambar QRIS
+    if (!empty($postData['remove_qris']) && $postData['remove_qris'] == '1') {
+        $qrisImage = '';
+    }
+
+    // Cek unggahan file gambar QRIS baru
+    if (!empty($filesData['name']) && $filesData['error'] === UPLOAD_ERR_OK) {
+        if (!is_dir(UPLOAD_QRIS_DIR)) {
+            mkdir(UPLOAD_QRIS_DIR, 0777, true);
+        }
+        $ext = strtolower(pathinfo($filesData['name'], PATHINFO_EXTENSION));
+        if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'svg'])) {
+            $fileName = 'qris_' . time() . '.' . $ext;
+            if (move_uploaded_file($filesData['tmp_name'], UPLOAD_QRIS_DIR . $fileName)) {
+                $qrisImage = 'uploads/qris/' . $fileName;
+            }
+        }
+    } elseif (!empty($postData['qris_image_path'])) {
+        $qrisImage = sanitize($postData['qris_image_path']);
+    }
+
+    $updated = [
+        'status_toko' => $statusToko,
+        'pesan_toko_tutup' => $pesanTokoTutup,
+        'nomor_whatsapp' => $nomorWhatsapp,
+        'rekening_bca_no' => $rekeningBcaNo,
+        'rekening_bca_nama' => $rekeningBcaNama,
+        'rekening_mandiri_no' => $rekeningMandiriNo,
+        'rekening_mandiri_nama' => $rekeningMandiriNama,
+        'qris_image' => $qrisImage,
+    ];
+
+    // Simpan ke DB MySQL jika aktif
+    $pdo = getDbConnection();
+    if ($pdo) {
+        try {
+            $pdo->exec("
+                CREATE TABLE IF NOT EXISTS `pengaturan_toko` (
+                    `id` INT PRIMARY KEY AUTO_INCREMENT,
+                    `status_toko` ENUM('buka', 'tutup') NOT NULL DEFAULT 'buka',
+                    `pesan_toko_tutup` TEXT,
+                    `nomor_whatsapp` VARCHAR(20) DEFAULT '081234567890',
+                    `rekening_bca_no` VARCHAR(50) DEFAULT '828-091-2334',
+                    `rekening_bca_nama` VARCHAR(100) DEFAULT 'Fastender Konveksi',
+                    `rekening_mandiri_no` VARCHAR(50) DEFAULT '144-00-2026889-1',
+                    `rekening_mandiri_nama` VARCHAR(100) DEFAULT 'Fastender Konveksi',
+                    `qris_image` VARCHAR(255) DEFAULT '',
+                    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            ");
+
+            $checkStmt = $pdo->query("SELECT id FROM `pengaturan_toko` LIMIT 1");
+            $hasRow = $checkStmt->fetch();
+            if ($hasRow) {
+                $upStmt = $pdo->prepare("
+                    UPDATE `pengaturan_toko` SET 
+                        `status_toko` = :status_toko,
+                        `pesan_toko_tutup` = :pesan_toko_tutup,
+                        `nomor_whatsapp` = :nomor_whatsapp,
+                        `rekening_bca_no` = :rekening_bca_no,
+                        `rekening_bca_nama` = :rekening_bca_nama,
+                        `rekening_mandiri_no` = :rekening_mandiri_no,
+                        `rekening_mandiri_nama` = :rekening_mandiri_nama,
+                        `qris_image` = :qris_image
+                    WHERE `id` = :id
+                ");
+                $updated['id'] = $hasRow['id'];
+                $upStmt->execute($updated);
+                unset($updated['id']);
+            } else {
+                $inStmt = $pdo->prepare("
+                    INSERT INTO `pengaturan_toko` (`id`, `status_toko`, `pesan_toko_tutup`, `nomor_whatsapp`, `rekening_bca_no`, `rekening_bca_nama`, `rekening_mandiri_no`, `rekening_mandiri_nama`, `qris_image`)
+                    VALUES (1, :status_toko, :pesan_toko_tutup, :nomor_whatsapp, :rekening_bca_no, :rekening_bca_nama, :rekening_mandiri_no, :rekening_mandiri_nama, :qris_image)
+                ");
+                $inStmt->execute($updated);
+            }
+        } catch (Exception $e) {
+            // Lanjut simpan ke file JSON
+        }
+    }
+
+    // Selalu simpan juga ke file JSON data/store_settings.json
+    if (!is_dir(dirname(DATA_STORE_SETTINGS_FILE))) {
+        mkdir(dirname(DATA_STORE_SETTINGS_FILE), 0777, true);
+    }
+    file_put_contents(DATA_STORE_SETTINGS_FILE, json_encode($updated, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+    return $updated;
+}
+
+/**
+ * Mengecek apakah operasional toko berstatus 'buka'
+ * @return bool True jika buka, False jika tutup
+ */
+function isStoreOpen() {
+    $settings = getStoreSettings();
+    return strtolower(trim((string)($settings['status_toko'] ?? 'buka'))) !== 'tutup';
+}
+
+/**
+ * Mengubah nomor WhatsApp menjadi link klik-ke-chat https://wa.me/62...
+ */
+function formatWhatsAppUrl($phone = null, $text = '') {
+    if ($phone === null || trim((string)$phone) === '') {
+        $settings = getStoreSettings();
+        $phone = $settings['nomor_whatsapp'] ?? '081234567890';
+    }
+    $clean = preg_replace('/[^0-9]/', '', (string)$phone);
+    if (str_starts_with($clean, '0')) {
+        $clean = '62' . substr($clean, 1);
+    } elseif (str_starts_with($clean, '8')) {
+        $clean = '62' . $clean;
+    }
+    if (empty($clean)) {
+        $clean = '6281234567890';
+    }
+    
+    $url = 'https://wa.me/' . $clean;
+    if (!empty($text)) {
+        $url .= '?text=' . urlencode($text);
+    }
+    return $url;
+}
+
+// ----------------------------------------------------
+// 12. PENGELOLAAN & PEMBATASAN LIMIT KUOTA PRE-ORDER
+// ----------------------------------------------------
+
+/**
+ * Menghitung total kuantiti produk yang sudah dipesan dalam transaksi valid/aktif.
+ */
+function getProductTotalOrderedQuantity($productId, $productName = '') {
+    $productId = (int)$productId;
+    $productName = trim((string)$productName);
+    $totalFromOrders = 0;
+
+    $pdo = getDbConnection();
+    if ($pdo) {
+        try {
+            ensureOrdersTableSchema($pdo);
+            $stmt = $pdo->prepare("
+                SELECT COALESCE(SUM(oi.quantity), 0) AS total_qty
+                FROM `order_items` oi
+                JOIN `orders` o ON o.id = oi.order_id
+                WHERE (oi.product_id = :pid OR (:pname != '' AND LOWER(oi.product_name) = LOWER(:pname2)))
+                  AND (o.payment_status NOT IN ('Dibatalkan', 'Ditolak', 'Batal') OR o.payment_status IS NULL)
+            ");
+            $stmt->execute([
+                ':pid' => $productId,
+                ':pname' => $productName,
+                ':pname2' => $productName
+            ]);
+            $totalFromOrders = (int)$stmt->fetchColumn();
+        } catch (Exception $e) {
+            // Lanjut ke fallback
+        }
+    }
+
+    // Fallback file orders.json
+    if ($totalFromOrders === 0 && file_exists(DATA_ORDERS_FILE)) {
+        $ordersRaw = file_get_contents(DATA_ORDERS_FILE);
+        $ordersArr = json_decode($ordersRaw, true);
+        if (is_array($ordersArr)) {
+            foreach ($ordersArr as $ord) {
+                $payStatus = strtolower(trim((string)($ord['payment_status'] ?? ($ord['paymentStatus'] ?? ''))));
+                if (in_array($payStatus, ['dibatalkan', 'ditolak', 'batal'], true)) {
+                    continue;
+                }
+                $items = $ord['items'] ?? [];
+                if (is_array($items)) {
+                    foreach ($items as $it) {
+                        $itId = (int)($it['id'] ?? 0);
+                        $itName = strtolower(trim((string)($it['name'] ?? '')));
+                        if (($productId > 0 && $itId === $productId) || ($productName !== '' && $itName === strtolower($productName))) {
+                            $totalFromOrders += max(1, (int)($it['quantity'] ?? ($it['qty'] ?? 1)));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Ambil baseline quota_current dari data produk
+    $prod = getProductById($productId);
+    $baseQuotaCurrent = (int)($prod['quota_current'] ?? 0);
+
+    return max($baseQuotaCurrent, $totalFromOrders);
+}
+
+/**
+ * Mendapatkan informasi kuota pre-order produk (target, terisi, sisa, dan status penuh)
+ */
+function getProductQuotaInfo($productOrId) {
+    if (is_array($productOrId)) {
+        $product = $productOrId;
+        $productId = (int)($product['id'] ?? 0);
+    } else {
+        $productId = (int)$productOrId;
+        $product = getProductById($productId);
+    }
+
+    if (!$product) {
+        return [
+            'is_full' => false,
+            'target' => 0,
+            'current' => 0,
+            'remaining' => 0
+        ];
+    }
+
+    $target = (int)($product['quota_target'] ?? 0);
+    $productName = $product['name'] ?? '';
+    $current = getProductTotalOrderedQuantity($productId, $productName);
+
+    $isFull = ($target > 0 && $current >= $target);
+    $remaining = max(0, $target - $current);
+
+    return [
+        'is_full' => $isFull,
+        'target' => $target,
+        'current' => $current,
+        'remaining' => $remaining
+    ];
+}
+
+/**
+ * Mengecek apakah kuota produk telah penuh / sold out
+ */
+function isProductQuotaFull($productOrId) {
+    $info = getProductQuotaInfo($productOrId);
+    return $info['is_full'];
+}
+
+/**
+ * Mengambil daftar ID produk yang kuotanya telah penuh (sold out)
+ */
+function getFullQuotaProductIds() {
+    $fullIds = [];
+    $all = getProductsList();
+    foreach ($all as $p) {
+        $info = getProductQuotaInfo($p);
+        if ($info['is_full']) {
+            $fullIds[] = (int)$p['id'];
+        }
+    }
+    return $fullIds;
+}

@@ -22,6 +22,14 @@ if (!$product) {
 $pageTitle = $product['name'] . ' - Fastender Pre-Order';
 $activePage = 'katalog';
 
+$storeSettings = getStoreSettings();
+$status_toko = $storeSettings['status_toko'] ?? 'buka';
+$isStoreOpen = isStoreOpen();
+$isPoActive = isPreOrderActive();
+
+$quotaInfo = getProductQuotaInfo($product);
+$isQuotaFull = $quotaInfo['is_full'];
+
 $hasRealImages = !empty($product['images']);
 
 include __DIR__ . '/includes/header.php';
@@ -79,7 +87,11 @@ include __DIR__ . '/includes/navbar.php';
         <div class="detail-header-group">
           <div class="detail-badges-row">
             <span class="badge badge-primary"><?= htmlspecialchars($product['category_name'] ?? $product['category']) ?></span>
-            <span class="badge badge-accent"><?= htmlspecialchars($product['badge'] ?? 'BATCH AKTIF') ?></span>
+            <?php if ($isQuotaFull): ?>
+              <span class="badge" style="background: #ef4444; color: #ffffff; font-weight: 700;">KUOTA PENUH / SOLD OUT</span>
+            <?php else: ?>
+              <span class="badge badge-accent"><?= htmlspecialchars($product['badge'] ?? 'BATCH AKTIF') ?></span>
+            <?php endif; ?>
           </div>
           <h1 class="detail-title"><?= htmlspecialchars($product['name']) ?></h1>
         </div>
@@ -132,18 +144,71 @@ include __DIR__ . '/includes/navbar.php';
         </div>
 
         <!-- 6. Total & Tombol Aksi Pesan/Keranjang -->
-        <div class="detail-actions">
-          <button type="button" id="buy-now-btn" class="btn btn-primary btn-lg btn-block">
-            Pesan Sekarang
-          </button>
-          <button type="button" id="add-to-cart-btn" class="btn btn-accent btn-lg btn-block">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="9" cy="21" r="1"></circle>
-              <circle cx="20" cy="21" r="1"></circle>
-              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+        <?php if ($isQuotaFull): ?>
+          <!-- Banner Alert Informasi Kuota Pre-Order Terpenuhi (Sold Out) -->
+          <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; display: flex; align-items: flex-start; gap: 10px; font-size: 12.5px; color: #b91c1c; line-height: 1.45;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px;">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
             </svg>
-            Tambah ke Keranjang
-          </button>
+            <div>
+              <strong style="color: #991b1b; display: block; margin-bottom: 2px;">Kuota Pre-Order Terpenuhi</strong>
+              Kuota pre-order untuk produk ini sudah terpenuhi. Silakan tunggu pembukaan batch berikutnya.
+            </div>
+          </div>
+        <?php elseif (!$isStoreOpen): ?>
+          <!-- Banner Alert Kecil Informasi Penutupan Pre-Order Toko -->
+          <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; display: flex; align-items: flex-start; gap: 10px; font-size: 12.5px; color: #b91c1c; line-height: 1.45;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px;">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+            <div>
+              <strong style="color: #991b1b; display: block; margin-bottom: 2px;">Pre-Order Sedang Ditutup</strong>
+              Pre-Order sedang ditutup sementara oleh admin. Anda hanya dapat memasukkan produk ke keranjang untuk batch berikutnya.
+            </div>
+          </div>
+        <?php endif; ?>
+
+        <div class="detail-actions">
+          <?php if ($isQuotaFull): ?>
+            <button type="button" id="buy-now-btn" class="btn btn-primary btn-lg btn-block" disabled style="background: #94a3b8; border-color: #94a3b8; color: #ffffff; cursor: not-allowed; pointer-events: none;" title="Kuota pre-order untuk produk ini sudah terpenuhi">
+              Kuota Penuh (Sold Out)
+            </button>
+            <button type="button" id="add-to-cart-btn" class="btn btn-accent btn-lg btn-block" disabled style="background: #cbd5e1; border-color: #cbd5e1; color: #64748b; cursor: not-allowed; pointer-events: none; opacity: 0.8;" title="Kuota pre-order untuk produk ini sudah terpenuhi">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="21" r="1"></circle>
+                <circle cx="20" cy="21" r="1"></circle>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+              </svg>
+              Tambah ke Keranjang
+            </button>
+          <?php elseif (!$isStoreOpen): ?>
+            <button type="button" id="buy-now-btn" class="btn btn-primary btn-lg btn-block" disabled style="background: #94a3b8; border-color: #94a3b8; color: #ffffff; cursor: not-allowed; pointer-events: none;" title="Pre-Order sedang ditutup sementara oleh admin">
+              Pre-Order Ditutup
+            </button>
+            <button type="button" id="add-to-cart-btn" class="btn btn-accent btn-lg btn-block">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="21" r="1"></circle>
+                <circle cx="20" cy="21" r="1"></circle>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+              </svg>
+              Tambah ke Keranjang
+            </button>
+          <?php else: ?>
+            <button type="button" id="buy-now-btn" class="btn btn-primary btn-lg btn-block">
+              Pesan Sekarang
+            </button>
+            <button type="button" id="add-to-cart-btn" class="btn btn-accent btn-lg btn-block">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="21" r="1"></circle>
+                <circle cx="20" cy="21" r="1"></circle>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+              </svg>
+              Tambah ke Keranjang
+            </button>
+          <?php endif; ?>
         </div>
 
       </div>
@@ -238,19 +303,21 @@ include __DIR__ . '/includes/navbar.php';
       });
     }
 
-    const IS_PO_ACTIVE = <?= isPreOrderActive() ? 'true' : 'false' ?>;
+    const IS_STORE_OPEN = <?= $isStoreOpen ? 'true' : 'false' ?>;
+    const IS_PO_ACTIVE = <?= $isPoActive ? 'true' : 'false' ?>;
+    const IS_QUOTA_FULL = <?= $isQuotaFull ? 'true' : 'false' ?>;
 
-    // Action: Tambah ke Keranjang
+    // Action: Tambah ke Keranjang (Hanya aktif jika kuota belum penuh)
     const addBtn = document.getElementById("add-to-cart-btn");
-    if (addBtn) {
+    if (addBtn && !IS_QUOTA_FULL) {
       addBtn.addEventListener("click", () => {
         addToCart(CURRENT_PRODUCT, quantity, selectedSize, "Standar", "");
       });
     }
 
-    // Action: Pesan Sekarang
+    // Action: Pesan Sekarang (Direct Buy ke Checkout jika Toko Buka & Kuota Ada)
     const buyNowBtn = document.getElementById("buy-now-btn");
-    if (buyNowBtn) {
+    if (buyNowBtn && IS_STORE_OPEN && !IS_QUOTA_FULL) {
       buyNowBtn.addEventListener("click", () => {
         addToCart(CURRENT_PRODUCT, quantity, selectedSize, "Standar", "");
         if (IS_PO_ACTIVE) {

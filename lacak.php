@@ -136,7 +136,7 @@ include __DIR__ . '/includes/navbar.php';
 
           <div style="margin-top: 32px; padding: 16px; background: var(--surface-plaster, #ecedee); border-radius: var(--radius-cards, 10px); font-size: 13px; color: var(--color-ash, #737780); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
             <span>Ada pertanyaan atau perubahan bordir nama?</span>
-            <a href="https://wa.me/6281234567890" target="_blank" style="color: var(--color-electric-cobalt, #000aff); font-weight: 700;">
+            <a href="<?= htmlspecialchars(formatWhatsAppUrl(null, 'Halo CS Fastender, saya ingin menanyakan status pesanan PO saya.')) ?>" target="_blank" style="color: var(--color-electric-cobalt, #000aff); font-weight: 700;">
               Chat CS Fastender di WhatsApp &rarr;
             </a>
           </div>

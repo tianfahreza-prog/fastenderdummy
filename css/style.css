@@ -316,7 +316,7 @@ button {
   text-underline-offset: 2px;
 }
 
-/* --- NAVBAR (User Side - Dual Floating Pills / Frosted Glass) --- */
+/* --- NAVBAR (User Side - Floating Frosted Glass Pills) --- */
 .navbar-wrapper {
   position: sticky;
   top: 14px;
@@ -326,6 +326,11 @@ button {
   justify-content: space-between;
   align-items: center;
   padding: 0 24px;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: none !important;
+  box-shadow: none !important;
   box-sizing: border-box;
   pointer-events: none;
   margin-top: 10px;
@@ -347,18 +352,20 @@ button {
 
 .navbar-wrapper .navbar-brand {
   pointer-events: auto;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: var(--radius-pills, 9999px);
   padding: 6px 16px 6px 8px;
-  box-shadow: 0 4px 18px -2px rgba(17, 17, 17, 0.07), 0 2px 6px -1px rgba(17, 17, 17, 0.04);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .navbar-wrapper .navbar-brand:hover {
-  background: #ffffff;
-  border-color: #cbd5e1;
-  box-shadow: 0 8px 24px -2px rgba(17, 17, 17, 0.1), 0 3px 8px -1px rgba(17, 17, 17, 0.06);
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
 }
 
 .brand-logo-img {
@@ -411,9 +418,11 @@ button {
   width: 44px;
   height: 44px;
   border-radius: var(--radius-pills, 9999px);
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 18px -2px rgba(17, 17, 17, 0.07), 0 2px 6px -1px rgba(17, 17, 17, 0.04);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -425,15 +434,18 @@ button {
 }
 
 .navbar-search-expandable:hover {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.9);
   border-color: #619ae6;
+  box-shadow: 0 6px 22px rgba(97, 154, 230, 0.2);
 }
 
 .navbar-search-expandable.expanded {
   width: 260px;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-color: #619ae6;
-  box-shadow: 0 14px 36px -4px rgba(97, 154, 230, 0.22), 0 4px 12px -2px rgba(17, 17, 17, 0.06);
+  box-shadow: 0 12px 32px -4px rgba(97, 154, 230, 0.25), 0 4px 12px rgba(0, 0, 0, 0.05);
   padding: 0 8px 0 4px;
 }
 
@@ -522,11 +534,13 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 14px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: var(--radius-pills, 9999px);
   padding: 6px 12px 6px 16px;
-  box-shadow: 0 4px 18px -2px rgba(17, 17, 17, 0.07), 0 2px 6px -1px rgba(17, 17, 17, 0.04);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   position: relative;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   height: 46px;
@@ -534,9 +548,9 @@ button {
 }
 
 .navbar-pill:hover {
-  background: #ffffff;
-  border-color: #cbd5e1;
-  box-shadow: 0 8px 24px -2px rgba(17, 17, 17, 0.1), 0 3px 8px -1px rgba(17, 17, 17, 0.06);
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
 }
 
 .navbar-nav {
@@ -563,9 +577,9 @@ button {
 }
 
 .navbar-link {
-  color: var(--color-ash, #737780);
+  color: #1e293b;
   font-size: 13.5px;
-  font-weight: 500;
+  font-weight: 600;
   padding: 6px 10px;
   border-radius: var(--radius-pills, 9999px);
   transition: color 0.2s ease, transform 0.15s ease;
@@ -1360,9 +1374,9 @@ button {
   border-radius: 28px;
   overflow: hidden;
   position: relative;
-  background-color: #0b0f19;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.16);
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
   box-sizing: border-box;
 }
 
@@ -1371,6 +1385,10 @@ button {
   height: 100%;
   position: relative;
   overflow: hidden;
+  border-radius: 28px;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 .slider-slide {
@@ -1378,35 +1396,56 @@ button {
   inset: 0;
   width: 100%;
   height: 100%;
+  min-width: 100%;
+  min-height: 100%;
   opacity: 0;
-  visibility: hidden;
-  transform: scale(1.04);
-  transition: opacity 0.85s cubic-bezier(0.4, 0, 0.2, 1), transform 0.85s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  border: none !important;
+  box-shadow: none !important;
+  overflow: hidden;
+  border-radius: 28px;
+  transition: opacity 0.85s ease-in-out;
   z-index: 1;
+  will-change: opacity;
+  background: transparent !important;
 }
 
 .slider-slide.active {
   opacity: 1;
-  visibility: visible;
-  transform: scale(1);
+  pointer-events: auto;
+  z-index: 3;
+  transition: opacity 0.85s ease-in-out;
+}
+
+.slider-slide.fade-out {
+  opacity: 0;
+  pointer-events: none;
   z-index: 2;
+  transition: opacity 0.85s ease-in-out;
 }
 
 .slider-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center center;
-  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100% !important;
+  min-height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: cover !important;
+  object-position: center center !important;
+  display: block !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: 28px;
 }
 
-/* Overlay gradient lembut di bagian bawah slider */
+/* Overlay gradient dinonaktifkan sepenuhnya untuk mencegah garis/bayangan gelap di tepi kanan */
 .slider-gradient-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.04) 0%, rgba(0, 0, 0, 0) 40%, rgba(10, 15, 28, 0.65) 100%);
-  pointer-events: none;
-  z-index: 3;
+  display: none !important;
+  background: transparent !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
 }
 
 /* Floating Badge Showcase */
@@ -1427,7 +1466,7 @@ button {
   gap: 8px;
   border: 1px solid rgba(255, 255, 255, 0.18);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-  z-index: 4;
+  z-index: 5;
 }
 
 .slider-badge-pulse {
@@ -1444,7 +1483,7 @@ button {
   position: absolute;
   bottom: 24px;
   left: 24px;
-  z-index: 4;
+  z-index: 5;
 }
 
 .slider-dots {
@@ -1494,7 +1533,7 @@ button {
   opacity: 0;
   visibility: hidden;
   transition: all 0.25s ease;
-  z-index: 4;
+  z-index: 5;
 }
 
 .slider-arrow:hover {
@@ -1585,7 +1624,7 @@ button {
   box-shadow: 0 3px 10px rgba(97, 154, 230, 0.22);
 }
 
-/* Swiper Slider Wrapper */
+/* Swiper Slider Wrapper (Continuous Linear Marquee) */
 .trending-swiper {
   width: 100%;
   padding: 8px 0 24px;
@@ -1593,15 +1632,23 @@ button {
 }
 
 .swiper-wrapper,
-.trending-swiper .swiper-wrapper {
+.trending-swiper .swiper-wrapper,
+#trending-swiper .swiper-wrapper {
   display: flex;
   align-items: stretch;
+  -webkit-transition-timing-function: linear !important;
   transition-timing-function: linear !important;
   will-change: transform;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
-.trending-swiper.is-manual-nav .swiper-wrapper {
-  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1) !important;
+.trending-swiper.is-manual-nav .swiper-wrapper,
+#trending-swiper.is-manual-nav .swiper-wrapper {
+  transition-timing-function: cubic-bezier(0.25, 1, 0.5, 1) !important;
+  -webkit-transition-timing-function: cubic-bezier(0.25, 1, 0.5, 1) !important;
 }
 
 .trending-slide {
@@ -1613,72 +1660,96 @@ button {
   transform: translate3d(0, 0, 0);
 }
 
-/* Card Minimalis Zellerfeld Style */
+/* Card Minimalis Bersih & Modern sesuai Wireframe Baru */
 .trending-card {
   width: 100%;
-  background: #f7f8fa;
-  border-radius: 28px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  padding: 18px;
+  background: #ffffff;
+  border-radius: 24px;
+  border: 1px solid #e2e8f0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   text-decoration: none;
   color: inherit;
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, background-color 0.25s ease;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease;
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.05);
 }
 
 .trending-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.12);
-  border-color: rgba(97, 154, 230, 0.4);
-  background: #ffffff;
+  transform: translateY(-4px);
+  box-shadow: 0 14px 30px -4px rgba(0, 0, 0, 0.1);
+  border-color: #cbd5e1;
 }
 
+/* Area Atas: Gambar Produk Dominan */
 .trending-card-img-wrap {
   width: 100%;
   aspect-ratio: 1 / 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 14px;
-  border-radius: 20px;
+  margin: 0;
+  padding: 0;
+  border-top-left-radius: 23px;
+  border-top-right-radius: 23px;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
   overflow: hidden;
-  background: #ffffff;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.03);
+  background: #f8fafc;
+  box-shadow: none;
+  position: relative;
 }
 
 .trending-card-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 20px;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  border-top-left-radius: 23px;
+  border-top-right-radius: 23px;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
   transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
   display: block;
 }
 
 .trending-card:hover .trending-card-img {
-  transform: scale(1.06);
+  transform: scale(1.05);
 }
 
+/* Garis Pemisah (Divider) Tegas & Bersih di Bawah Gambar */
+.trending-card-divider {
+  width: 100%;
+  height: 1px;
+  background-color: #e2e8f0;
+  border: none;
+  margin: 0;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+/* Area Bawah: Info Baris Sejajar (Nama di Kiri, Harga di Kanan) */
 .trending-card-footer {
   display: flex;
-  align-items: baseline;
   justify-content: space-between;
-  gap: 12px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  align-items: center;
+  padding: 14px 16px;
+  background: #ffffff;
   width: 100%;
+  box-sizing: border-box;
+  gap: 12px;
+  border-top: none;
 }
 
 .trending-card-name {
   font-size: 15px;
   font-weight: 700;
   color: var(--color-ink-black, #111111);
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1689,8 +1760,8 @@ button {
 
 .trending-card-price {
   font-size: 15px;
-  font-weight: 700;
-  color: #619ae6;
+  font-weight: 800;
+  color: var(--color-ink-black, #111111);
   letter-spacing: -0.02em;
   white-space: nowrap;
   flex-shrink: 0;
@@ -1702,12 +1773,20 @@ button {
     padding: 24px 0 36px;
   }
   .trending-card {
-    padding: 14px;
-    border-radius: 18px;
+    border-radius: 20px;
+  }
+  .trending-card-img-wrap,
+  .trending-card-img {
+    border-top-left-radius: 19px;
+    border-top-right-radius: 19px;
+  }
+  .trending-card-footer {
+    padding: 12px 14px;
+    gap: 8px;
   }
   .trending-card-name,
   .trending-card-price {
-    font-size: 14px;
+    font-size: 13.5px;
   }
   .trending-nav-btn {
     width: 38px;
@@ -1799,52 +1878,62 @@ button {
 .po-steps-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
+  gap: 16px;
   width: 100%;
+  align-items: stretch;
 }
 
 .step-card {
-  background: #f7f8fa;
-  border-radius: 28px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  padding: clamp(22px, 2.2vw, 32px);
+  background: #ffffff;
+  border-radius: 24px;
+  border: 1px solid #e2e8f0;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  aspect-ratio: 1 / 1;
+  justify-content: flex-start;
+  height: 100%;
+  min-height: 360px;
   box-sizing: border-box;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.04);
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
               box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
-              border-color 0.25s ease, 
-              background-color 0.25s ease;
+              border-color 0.25s ease;
 }
 
 .step-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.08);
-  border-color: rgba(97, 154, 230, 0.4);
-  background: #ffffff;
+  transform: translateY(-5px);
+  box-shadow: 0 14px 32px -6px rgba(0, 0, 0, 0.08);
+  border-color: #cbd5e1;
+}
+
+/* Baris Header Langkah (Badge nomor & label sejajar di paling atas) */
+.step-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  width: 100%;
+  flex-shrink: 0;
 }
 
 .step-num {
-  width: clamp(42px, 3.2vw, 50px);
-  height: clamp(42px, 3.2vw, 50px);
-  background: #ffffff;
+  width: 38px;
+  height: 38px;
+  background: #f1f5f9;
   color: #619ae6;
-  border-radius: 14px;
-  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-space-mono, monospace);
-  font-weight: 700;
-  font-size: clamp(14px, 1.1vw, 17px);
+  font-weight: 800;
+  font-size: 15px;
   letter-spacing: -0.02em;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
   transition: all 0.25s ease;
-  margin: 0 0 16px 0;
   flex-shrink: 0;
 }
 
@@ -1852,12 +1941,54 @@ button {
   background: #619ae6;
   color: #ffffff;
   border-color: #619ae6;
+  transform: scale(1.05);
+  box-shadow: 0 4px 14px rgba(97, 154, 230, 0.3);
+}
+
+.step-badge-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  font-family: var(--font-space-mono, monospace);
+}
+
+/* Container Visual Gambar Alur PO: Bersih Melayang Tanpa Box/Background Abu-abu */
+.alur-po-img-wrap {
+  width: 100%;
+  height: 180px;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0 0 16px 0;
+  overflow: visible;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.alur-po-img {
+  max-height: 165px !important;
+  width: auto !important;
+  max-width: 100% !important;
+  object-fit: contain !important;
+  margin: 0 auto;
+  display: block;
+  background: transparent !important;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.08));
+}
+
+.step-card:hover .alur-po-img {
   transform: scale(1.06);
-  box-shadow: 0 6px 16px rgba(97, 154, 230, 0.3);
 }
 
 .step-card.active {
-  border-color: rgba(97, 154, 230, 0.35);
+  border-color: rgba(97, 154, 230, 0.4);
 }
 
 .step-card.active .step-num {
@@ -1866,29 +1997,35 @@ button {
   border-color: #619ae6;
 }
 
+/* Penyelarasan Konten Bawah */
 .step-content {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex: 1;
+  width: 100%;
 }
 
 .step-title,
 .step-card h3,
 .step-card h4 {
   font-family: var(--font-roobert, 'Inter', sans-serif);
-  font-size: clamp(16px, 1.3vw, 18px);
+  font-size: 16.5px;
   font-weight: 700;
   margin: 0;
   color: var(--color-ink-black, #111111);
   letter-spacing: -0.03em;
-  line-height: 1.25;
+  line-height: 1.35;
+  min-height: 44px;
+  display: flex;
+  align-items: flex-start;
 }
 
 .step-desc,
 .step-card p {
-  font-size: clamp(12.5px, 0.95vw, 13.5px);
-  color: var(--color-ash, #737780);
-  line-height: 1.5;
+  font-size: 13.5px;
+  color: #64748b;
+  line-height: 1.55;
   margin: 0;
 }
 
@@ -3662,6 +3799,7 @@ button {
 
   .navbar-wrapper {
     padding: 0 16px;
+    top: 10px;
     justify-content: space-between;
     align-items: center;
   }
@@ -3710,8 +3848,10 @@ button {
     top: calc(100% + 10px);
     right: 0;
     min-width: 210px;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.8);
     border-radius: 20px;
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04);
     flex-direction: column;
@@ -3800,14 +3940,38 @@ button {
 
   .po-steps-grid {
     grid-template-columns: 1fr;
-    gap: 14px;
+    gap: 24px;
+    position: relative;
   }
 
   .step-card {
     aspect-ratio: auto;
-    min-height: 160px;
-    padding: 24px 20px;
+    min-height: auto;
+    padding: 20px 18px;
     border-radius: 20px;
+  }
+
+  .step-card:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    bottom: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 8px solid #cbd5e1;
+    z-index: 2;
+  }
+
+  .alur-po-img-wrap {
+    height: 160px;
+    margin-bottom: 14px;
+  }
+
+  .alur-po-img {
+    max-height: 145px !important;
   }
 
   .footer-grid {
