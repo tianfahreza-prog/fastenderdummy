@@ -782,7 +782,7 @@ function initHeroSlider() {
   let currentSlide = 0;
   let isTransitioning = false;
   let autoplayTimer = null;
-  const AUTOPLAY_INTERVAL = 3800; // Loop bergantian tiap 3.8 detik
+  const AUTOPLAY_INTERVAL = 4500; // Loop bergantian tiap 4.5 detik (tenang & konsisten)
   const TRANSITION_DURATION = 850; // Durasi sinkron dengan CSS transition 0.85s (850ms)
 
   function goToSlide(index) {
@@ -906,154 +906,238 @@ function initHeroSlider() {
 }
 
 // ==========================================
-// NOW TRENDING HORIZONTAL CAROUSEL (SWIPER INFINITE LOOP MARQUEE)
+// NOW TRENDING HORIZONTAL CAROUSEL (ULTRA-SMOOTH CONTINUOUS TICKER)
+// Kecepatan 100% konsisten, selalu lambat, tanpa lonjakan/glitch, bebas bug
 // ==========================================
 function initTrendingCarousel() {
-  const swiperEl = document.getElementById("trending-swiper");
-  if (!swiperEl) return;
+  const container = document.getElementById("trending-swiper");
+  if (!container) return;
 
-  const startSwiper = () => {
-    if (typeof Swiper === "undefined") {
-      setTimeout(startSwiper, 100);
-      return;
+  const wrapper = container.querySelector(".swiper-wrapper");
+  if (!wrapper) return;
+
+  const slides = wrapper.querySelectorAll(".trending-slide");
+  if (!slides || slides.length === 0) return;
+
+  const originalCount = parseInt(container.getAttribute("data-original-count"), 10) || 6;
+  if (slides.length <= originalCount) return;
+
+  // Kecepatan gerak konstan dalam piksel per detik:
+  // 32px per detik = sangat lambat, tenang, elegan, dan nyaman dibaca
+  const SPEED_PX_PER_SEC = 32;
+
+  let currentTranslate = 0;
+  let oneCycleWidth = 0;
+  let isHovered = false;
+  let isDragging = false;
+  let isManualAnimating = false;
+  let manualAnimReq = null;
+  let lastTimestamp = null;
+  let animFrameId = null;
+
+  // Hitung lebar 1 siklus produk asli secara presisi dari posisi elemen DOM
+  function calculateDimensions() {
+    if (slides[originalCount] && slides[0]) {
+      const dist = slides[originalCount].offsetLeft - slides[0].offsetLeft;
+      if (dist > 0) {
+        oneCycleWidth = dist;
+      }
+    }
+    // Fallback jika offsetLeft belum terhitung
+    if (!oneCycleWidth || oneCycleWidth <= 0) {
+      const slideWidth = slides[0].offsetWidth || 270;
+      const computedMargin = parseFloat(window.getComputedStyle(slides[0]).marginRight) || 20;
+      oneCycleWidth = (slideWidth + computedMargin) * originalCount;
+    }
+  }
+
+  calculateDimensions();
+
+  // Resize listener untuk mengupdate dimensi loop saat ukuran layar berubah
+  window.addEventListener("resize", () => {
+    calculateDimensions();
+    if (oneCycleWidth > 0) {
+      while (currentTranslate <= -oneCycleWidth) currentTranslate += oneCycleWidth;
+      while (currentTranslate > 0) currentTranslate -= oneCycleWidth;
+      setTranslate(currentTranslate);
+    }
+  });
+
+  // Terapkan translasi 3D ke wrapper untuk akselerasi perangkat keras (GPU)
+  function setTranslate(val) {
+    currentTranslate = val;
+    wrapper.style.transform = `translate3d(${val}px, 0, 0)`;
+  }
+
+  // Loop requestAnimationFrame berbasis Delta-Time (konsisten di semua monitor 60Hz/120Hz/144Hz)
+  function step(timestamp) {
+    if (!lastTimestamp) {
+      lastTimestamp = timestamp;
+    }
+    // Batasi delta time maksimal 100ms untuk mencegah lonjakan saat tab diminimize
+    const delta = Math.min((timestamp - lastTimestamp) / 1000, 0.1);
+    lastTimestamp = timestamp;
+
+    if (!isHovered && !isDragging && !isManualAnimating && oneCycleWidth > 0) {
+      currentTranslate -= SPEED_PX_PER_SEC * delta;
+
+      // Seamless infinite loop: perpindahan modul visual 100% tanpa celah/hentakan
+      while (currentTranslate <= -oneCycleWidth) {
+        currentTranslate += oneCycleWidth;
+      }
+      while (currentTranslate > 0) {
+        currentTranslate -= oneCycleWidth;
+      }
+
+      setTranslate(currentTranslate);
     }
 
-    const MARQUEE_SPEED = 7000; // Kecepatan pelan, stabil, dan rileks (7000ms per rotasi slide)
-    const MANUAL_SPEED = 650;   // Kecepatan empuk saat tombol navigasi manual ditekan
-    let manualNavTimer = null;
+    animFrameId = requestAnimationFrame(step);
+  }
 
-    const trendingSwiper = new Swiper("#trending-swiper", {
-      loop: true,
-      loopPreventsSliding: false,
-      loopAdditionalSlides: 6,
-      slidesPerGroup: 1,
-      speed: MARQUEE_SPEED,
-      autoplay: {
-        delay: 0,
-        disableOnInteraction: false,
-        pauseOnMouseEnter: true, // Jeda halus saat cursor diarahkan ke kartu produk
-      },
-      freeMode: {
-        enabled: true,
-        momentum: false,
-      },
-      allowTouchMove: true,
-      grabCursor: true,
-      watchSlidesProgress: true,
-      spaceBetween: 16,
-      slidesPerView: 1.25,
-      breakpoints: {
-        480: {
-          slidesPerView: 1.6,
-          spaceBetween: 16,
-        },
-        680: {
-          slidesPerView: 2.3,
-          spaceBetween: 18,
-        },
-        960: {
-          slidesPerView: 3.2,
-          spaceBetween: 20,
-        },
-        1280: {
-          slidesPerView: 4.2,
-          spaceBetween: 20,
-        },
-        1600: {
-          slidesPerView: 5.2,
-          spaceBetween: 22,
-        },
-      },
-      keyboard: {
-        enabled: true,
-      },
-      preventClicks: false,
-      preventClicksPropagation: false,
-      on: {
-        init: function (swiper) {
-          if (swiper.wrapperEl) {
-            swiper.wrapperEl.style.transitionTimingFunction = "linear";
-          }
-        },
-        setTransition: function (swiper, transition) {
-          if (!swiperEl.classList.contains("is-manual-nav") && swiper.wrapperEl) {
-            swiper.wrapperEl.style.transitionTimingFunction = "linear";
-          }
-        },
-        touchEnd: function (swiper) {
-          if (!swiperEl.classList.contains("is-manual-nav")) {
-            setTimeout(() => {
-              if (swiper.wrapperEl) {
-                swiper.wrapperEl.style.transitionTimingFunction = "linear";
-              }
-              swiper.params.speed = MARQUEE_SPEED;
-              if (swiper.autoplay && !swiper.autoplay.running) {
-                swiper.autoplay.start();
-              }
-            }, 50);
-          }
-        },
-      },
-    });
+  animFrameId = requestAnimationFrame(step);
 
-    // Sinkronisasi dengan Tombol Navigasi Manual (< dan >)
-    const prevBtn = document.querySelector(".btn-prev-terpopuler");
-    const nextBtn = document.querySelector(".btn-next-terpopuler");
+  // Pause on hover: saat kursor mouse di atas slider, berhenti tenang di piksel saat itu
+  container.addEventListener("mouseenter", () => {
+    isHovered = true;
+  });
 
-    function executeManualSlide(direction) {
-      if (manualNavTimer) {
-        clearTimeout(manualNavTimer);
-        manualNavTimer = null;
+  // Resume on leave: lanjutkan kembali dengan kecepatan lambat yang persis sama
+  container.addEventListener("mouseleave", () => {
+    isHovered = false;
+    lastTimestamp = performance.now(); // reset timer agar delta tidak menumpuk
+  });
+
+  // Navigasi manual via tombol panah (< dan >)
+  const prevBtn = document.querySelector(".btn-prev-terpopuler") || document.getElementById("trending-prev");
+  const nextBtn = document.querySelector(".btn-next-terpopuler") || document.getElementById("trending-next");
+
+  function getStepDistance() {
+    if (slides.length > 1) {
+      const stepDist = slides[1].offsetLeft - slides[0].offsetLeft;
+      if (stepDist > 0) return stepDist;
+    }
+    return (slides[0].offsetWidth || 270) + 20;
+  }
+
+  function smoothManualMove(direction) {
+    if (manualAnimReq) {
+      cancelAnimationFrame(manualAnimReq);
+      manualAnimReq = null;
+    }
+
+    isManualAnimating = true;
+    const stepDist = getStepDistance();
+    const startX = currentTranslate;
+    const targetDistance = (direction === "next") ? -stepDist : stepDist;
+    const duration = 460; // ms
+    const startTime = performance.now();
+
+    function easeOutCubic(t) {
+      return 1 - Math.pow(1 - t, 3);
+    }
+
+    function animateManual(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const easeVal = easeOutCubic(progress);
+
+      let newX = startX + (targetDistance * easeVal);
+
+      if (oneCycleWidth > 0) {
+        while (newX <= -oneCycleWidth) newX += oneCycleWidth;
+        while (newX > 0) newX -= oneCycleWidth;
       }
 
-      // Aktifkan mode navigasi manual sementara
-      swiperEl.classList.add("is-manual-nav");
-      if (trendingSwiper.autoplay && trendingSwiper.autoplay.running) {
-        trendingSwiper.autoplay.stop();
-      }
+      setTranslate(newX);
 
-      trendingSwiper.params.speed = MANUAL_SPEED;
-      if (trendingSwiper.wrapperEl) {
-        trendingSwiper.wrapperEl.style.transitionTimingFunction = "cubic-bezier(0.25, 1, 0.5, 1)";
-      }
-
-      if (direction === "next") {
-        trendingSwiper.slideNext(MANUAL_SPEED);
+      if (progress < 1) {
+        manualAnimReq = requestAnimationFrame(animateManual);
       } else {
-        trendingSwiper.slidePrev(MANUAL_SPEED);
+        isManualAnimating = false;
+        lastTimestamp = performance.now();
       }
-
-      // Setelah geser manual selesai, kembalikan ke linear marquee santai
-      manualNavTimer = setTimeout(() => {
-        swiperEl.classList.remove("is-manual-nav");
-        trendingSwiper.params.speed = MARQUEE_SPEED;
-        if (trendingSwiper.wrapperEl) {
-          trendingSwiper.wrapperEl.style.transitionTimingFunction = "linear";
-        }
-        if (trendingSwiper.autoplay) {
-          trendingSwiper.autoplay.start();
-        }
-      }, MANUAL_SPEED + 150);
     }
 
-    if (prevBtn) {
-      prevBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        executeManualSlide("prev");
-      });
+    manualAnimReq = requestAnimationFrame(animateManual);
+  }
+
+  if (prevBtn) {
+    prevBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      smoothManualMove("prev");
+    });
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      smoothManualMove("next");
+    });
+  }
+
+  // Dukungan sentuhan / drag geser manual (Mouse & Touch)
+  let startPointerX = 0;
+  let startTranslateDrag = 0;
+  let isPointerDown = false;
+  let hasMoved = false;
+
+  function onPointerDown(e) {
+    if (isManualAnimating) {
+      cancelAnimationFrame(manualAnimReq);
+      isManualAnimating = false;
+    }
+    isPointerDown = true;
+    isDragging = true;
+    hasMoved = false;
+    startPointerX = (e.clientX !== undefined) ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+    startTranslateDrag = currentTranslate;
+    container.style.cursor = "grabbing";
+  }
+
+  function onPointerMove(e) {
+    if (!isPointerDown) return;
+    const curX = (e.clientX !== undefined) ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+    const diff = curX - startPointerX;
+
+    if (Math.abs(diff) > 4) {
+      hasMoved = true;
     }
 
-    if (nextBtn) {
-      nextBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        executeManualSlide("next");
-      });
+    let dragX = startTranslateDrag + diff;
+    if (oneCycleWidth > 0) {
+      while (dragX <= -oneCycleWidth) dragX += oneCycleWidth;
+      while (dragX > 0) dragX -= oneCycleWidth;
     }
+    setTranslate(dragX);
+  }
 
-    return trendingSwiper;
-  };
+  function onPointerUp() {
+    if (!isPointerDown) return;
+    isPointerDown = false;
+    isDragging = false;
+    container.style.cursor = "";
+    lastTimestamp = performance.now();
+  }
 
-  startSwiper();
+  container.addEventListener("mousedown", onPointerDown);
+  window.addEventListener("mousemove", onPointerMove);
+  window.addEventListener("mouseup", onPointerUp);
+
+  container.addEventListener("touchstart", onPointerDown, { passive: true });
+  window.addEventListener("touchmove", onPointerMove, { passive: true });
+  window.addEventListener("touchend", onPointerUp, { passive: true });
+
+  // Cegah link <a> terbuka hanya jika user sedang melakukan swipe/drag
+  container.addEventListener("click", (e) => {
+    if (hasMoved) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+
+  // Hitung ulang dimensi secara presisi setelah semua gambar selesai dimuat
+  window.addEventListener("load", calculateDimensions);
 }
 
 

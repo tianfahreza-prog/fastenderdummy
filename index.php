@@ -15,10 +15,10 @@ $sliderImages = getHeroSliderImages();
 $trendingProducts = getTrendingProducts();
 $isPoActive = isPreOrderActive();
 
-// Gandakan produk minimal 3x lipat (18 slide) untuk menjamin seamless infinite loop Swiper tanpa jeda visual atau ruang kosong di layar lebar
+// Gandakan produk minimal 4x lipat (24 slide) untuk menjamin infinite loop mulus tanpa celah di layar lebar
 $displayTrendingProducts = $trendingProducts;
-if (count($displayTrendingProducts) > 0 && count($displayTrendingProducts) < 18) {
-    while (count($displayTrendingProducts) < 18) {
+if (count($displayTrendingProducts) > 0) {
+    while (count($displayTrendingProducts) < 24) {
         $displayTrendingProducts = array_merge($displayTrendingProducts, $trendingProducts);
     }
 }
@@ -160,7 +160,7 @@ include __DIR__ . '/includes/navbar.php';
     </div>
 
     <!-- Swiper Carousel Container (Infinite Scroll Looping) -->
-    <div class="swiper trending-swiper" id="trending-swiper">
+    <div class="swiper trending-swiper" id="trending-swiper" data-original-count="<?= count($trendingProducts) ?>">
       <div class="swiper-wrapper">
         <?php foreach ($displayTrendingProducts as $tProd): ?>
           <div class="swiper-slide trending-slide">
@@ -217,7 +217,7 @@ include __DIR__ . '/includes/navbar.php';
         </div>
         <div class="step-content">
           <h3 class="step-title">Pilih Produk &amp; Varian</h3>
-          <p class="step-desc">Tentukan model, ukuran (S - 3XL), warna, dan masukkan detail custom nama atau logo angkatanmu.</p>
+          <p class="step-desc">Tentukan model dan Ukuran yang sesuai.</p>
         </div>
       </div>
 
@@ -262,7 +262,7 @@ include __DIR__ . '/includes/navbar.php';
         </div>
         <div class="step-content">
           <h3 class="step-title">Pengiriman Sampai Lokasi</h3>
-          <p class="step-desc">Setelah lolos quality check, barang langsung dikirim ke alamat rumah atau titik kumpul kampusmu.</p>
+          <p class="step-desc">Setelah lolos quality check, barang langsung dikirim ke alamat rumah atau dapat diambil di sekretariat UKM Usaha Mahasiswa.</p>
         </div>
       </div>
     </div>

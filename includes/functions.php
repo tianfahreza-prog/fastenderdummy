@@ -1343,75 +1343,90 @@ function getAllOrdersList() {
     if (file_exists(DATA_ORDERS_FILE)) {
         $json = file_get_contents(DATA_ORDERS_FILE);
         $data = json_decode($json, true);
-        if (is_array($data)) return $data;
+        if (is_array($data) && !empty($data)) return $data;
     }
 
-    // Default sample orders
+    // Default sample orders jika database & JSON belum memiliki data
     return [
         [
             'order_code' => 'PO-2026-8891',
             'customer_name' => 'Ahmad Fauzi',
             'organization' => 'Himpunan Informatika',
+            'jurusan' => 'Teknik Informatika',
             'customer_phone' => '081234567890',
             'customer_email' => 'fauzi@example.com',
             'date' => '12 Okt 2026',
             'product_summary' => 'Varsity Jacket Angkatan (L, Navy)',
             'qty' => 24,
             'total_price' => 5895000,
-            'payment_status' => 'DP 50% Lunas',
-            'production_status' => 'Sedang Produksi'
+            'payment_scheme' => 'dp',
+            'payment_status' => 'DP Terverifikasi',
+            'production_status' => 'Sedang Produksi',
+            'bukti_pembayaran' => 'uploads/bukti/sample_transfer.jpg'
         ],
         [
             'order_code' => 'PO-2026-1045',
             'customer_name' => 'Siti Rahma',
             'organization' => 'BEM FT Undip',
+            'jurusan' => 'Teknik Mesin',
             'customer_phone' => '081398765432',
             'customer_email' => 'siti@example.com',
             'date' => '15 Okt 2026',
             'product_summary' => 'Kemeja PDH Drill 1919 (M, Navy)',
             'qty' => 20,
             'total_price' => 2715000,
-            'payment_status' => 'Lunas 100%',
-            'production_status' => 'Dalam Pengiriman'
+            'payment_scheme' => 'full',
+            'payment_status' => 'Lunas',
+            'production_status' => 'Dalam Pengiriman',
+            'bukti_pembayaran' => 'uploads/bukti/sample_transfer.jpg'
         ],
         [
             'order_code' => 'PO-2026-7734',
             'customer_name' => 'Dewi Lestari',
             'organization' => 'Manajemen Bisnis',
+            'jurusan' => 'Bisnis Digital',
             'customer_phone' => '085712345678',
             'customer_email' => 'dewi@example.com',
             'date' => '17 Okt 2026',
             'product_summary' => 'Tote Bag Canvas + Pin (3 pcs)',
             'qty' => 3,
             'total_price' => 180000,
-            'payment_status' => 'Lunas 100%',
-            'production_status' => 'Quality Check'
+            'payment_scheme' => 'full',
+            'payment_status' => 'Menunggu Verifikasi',
+            'production_status' => 'Quality Check',
+            'bukti_pembayaran' => null
         ],
         [
             'order_code' => 'PO-2026-4412',
             'customer_name' => 'Rian Hidayat',
             'organization' => 'Teknik Sipil 2026',
+            'jurusan' => 'Teknik Sipil',
             'customer_phone' => '082187654321',
             'customer_email' => 'rian@example.com',
             'date' => '18 Okt 2026',
             'product_summary' => 'T-Shirt Combed 24s (L, Navy)',
             'qty' => 12,
             'total_price' => 1155000,
-            'payment_status' => 'DP 50% Lunas',
-            'production_status' => 'Sedang Produksi'
+            'payment_scheme' => 'dp',
+            'payment_status' => 'DP Terverifikasi',
+            'production_status' => 'Sedang Produksi',
+            'bukti_pembayaran' => 'uploads/bukti/sample_transfer.jpg'
         ],
         [
             'order_code' => 'PO-2026-3390',
             'customer_name' => 'Budi Santoso',
-            'organization' => 'Teknik Mesin',
+            'organization' => 'Teknik Elektro',
+            'jurusan' => 'Sistem Informasi',
             'customer_phone' => '081912349999',
             'customer_email' => 'budi@example.com',
             'date' => '20 Okt 2026',
             'product_summary' => 'Hoodie Heavyweight Fleece (XXL)',
             'qty' => 1,
             'total_price' => 200000,
-            'payment_status' => 'Lunas 100%',
-            'production_status' => 'Selesai'
+            'payment_scheme' => 'full',
+            'payment_status' => 'Lunas',
+            'production_status' => 'Selesai',
+            'bukti_pembayaran' => null
         ]
     ];
 }

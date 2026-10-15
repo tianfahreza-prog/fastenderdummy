@@ -503,8 +503,13 @@
 }
 
 .status-badge.pending {
-  background: var(--color-plaster, #ecedee);
-  color: var(--color-ink-black, #111111);
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.status-badge.verified {
+  background: #e0f2fe;
+  color: #0369a1;
 }
 
 .status-badge.production {
@@ -523,13 +528,53 @@
 }
 
 .status-badge.completed {
-  background: var(--color-ink-black, #111111);
-  color: var(--color-pure-white, #ffffff);
+  background: #dcfce7;
+  color: #15803d;
 }
 
-.status-badge.cancel {
+.status-badge.cancel,
+.status-badge.rejected {
   background: #fee2e2;
   color: #b91c1c;
+}
+
+/* Tombol & Badge Kolom Bukti Pembayaran */
+.btn-view-proof {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-view-proof:hover {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+}
+
+.badge-proof-empty {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f5f9;
+  color: #94a3b8;
+  border: 1px solid #e2e8f0;
+  padding: 4px 9px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .action-btn-group {

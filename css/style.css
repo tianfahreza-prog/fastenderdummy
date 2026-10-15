@@ -1624,40 +1624,61 @@ button {
   box-shadow: 0 3px 10px rgba(97, 154, 230, 0.22);
 }
 
-/* Swiper Slider Wrapper (Continuous Linear Marquee) */
+/* Swiper Slider Wrapper (Continuous Ultra-Smooth Ticker) */
 .trending-swiper {
   width: 100%;
   padding: 8px 0 24px;
   overflow: hidden;
+  user-select: none;
+  cursor: grab;
+  position: relative;
 }
 
-.swiper-wrapper,
-.trending-swiper .swiper-wrapper,
-#trending-swiper .swiper-wrapper {
+.trending-swiper:active {
+  cursor: grabbing;
+}
+
+.trending-swiper .swiper-wrapper {
   display: flex;
   align-items: stretch;
-  -webkit-transition-timing-function: linear !important;
-  transition-timing-function: linear !important;
+  width: max-content;
   will-change: transform;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-}
-
-.trending-swiper.is-manual-nav .swiper-wrapper,
-#trending-swiper.is-manual-nav .swiper-wrapper {
-  transition-timing-function: cubic-bezier(0.25, 1, 0.5, 1) !important;
-  -webkit-transition-timing-function: cubic-bezier(0.25, 1, 0.5, 1) !important;
+  transition: none;
 }
 
 .trending-slide {
   height: auto;
   display: flex;
   box-sizing: border-box;
+  flex: 0 0 270px;
+  width: 270px;
+  max-width: 270px;
+  margin-right: 20px;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   transform: translate3d(0, 0, 0);
+}
+
+@media (max-width: 960px) {
+  .trending-slide {
+    flex: 0 0 235px;
+    width: 235px;
+    max-width: 235px;
+    margin-right: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .trending-slide {
+    flex: 0 0 200px;
+    width: 200px;
+    max-width: 200px;
+    margin-right: 14px;
+  }
 }
 
 /* Card Minimalis Bersih & Modern sesuai Wireframe Baru */
