@@ -75,15 +75,15 @@ $activePage = $activePage ?? 'beranda';
 
       <!-- Kanan: Keranjang Belanja & Aksi Pelanggan -->
       <div class="navbar-actions">
-        <!-- Keranjang Belanja Icon -->
-        <a href="keranjang.php" class="cart-btn" aria-label="Keranjang Belanja">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="9" cy="21" r="1"></circle>
-            <circle cx="20" cy="21" r="1"></circle>
-            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-          </svg>
-          <span class="cart-badge" id="navbar-cart-badge">0</span>
-        </a>
+         <!-- Keranjang Belanja Button (Ikon saja, biru serasi) -->
+         <a href="keranjang.php" class="nav-cart-btn" aria-label="Keranjang Belanja">
+           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+             <circle cx="9" cy="21" r="1"></circle>
+             <circle cx="20" cy="21" r="1"></circle>
+             <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+           </svg>
+           <span class="cart-badge" id="navbar-cart-badge">0</span>
+         </a>
 
          <!-- Tombol Aksi Utama Pelanggan (Pill rounded CTA) -->
          <a href="pesanan-saya.php" class="btn btn-accent btn-sm btn-nav-cta">

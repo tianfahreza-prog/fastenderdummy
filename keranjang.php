@@ -23,9 +23,7 @@ include __DIR__ . '/includes/navbar.php';
      ========================================== -->
 <section class="section-padding" style="padding-top: 28px;">
   <div class="container">
-    <div style="margin-bottom: 24px;">
-      <h1 style="font-size: 32px; font-weight: 800; color: var(--color-ink-black, #111111); letter-spacing: -0.04em; margin: 0;">Keranjang Pesanan Pre-Order</h1>
-    </div>
+    <div style="margin-bottom: 0;">
 
     <?php if (!$isStoreOpen): ?>
       <!-- Banner / Alert Informasi Penutupan Operasional Toko -->

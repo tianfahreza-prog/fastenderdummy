@@ -677,21 +677,21 @@ button {
 
 .cart-badge {
   position: absolute;
-  top: -3px;
-  right: -3px;
-  background-color: var(--color-electric-cobalt, #000aff);
+  top: 0px;
+  right: 0px;
+  background-color: #dc2626;
   color: var(--color-pure-white, #ffffff);
   font-family: var(--font-space-mono);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
-  min-width: 17px;
-  height: 17px;
-  padding: 0 4px;
-  border-radius: var(--radius-badges, 30px);
+  min-width: auto;
+  height: auto;
+  padding: 1px 5px;
+  border-radius: var(--radius-badges, 10px);
+  border: 1.5px solid #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1.5px solid var(--surface-canvas, #ffffff);
 }
 
 .btn-nav-cta {
@@ -712,6 +712,35 @@ button {
 .btn-nav-cta:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 14px rgba(0, 10, 255, 0.32);
+}
+
+.nav-cart-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  background-color: #619ae6;
+  border: none;
+  border-radius: 50%;
+  color: #ffffff;
+  text-decoration: none;
+  padding: 0;
+  box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(0, 10, 255, 0.2);
+  transition: all 0.2s ease;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.nav-cart-btn:hover {
+  background-color: #4e85d1;
+  box-shadow: 0 4px 14px rgba(0, 10, 255, 0.32);
+  transform: translateY(-1px);
+}
+
+.nav-cart-btn:active {
+  transform: translateY(0);
 }
 
 .nav-toggle-btn {
