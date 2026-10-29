@@ -77,11 +77,8 @@ $hasHeroBannerFile = ($heroBannerPath !== '' && is_file(__DIR__ . '/' . ltrim($h
       <div class="admin-content">
 
         <!-- Title & Action Button -->
-        <div class="admin-page-title-box">
-          <div>
-            <h1 class="admin-page-title">Pengaturan Hero Banner &amp; Countdown PO</h1>
-            <p class="admin-page-sub">Kelola tampilan visual utama, teks headline, dan waktu penutupan pre-order di halaman Beranda.</p>
-          </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+          <h1 class="admin-page-title" style="margin: 0;">Hero Banner &amp; Countdown</h1>
           <div style="display: flex; gap: 10px;">
             <a href="index.php" target="_blank" class="btn btn-outline-primary btn-sm" style="display: inline-flex; align-items: center; gap: 6px;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -89,7 +86,7 @@ $hasHeroBannerFile = ($heroBannerPath !== '' && is_file(__DIR__ . '/' . ltrim($h
                 <polyline points="15 3 21 3 21 9"></polyline>
                 <line x1="10" y1="14" x2="21" y2="3"></line>
               </svg>
-              Lihat di Beranda
+              Lihat
             </a>
           </div>
         </div>
@@ -130,7 +127,7 @@ $hasHeroBannerFile = ($heroBannerPath !== '' && is_file(__DIR__ . '/' . ltrim($h
                 <div class="form-group" style="margin-bottom: 14px;">
                   <label class="form-label" style="font-size: 13px; font-weight: 600;">Judul Utama Hero (Kolom Kiri):</label>
                   <input type="text" class="form-control" name="title" id="hero-title" value="<?= htmlspecialchars($heroSettings['title'] ?? 'Pre-Order Batch 1 telah dibuka') ?>" required>
-                  <small style="color: var(--text-muted); font-size: 11px;">Gunakan baris baru atau spasi untuk menyesuaikan tipografi di halaman utama.</small>
+                    <input type="text" class="form-control" name="description" placeholder="Deskripsi singkat" value="<?= htmlspecialchars($heroSettings['description'] ?? '') ?>" maxlength="180">
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
@@ -147,7 +144,6 @@ $hasHeroBannerFile = ($heroBannerPath !== '' && is_file(__DIR__ . '/' . ltrim($h
                 <div class="form-group" style="margin-bottom: 14px;">
                   <label class="form-label" style="font-size: 13px; font-weight: 600;">Target Waktu Penutupan PO (Deadline Countdown):</label>
                   <input type="datetime-local" class="form-control" name="countdown_deadline" id="hero-deadline" value="<?= date('Y-m-d\TH:i', strtotime($heroSettings['countdown_deadline'] ?? '+14 days')) ?>" required>
-                  <small style="color: var(--text-muted); font-size: 11px;">Timer DAYS, HOURS, MINS, SECS di Beranda akan menghitung mundur ke waktu ini secara realtime.</small>
                 </div>
 
                 <div class="form-group" style="margin-bottom: 14px;">
@@ -181,8 +177,7 @@ $hasHeroBannerFile = ($heroBannerPath !== '' && is_file(__DIR__ . '/' . ltrim($h
                 <div class="form-group" style="margin-bottom: 12px;">
                   <label class="form-label" style="font-size: 13px; font-weight: 600;">Upload Gambar Showcase Baru (Kolom Kanan):</label>
                   <input type="file" name="banner_file" id="hero-banner-input" class="form-control" accept="image/*" onchange="previewHeroBanner(this)">
-                  <input type="hidden" name="banner_image_path" id="hero-banner-saved-path" value="<?= htmlspecialchars($heroBannerPath) ?>">
-                  <small style="color: var(--text-muted); font-size: 11px;">Mendukung format JPG, PNG, WebP (Rekomendasi rasio 4:3 atau 16:10).</small>
+                   <input type="hidden" name="banner_image_path" id="hero-banner-saved-path" value="<?= htmlspecialchars($heroBannerPath) ?>">
                 </div>
 
                 <div style="margin-top: 14px;">

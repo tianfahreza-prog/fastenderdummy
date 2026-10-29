@@ -89,11 +89,8 @@ $hasQris = ($qrisImage !== '' && is_file(__DIR__ . '/' . ltrim($qrisImage, '/'))
       <div class="admin-content">
 
         <!-- Title & Action Button -->
-        <div class="admin-page-title-box">
-          <div>
-            <h1 class="admin-page-title">Pengaturan Toko &amp; Pembayaran</h1>
-            <p class="admin-page-sub">Kelola status operasional buka/tutup toko, nomor kontak WhatsApp CS, rekening bank, dan barcode QRIS.</p>
-          </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+          <h1 class="admin-page-title" style="margin: 0;">Pengaturan Toko</h1>
           <div style="display: flex; gap: 10px;">
             <a href="keranjang.php" target="_blank" class="btn btn-outline-primary btn-sm" style="display: inline-flex; align-items: center; gap: 6px;">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -101,7 +98,7 @@ $hasQris = ($qrisImage !== '' && is_file(__DIR__ . '/' . ltrim($qrisImage, '/'))
                 <circle cx="20" cy="21" r="1"></circle>
                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
               </svg>
-              Cek Halaman Keranjang
+              Keranjang
             </a>
           </div>
         </div>
@@ -305,7 +302,6 @@ $hasQris = ($qrisImage !== '' && is_file(__DIR__ . '/' . ltrim($qrisImage, '/'))
                           <rect x="3" y="14" width="7" height="7"></rect>
                         </svg>
                         <span>Belum ada barcode QRIS</span>
-                        <small style="font-size: 11px;">Unggah file gambar QRIS di samping</small>
                       </div>
                       <img src="" alt="QRIS Barcode Preview" id="qris-img-preview" style="display: none;">
                     <?php endif; ?>
@@ -317,9 +313,6 @@ $hasQris = ($qrisImage !== '' && is_file(__DIR__ . '/' . ltrim($qrisImage, '/'))
                       Pilih Gambar Barcode QRIS
                     </label>
                     <input type="file" name="qris_file" id="inp-qris-file" accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml" class="form-control" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px; font-size: 13px; margin-bottom: 10px;" onchange="previewQrisFile(event)">
-                    <span style="font-size: 11px; color: #64748b; display: block; margin-bottom: 14px;">
-                      Format: PNG, JPG, WEBP, atau SVG. Rekomendasi rasio persegi (1:1).
-                    </span>
 
                     <?php if ($hasQris): ?>
                       <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 12px; margin-bottom: 12px;">

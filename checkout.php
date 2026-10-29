@@ -416,7 +416,7 @@ include __DIR__ . '/includes/navbar.php';
     </div>
 
     <div style="display: flex; gap: 12px;">
-      <a id="success-track-link" href="lacak.php?resi=<?= urlencode($flashSuccessOrder['order_code'] ?? 'PO-2026-8891') ?>" class="btn btn-accent btn-block">
+       <a id="success-track-link" href="pesanan-saya.php?resi=<?= urlencode($flashSuccessOrder['order_code'] ?? 'PO-2026-8891') ?>" class="btn btn-accent btn-block">
         Lacak Pesanan Saya
       </a>
       <a href="index.php" class="btn btn-outline-primary btn-block">
@@ -1000,7 +1000,7 @@ include __DIR__ . '/includes/navbar.php';
       // Tampilkan modal sukses
       document.getElementById("success-order-code").textContent = savedOrder.order_code || savedOrder.orderId;
       document.getElementById("success-order-amount").textContent = formatRupiah(savedOrder.due || savedOrder.total_bayar);
-      document.getElementById("success-track-link").href = `lacak.php?resi=${encodeURIComponent(savedOrder.order_code || savedOrder.orderId)}`;
+      document.getElementById("success-track-link").href = `pesanan-saya.php?resi=${encodeURIComponent(savedOrder.order_code || savedOrder.orderId)}`;
       document.getElementById("order-success-modal").classList.add("active");
     } catch (err) {
       console.error("Checkout submit error:", err);

@@ -29,7 +29,7 @@
           <ul class="footer-links">
             <li><a href="index.php">beranda</a></li>
             <li><a href="katalog.php">katalog produk po</a></li>
-            <li><a href="lacak.php">lacak status pesanan</a></li>
+             <li><a href="pesanan-saya.php">pesanan saya</a></li>
             <li><a href="keranjang.php">keranjang belanja</a></li>
             <li><a href="checkout.php">formulir pemesanan po</a></li>
           </ul>

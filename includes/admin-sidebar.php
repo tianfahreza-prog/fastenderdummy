@@ -22,7 +22,6 @@ $sidebarOrderCount = function_exists('getAllOrdersList') ? count(getAllOrdersLis
 
   <!-- Menu Navigasi -->
   <nav class="sidebar-nav">
-    <div class="nav-category">Utama</div>
     
     <!-- Menu 1: Dashboard -->
     <a href="admin-dashboard.php" class="sidebar-link <?= ($adminPage === 'dashboard') ? 'active' : '' ?>">
@@ -45,7 +44,7 @@ $sidebarOrderCount = function_exists('getAllOrdersList') ? count(getAllOrdersLis
           <line x1="3" y1="6" x2="21" y2="6"></line>
           <path d="M16 10a4 4 0 0 1-8 0"></path>
         </svg>
-        <span>Pesanan PO</span>
+        <span>Pesanan</span>
       </div>
       <span class="sidebar-counter" id="sidebar-order-count"><?= $sidebarOrderCount ?></span>
     </a>
@@ -57,7 +56,7 @@ $sidebarOrderCount = function_exists('getAllOrdersList') ? count(getAllOrdersLis
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
         </svg>
-        <span>Input Produk PO</span>
+        <span>Produk</span>
       </div>
     </a>
 
@@ -68,7 +67,7 @@ $sidebarOrderCount = function_exists('getAllOrdersList') ? count(getAllOrdersLis
           <circle cx="12" cy="12" r="10"></circle>
           <polyline points="12 6 12 12 16 14"></polyline>
         </svg>
-        <span>Pengaturan Hero PO</span>
+        <span>Hero Banner</span>
       </div>
       <span class="badge badge-accent" style="font-size: 10px; padding: 2px 6px;">LIVE</span>
     </a>
@@ -80,20 +79,18 @@ $sidebarOrderCount = function_exists('getAllOrdersList') ? count(getAllOrdersLis
           <circle cx="12" cy="12" r="3"></circle>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
         </svg>
-        <span>Pengaturan Toko</span>
+        <span>Pengaturan</span>
       </div>
     </a>
 
-    <div class="nav-category">Tampilan Pengguna</div>
-
     <!-- Tautan Langsung ke Halaman User -->
-    <a href="katalog.php" target="_blank" class="sidebar-link">
+    <a href="katalog.php" target="_blank" class="sidebar-link" style="margin-top: 16px;">
       <div class="sidebar-link-content">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
           <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
           <line x1="7" y1="7" x2="7.01" y2="7"></line>
         </svg>
-        <span>Lihat Hasil Katalog</span>
+        <span>Katalog</span>
       </div>
       <span style="font-size: 11px; color: var(--color-ash, #737780);">↗</span>
     </a>
@@ -104,7 +101,7 @@ $sidebarOrderCount = function_exists('getAllOrdersList') ? count(getAllOrdersLis
           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
           <polyline points="9 22 9 12 15 12 15 22"></polyline>
         </svg>
-        <span>Lihat Halaman Beranda</span>
+        <span>Beranda</span>
       </div>
       <span style="font-size: 11px; color: var(--color-ash, #737780);">↗</span>
     </a>

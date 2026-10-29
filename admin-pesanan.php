@@ -158,7 +158,7 @@ $orders = getAllOrdersList();
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-            <input type="text" id="admin-search-orders" placeholder="Cari No. Resi, nama pemesan, jurusan..." oninput="handleAdminSearch(this.value)">
+            <input type="text" id="admin-search-orders" placeholder="Cari resi / pemesan..." oninput="handleAdminSearch(this.value)">
           </div>
         </div>
 
@@ -176,27 +176,24 @@ $orders = getAllOrdersList();
       <!-- Area Konten Utama -->
       <div class="admin-content">
 
-        <!-- Title & Action Button -->
-        <div class="admin-page-title-box">
-          <div>
-            <h1 class="admin-page-title">Daftar Pesanan Pre-Order Masuk</h1>
-            <p class="admin-page-sub">Kelola verifikasi pembayaran DP/Lunas, alur pengerjaan vendor, dan data pesanan PO.</p>
-          </div>
-          <div style="display: flex; gap: 10px;">
+        <!-- Title & Action Button (Minimalist Header) -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+          <h1 class="admin-page-title" style="margin: 0;">Pesanan</h1>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <button type="button" class="btn btn-outline-primary btn-sm" onclick="exportOrdersData()">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
-              Ekspor Data
+              Ekspor
             </button>
             <a href="admin-input-produk.php" class="btn btn-accent btn-sm">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
               </svg>
-              Tambah Produk PO
+              Tambah
             </a>
           </div>
         </div>
@@ -217,17 +214,12 @@ $orders = getAllOrdersList();
         <div class="admin-table-card" id="orders-section">
           
           <div class="table-toolbar">
-            <div>
-              <h3 class="table-title">Daftar Pesanan Pre-Order Masuk</h3>
-              <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">
-                Kelola status pembayaran DP, pelunasan, dan alur pengerjaan vendor.
-              </p>
-            </div>
+            <h3 class="table-title" style="margin: 0;">Daftar Pesanan</h3>
 
             <div class="table-actions">
               <select class="table-filter-select" id="filter-order-status" onchange="filterOrdersByStatus(this.value)">
-                <option value="all">Semua Status Produksi</option>
-                <option value="Menunggu Konfirmasi Admin">Menunggu Konfirmasi Admin</option>
+                <option value="all">Semua Status</option>
+                <option value="Menunggu Konfirmasi Admin">Menunggu Konfirmasi</option>
                 <option value="Sedang Produksi">Sedang Produksi</option>
                 <option value="Quality Check">Quality Check</option>
                 <option value="Dalam Pengiriman">Dalam Pengiriman</option>
@@ -580,7 +572,7 @@ $orders = getAllOrdersList();
                 <button type="button" class="action-icon-btn" onclick="openStatusModal('${order.orderId}')" title="Ubah Status">
                   Update
                 </button>
-                <a href="lacak.php?resi=${encodeURIComponent(order.orderId)}" target="_blank" class="action-icon-btn" style="color: var(--accent);" title="Lihat Timeline">
+                 <a href="pesanan-saya.php?resi=${encodeURIComponent(order.orderId)}" target="_blank" class="action-icon-btn" style="color: var(--accent);" title="Lihat Timeline">
                   Lacak
                 </a>
                 <a href="admin-pesanan.php?action=delete&id=${encodeURIComponent(order.orderId)}" class="action-icon-btn btn-delete-order" onclick="return handleDeleteOrder(event, '${order.orderId}')" title="Hapus Pesanan">

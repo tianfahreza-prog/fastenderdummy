@@ -65,17 +65,12 @@ $activePage = $activePage ?? 'beranda';
               beranda
             </a>
           </li>
-          <li>
-            <a href="katalog.php" class="navbar-link <?= ($activePage === 'katalog') ? 'active' : '' ?>">
-              katalog
-            </a>
-          </li>
-          <li>
-            <a href="lacak.php" class="navbar-link <?= ($activePage === 'lacak') ? 'active' : '' ?>">
-              Lacak
-            </a>
-          </li>
-        </ul>
+           <li>
+             <a href="katalog.php" class="navbar-link <?= ($activePage === 'katalog') ? 'active' : '' ?>">
+               katalog
+             </a>
+           </li>
+         </ul>
       </nav>
 
       <!-- Kanan: Keranjang Belanja & Aksi Pelanggan -->
@@ -90,10 +85,10 @@ $activePage = $activePage ?? 'beranda';
           <span class="cart-badge" id="navbar-cart-badge">0</span>
         </a>
 
-        <!-- Tombol Aksi Utama Pelanggan (Pill rounded CTA) -->
-        <a href="katalog.php" class="btn btn-accent btn-sm btn-nav-cta">
-          mulai po
-        </a>
+         <!-- Tombol Aksi Utama Pelanggan (Pill rounded CTA) -->
+         <a href="pesanan-saya.php" class="btn btn-accent btn-sm btn-nav-cta">
+           Pesanan Saya
+         </a>
 
         <!-- Tombol Menu Mobile Hamburger -->
         <button class="nav-toggle-btn" aria-label="Buka Menu Navigasi">

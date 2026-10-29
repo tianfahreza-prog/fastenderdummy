@@ -127,18 +127,9 @@ $formImages = ($isEditMode && !empty($editProduct['images']) && is_array($editPr
         
         <!-- Header Halaman & Tombol Demo Cepat -->
         <div class="admin-page-title-box">
-          <div>
-            <h1 class="admin-page-title">
-              <?= $isEditMode ? 'Edit Produk Pre-Order (PO)' : 'Form Input Produk Pre-Order (PO)' ?>
-            </h1>
-            <p class="admin-page-sub">
-              <?php if ($isEditMode): ?>
-                Perbarui informasi produk <strong><?= htmlspecialchars($formName) ?></strong>. Perubahan akan langsung tersinkronisasi di Beranda dan Katalog.
-              <?php else: ?>
-                Produk yang Anda inputkan di halaman ini akan langsung mengisi <strong>space kosongan</strong> pada halaman Beranda dan Katalog Pengguna.
-              <?php endif; ?>
-            </p>
-          </div>
+          <h1 class="admin-page-title" style="margin: 0;">
+            <?= $isEditMode ? 'Edit Produk' : 'Tambah Produk' ?>
+          </h1>
           
           <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <?php if ($isEditMode): ?>

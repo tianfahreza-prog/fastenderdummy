@@ -1,0 +1,233 @@
+[
+    {
+        "id": 1793238330,
+        "name": "kaos",
+        "subtitle": "",
+        "category": "Kaos",
+        "category_name": "Kaos",
+        "price": 75000,
+        "dp_price": 37500,
+        "quota_current": 0,
+        "quota_target": 100,
+        "badge": "PO Baru",
+        "batch": "Batch 1 (Tutup 25 Nov 2026)",
+        "description": "kaos catton combed 24s",
+        "specs": [
+            "Bahan Cotton Fleece 330gsm",
+            "Bordir Komputer HD",
+            "Jahitan Rantai Standar Distro",
+            "Estimasi Produksi 14-21 Hari"
+        ],
+        "sizes": [
+            "S",
+            "M",
+            "L",
+            "XL",
+            "XXL",
+            "3XL"
+        ],
+        "colors": [
+            "Navy",
+            "Hitam",
+            "Maroon",
+            "Putih"
+        ],
+        "icon_type": "tshirt",
+        "images": [
+            "uploads/products/prod_1793238330_6ae2a53ac090e.jpg"
+        ],
+        "parent_kategori": "POLSTUFF"
+    },
+    {
+        "id": 1,
+        "name": "Workshirt Angkatan 2026",
+        "category": "Workshirt",
+        "category_name": "Workshirt",
+        "price": 145000,
+        "dp_price": 75000,
+        "quota_target": 100,
+        "quota_current": 64,
+        "batch": "Batch 1",
+        "badge": "Terpopuler",
+        "images": [
+            "assets/images/gambar1.jpg"
+        ],
+        "specs": [
+            "Bahan American Drill Grade A",
+            "Bordir Komputer High Density",
+            "Jahitan Rantai Kuat"
+        ],
+        "sizes": [
+            "S",
+            "M",
+            "L",
+            "XL",
+            "XXL",
+            "3XL"
+        ],
+        "colors": [
+            "Navy & White",
+            "Black & Cream",
+            "Forest Green"
+        ],
+        "description": "Workshirt edisi angkatan 2026 dengan material American drill premium kombinasi bordir komputer presisi tinggi.",
+        "parent_kategori": "POLNEEDS"
+    },
+    {
+        "id": 2,
+        "name": "Jas Almamater Kampus Polinema",
+        "category": "Jas almamater",
+        "category_name": "Jas almamater",
+        "price": 185000,
+        "dp_price": 95000,
+        "quota_target": 150,
+        "quota_current": 112,
+        "batch": "Batch 1",
+        "badge": "Best Seller",
+        "images": [
+            "assets/images/gambar2.jpg"
+        ],
+        "specs": [
+            "Bahan Twist Drill Tebal",
+            "Furing Dormeuil Adem",
+            "Kancing Kuningan Berlogo"
+        ],
+        "sizes": [
+            "S",
+            "M",
+            "L",
+            "XL",
+            "XXL",
+            "3XL"
+        ],
+        "colors": [
+            "Navy Blue Resmi"
+        ],
+        "description": "Jas almamater resmi mahasiswa dengan bahan twist drill rapi, furing adem, dan potongan formal presisi.",
+        "parent_kategori": "POLNEEDS"
+    },
+    {
+        "id": 3,
+        "name": "Jas Lab Praktikum Lengan Panjang",
+        "category": "Jas Lab",
+        "category_name": "Jas Lab",
+        "price": 125000,
+        "dp_price": 65000,
+        "quota_target": 80,
+        "quota_current": 58,
+        "batch": "Batch 1",
+        "badge": "Wajib Praktikum",
+        "images": [
+            "assets/images/gambar3.jpg"
+        ],
+        "specs": [
+            "Bahan Oxford Tebal Standar Lab",
+            "Saku Depan & Samping",
+            "Mudah Dicuci & Setrika"
+        ],
+        "sizes": [
+            "S",
+            "M",
+            "L",
+            "XL",
+            "XXL"
+        ],
+        "colors": [
+            "Putih Bersih"
+        ],
+        "description": "Jas laboratorium standar praktikum kampus dan bengkel dengan bahan Oxford tebal dan nyaman dipakai.",
+        "parent_kategori": "POLNEEDS"
+    },
+    {
+        "id": 4,
+        "name": "T-Shirt Cotton Combed 24s Sablon",
+        "category": "Kaos",
+        "category_name": "Kaos",
+        "price": 95000,
+        "dp_price": 50000,
+        "quota_target": 200,
+        "quota_current": 140,
+        "batch": "Batch 1",
+        "badge": "Favorit",
+        "images": [
+            "assets/images/gambar1.jpg"
+        ],
+        "specs": [
+            "100% Cotton Combed 24s Reaktif",
+            "Sablon Plastisol Doff",
+            "Kerah Rib Katun Tidak Melar"
+        ],
+        "sizes": [
+            "S",
+            "M",
+            "L",
+            "XL",
+            "XXL",
+            "3XL"
+        ],
+        "colors": [
+            "Hitam Solid",
+            "Putih Bersih",
+            "Navy Tua"
+        ],
+        "description": "Kaos angkatan kasual harian bahan cotton combed 24s adem dan menyerap keringat dengan sablon tahan cuci.",
+        "parent_kategori": "POLSTUFF"
+    },
+    {
+        "id": 5,
+        "name": "Paket Starter Kit POLNEEDS 2026",
+        "category": "POLNEEDS",
+        "category_name": "POLNEEDS",
+        "price": 115000,
+        "dp_price": 60000,
+        "quota_target": 75,
+        "quota_current": 42,
+        "batch": "Batch 1",
+        "badge": "Baru",
+        "images": [
+            "assets/images/gambar2.jpg"
+        ],
+        "specs": [
+            "Perlengkapan Mahasiswa Baru",
+            "Kualitas Original USMA",
+            "Kemasan Eksklusif"
+        ],
+        "sizes": [
+            "All Size"
+        ],
+        "colors": [
+            "Standar"
+        ],
+        "description": "Paket perlengkapan kebutuhan kuliah mahasiswa Polinema (POLNEEDS) praktis dan ekonomis.",
+        "parent_kategori": "POLNEEDS"
+    },
+    {
+        "id": 6,
+        "name": "Canvas Totebag & Keychain POLSTUFF",
+        "category": "Totebag",
+        "category_name": "Totebag",
+        "price": 75000,
+        "dp_price": 40000,
+        "quota_target": 120,
+        "quota_current": 88,
+        "batch": "Batch 1",
+        "badge": "Merch Resmi",
+        "images": [
+            "assets/images/gambar3.jpg"
+        ],
+        "specs": [
+            "Kanvas Tebal 12oz dengan Resleting",
+            "Sablon High Quality",
+            "Bonus Sticker Pack Vinyl"
+        ],
+        "sizes": [
+            "One Size (All Sizes)"
+        ],
+        "colors": [
+            "Off-White Canvas",
+            "Midnight Black"
+        ],
+        "description": "Totebag kanvas tebal 12oz dengan resleting kuat, cocok untuk kuliah dan aktivitas harian.",
+        "parent_kategori": "POLSTUFF"
+    }
+]

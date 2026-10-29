@@ -579,21 +579,22 @@ function updateProductById($id, $postData, $filesData = null) {
     $existingImages = is_array($existingProduct['images'] ?? null) ? $existingProduct['images'] : [];
 
     // Jika ada foto baru yang diunggah, hapus file foto lama di uploads/products/ dan gunakan foto baru.
-    // Jika tidak ada foto baru yang diunggah, pertahankan foto lama tanpa menimpanya menjadi kosong/null.
-    if (!empty($newUploadedImages)) {
-        foreach ($existingImages as $oldImg) {
-            $cleanOld = ltrim(str_replace(['..', '\\'], ['', '/'], (string)$oldImg), '/');
-            if ($cleanOld !== '' && strpos($cleanOld, 'uploads/products/') === 0) {
-                $fullOldPath = __DIR__ . '/../' . $cleanOld;
-                if (is_file($fullOldPath)) {
-                    @unlink($fullOldPath);
-                }
-            }
-        }
-        $finalImages = $newUploadedImages;
-    } else {
-        $finalImages = $existingImages;
-    }
+     // Jika tidak ada foto baru yang diunggah, pertahankan foto lama tanpa menimpanya menjadi kosong/null.
+     if (!empty($newUploadedImages)) {
+         foreach ($existingImages as $oldImg) {
+             // Use basename to safely extract filename only, preventing directory traversal
+             $fileName = basename((string)$oldImg);
+             if ($fileName !== '' && preg_match('/^prod_\d+_[a-z0-9]+\.(jpg|jpeg|png|webp|gif)$/i', $fileName)) {
+                 $fullOldPath = UPLOAD_DIR . $fileName;
+                 if (is_file($fullOldPath)) {
+                     @unlink($fullOldPath);
+                 }
+             }
+         }
+         $finalImages = $newUploadedImages;
+     } else {
+         $finalImages = $existingImages;
+     }
 
     // Update ke MySQL jika PDO aktif
     if ($pdo) {
@@ -682,111 +683,8 @@ function deleteProductById($id) {
     file_put_contents(DATA_PRODUCTS_FILE, json_encode($filtered, JSON_PRETTY_PRINT));
 }
 
-/**
- * Kosongkan semua produk (Mengaktifkan mode "Space Kosongan")
- */
-function clearAllProductsData() {
-    $pdo = getDbConnection();
-    if ($pdo) {
-        try {
-            $pdo->exec("DELETE FROM product_images");
-            $pdo->exec("DELETE FROM products");
-        } catch (Exception $e) {}
-    }
-    file_put_contents(DATA_PRODUCTS_FILE, json_encode([], JSON_PRETTY_PRINT));
-}
-
-/**
- * Muat produk demo bawaan ke sistem
- */
-function loadDemoProductsData() {
-    $demos = getDefaultDemoProducts();
-    file_put_contents(DATA_PRODUCTS_FILE, json_encode($demos, JSON_PRETTY_PRINT));
-}
-
-// ----------------------------------------------------
-// 4. DATA TEMPLATE PRODUK DEMO
-// ----------------------------------------------------
-function getDefaultDemoProducts() {
-    return [
-        [
-            'id' => 1,
-            'name' => 'Varsity Jacket Premium Angkatan 2026',
-            'subtitle' => 'Custom Bordir Komputer Nama, NIM, & Logo Jurusan',
-            'category' => 'jaket',
-            'category_name' => 'Jaket & Varsity',
-            'price' => 245000,
-            'dp_price' => 122500,
-            'quota_current' => 82,
-            'quota_target' => 100,
-            'badge' => 'PO Terpopuler',
-            'batch' => 'Batch 2 (Tutup 25 Okt)',
-            'description' => 'Varsity jacket berbahan Fleece Cotton tebal 330gsm kombinasi kulit sintetis premium pada lengan. Dilengkapi furing quilting diamond yang hangat dan nyaman, kancing snap metal anti karat, dan bordir komputer kerapatan tinggi.',
-            'specs' => ['Bahan Badan: Cotton Fleece 330gsm', 'Bahan Lengan: Oscar Leather Soft Grade A', 'Bordir: 4 Titik Bordir Komputer Full HD', 'Furing: Quilting Diamond Dacron 4oz', 'Estimasi Produksi: 18 - 21 Hari'],
-            'sizes' => ['S', 'M', 'L', 'XL', 'XXL', '3XL'],
-            'colors' => ['Navy - White', 'Black - Grey', 'Maroon - Cream'],
-            'icon_type' => 'varsity',
-            'images' => []
-        ],
-        [
-            'id' => 2,
-            'name' => 'Kemeja PDH Drill Custom Bordir Logo',
-            'subtitle' => 'Bahan American Drill Original 1919 Tebal & Adem',
-            'category' => 'pdh',
-            'category_name' => 'Kemeja PDH',
-            'price' => 135000,
-            'dp_price' => 67500,
-            'quota_current' => 64,
-            'quota_target' => 80,
-            'badge' => 'Bordir Rapih',
-            'batch' => 'Batch 1 (Tutup 20 Okt)',
-            'description' => 'Kemeja PDH/PDL resmi organisasi dan angkatan. Menggunakan bahan American Drill 1919 asli yang tidak berbulu dan adem dipakai seharian. Jahitan rantai ganda kuat standar konveksi profesional.',
-            'specs' => ['Bahan: Original American Drill 1919', 'Bordir: Komputer Tajam 3 Titik', 'Jahitan: Rantai Tiga Benang Kuat', 'Kancing: Eksklusif Emboss', 'Estimasi Produksi: 14 - 17 Hari'],
-            'sizes' => ['S', 'M', 'L', 'XL', 'XXL'],
-            'colors' => ['Navy Blue', 'Hitam Solid', 'Abu Khaki'],
-            'icon_type' => 'shirt',
-            'images' => []
-        ],
-        [
-            'id' => 3,
-            'name' => 'Hoodie Heavyweight Fleece 330gsm 2026',
-            'subtitle' => 'Double Layered Hood dengan Sablon High Density',
-            'category' => 'hoodie',
-            'category_name' => 'Hoodie & Sweatshirt',
-            'price' => 185000,
-            'dp_price' => 92500,
-            'quota_current' => 92,
-            'quota_target' => 100,
-            'badge' => 'Sisa 8 Kuota',
-            'batch' => 'Batch 3 (Segera Tutup)',
-            'description' => 'Hoodie kasual angkatan dengan bahan Cotton Fleece heavyweight tebal tanpa campuran poliester kasar. Bagian dalam lembut, saku kanguru presisi, dan tali hoodie anyaman tebal.',
-            'specs' => ['Bahan: 100% Cotton Fleece 330gsm', 'Sablon: Plastisol High Density Timbul', 'Hoodie: Double Layer Tebal', 'Rib: Elastis Spandex Anti Melar', 'Estimasi Produksi: 14 Hari'],
-            'sizes' => ['S', 'M', 'L', 'XL', 'XXL', '3XL'],
-            'colors' => ['Deep Navy', 'Jet Black', 'Forest Green'],
-            'icon_type' => 'hoodie',
-            'images' => []
-        ],
-        [
-            'id' => 4,
-            'name' => 'T-Shirt Cotton Combed 24s Sablon Plastisol',
-            'subtitle' => 'Kaos Makrab & Event Angkatan Nyaman & Sejuk',
-            'category' => 'kaos',
-            'category_name' => 'Kaos Angkatan',
-            'price' => 95000,
-            'dp_price' => 47500,
-            'quota_current' => 140,
-            'quota_target' => 150,
-            'badge' => 'Best Seller',
-            'batch' => 'Batch 1 (Tutup 30 Okt)',
-            'description' => 'Kaos angkatan yang pas untuk kegiatan santai, makrab, atau gathering. Terbuat dari katun combed 24s reaktif gramasi pas, menyerap keringat maksimal, dan disablon dengan tinta plastisol premium.',
-            'specs' => ['Bahan: Cotton Combed 24s Reaktif', 'Sablon: Plastisol Curing Oven Glossy', 'Jahitan: Standar Distro Rantai Pundak', 'Model: Reguler Fit Unisex', 'Estimasi Produksi: 10 - 12 Hari'],
-            'sizes' => ['S', 'M', 'L', 'XL', 'XXL'],
-            'colors' => ['Biru Navy', 'Hitam', 'Putih', 'Sage Green'],
-            'icon_type' => 'tshirt',
-            'images' => []
-        ]
-    ];
-}
+// Cleared: Unused demo functions (clearAllProductsData, loadDemoProductsData, getDefaultDemoProducts)
+// These were defined but never called in production code
 
 /**
  * Mengambil daftar produk trending untuk horizontal carousel di beranda (gaya Zellerfeld)
@@ -1039,9 +937,9 @@ function processNewCheckoutOrder($postData, $fileData) {
         }
     }
 
-    // 4. Generate kode pesanan & nama file unik: bukti_PO-2026-XXXX_timestamp.ext
-    $randomSuffix = random_int(1000, 9999);
-    $orderCode = sanitize($postData['order_code'] ?? '') ?: ('PO-2026-' . $randomSuffix);
+    // 4. Generate kode pesanan unik: PO-2026-[timestamp]-[uniqid] untuk menghindari collision
+    $uniqueSuffix = time() . '-' . substr(uniqid(), -6);
+    $orderCode = sanitize($postData['order_code'] ?? '') ?: ('PO-2026-' . $uniqueSuffix);
     $safeOrderCode = preg_replace('/[^A-Za-z0-9\-]/', '', $orderCode);
     $newFileName = 'bukti_' . $safeOrderCode . '_' . time() . '.' . $ext;
 
@@ -2011,53 +1909,7 @@ function get3DShowcaseConfig() {
     ];
 }
 
-function save3DShowcaseConfig($postData, $fileData = null) {
-    if (!is_dir(UPLOAD_3D_DIR)) {
-        mkdir(UPLOAD_3D_DIR, 0777, true);
-    }
-    
-    $current = get3DShowcaseConfig();
-    $imageUrl = $current['image_url'];
-    
-    // Upload via $_FILES
-    if (!empty($fileData['name']) && $fileData['error'] === UPLOAD_ERR_OK) {
-        $ext = strtolower(pathinfo($fileData['name'], PATHINFO_EXTENSION));
-        if ($ext === 'png') {
-            $fileName = 'model_3d_' . time() . '.png';
-            $targetPath = UPLOAD_3D_DIR . $fileName;
-            if (move_uploaded_file($fileData['tmp_name'], $targetPath)) {
-                $imageUrl = 'uploads/3d/' . $fileName;
-            }
-        }
-    } 
-    // Atau upload via Base64 DataURL (Drag & Drop AJAX)
-    elseif (!empty($postData['image_base64'])) {
-        $base64 = $postData['image_base64'];
-        if (preg_match('/^data:image\/(\w+);base64,/', $base64, $type)) {
-            $data = substr($base64, strpos($base64, ',') + 1);
-            $data = base64_decode($data);
-            if ($data !== false) {
-                $fileName = 'model_3d_' . time() . '.png';
-                file_put_contents(UPLOAD_3D_DIR . $fileName, $data);
-                $imageUrl = 'uploads/3d/' . $fileName;
-            }
-        }
-    }
-    
-    $config = [
-        'image_url' => $imageUrl,
-        'title' => sanitize($postData['title'] ?? ($current['title'] ?? '3D Apparel Fastender')),
-        'subtitle' => sanitize($postData['subtitle'] ?? ($current['subtitle'] ?? 'Desain 3D Pre-Order Terkini')),
-        'depth' => floatval($postData['depth'] ?? 8),
-        'rotation_speed' => floatval($postData['rotation_speed'] ?? 0.006),
-        'metalness' => floatval($postData['metalness'] ?? 0.35),
-        'roughness' => floatval($postData['roughness'] ?? 0.3),
-        'updated_at' => date('Y-m-d H:i:s')
-    ];
-    
-    file_put_contents(DATA_SHOWCASE_3D_FILE, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-    return $config;
-}
+// Cleared: save3DShowcaseConfig() - 3D showcase feature incomplete, no admin UI or frontend usage
 
 // ----------------------------------------------------
 // 9. PENGELOLAAN HERO SECTION & COUNTDOWN BANNER (SPLIT-CARD)
@@ -2160,30 +2012,7 @@ function isPreOrderActive() {
 /**
  * Mengambil informasi detail status Pre-Order saat ini
  */
-function getPreOrderStatus() {
-    $hero = getHeroSettings();
-    $deadlineStr = trim((string)($hero['countdown_deadline'] ?? ''));
-    $isActive = true;
-    $deadlineTs = 0;
-
-    if ($deadlineStr !== '') {
-        $ts = strtotime($deadlineStr);
-        if ($ts === false) {
-            $ts = strtotime(str_replace('T', ' ', $deadlineStr));
-        }
-        if ($ts !== false) {
-            $deadlineTs = $ts;
-            $isActive = (time() < $deadlineTs);
-        }
-    }
-
-    return [
-        'is_active' => $isActive,
-        'deadline_str' => $deadlineStr,
-        'deadline_timestamp' => $deadlineTs,
-        'server_time' => time(),
-    ];
-}
+// Cleared: getPreOrderStatus() - never called; isPreOrderActive() used instead
 
 /**
  * Menyimpan pengaturan hero section (dari form admin)

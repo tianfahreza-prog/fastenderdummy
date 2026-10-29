@@ -75,37 +75,24 @@ $stats = getDashboardStats($orders);
       <!-- Area Konten Utama -->
       <div class="admin-content">
 
-        <!-- Title & Action Button -->
-        <div class="admin-page-title-box">
-          <div>
-            <h1 class="admin-page-title">Dashboard Manajemen Pre-Order</h1>
-            <p class="admin-page-sub">Ringkasan metrik performa dan statistik pre-order secara keseluruhan.</p>
-          </div>
-          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-            <form id="form-reset-stats" method="POST" action="admin-dashboard.php" style="margin: 0;">
-              <input type="hidden" name="action" value="reset_stats">
-              <button type="button" class="btn-reset-stats" onclick="handleResetStats()">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="1 4 1 10 7 10"></polyline>
-                  <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-                </svg>
-                Reset Statistik
-              </button>
-            </form>
+        <!-- Title & Action Button (Minimalist) -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+          <h1 class="admin-page-title" style="margin: 0;">Dashboard</h1>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <a href="admin-pesanan.php" class="btn btn-outline-primary btn-sm">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
                 <line x1="3" y1="6" x2="21" y2="6"></line>
                 <path d="M16 10a4 4 0 0 1-8 0"></path>
               </svg>
-              Kelola Pesanan PO
+              Pesanan
             </a>
             <a href="admin-input-produk.php" class="btn btn-accent btn-sm">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
               </svg>
-              Tambah Produk PO
+              Tambah
             </a>
           </div>
         </div>
@@ -135,10 +122,6 @@ $stats = getDashboardStats($orders);
               </div>
             </div>
             <div class="stat-value" id="stat-total-orders"><?= number_format($stats['total_orders'], 0, ',', '.') ?></div>
-            <div class="stat-trend positive">
-              <span><?= $stats['total_orders'] > 0 ? '↑ 18.2%' : '0%' ?></span>
-              <span style="color: var(--text-muted); font-weight: normal;">dibanding batch lalu</span>
-            </div>
           </div>
 
           <!-- Stat 2: Total Pendapatan -->
@@ -153,10 +136,6 @@ $stats = getDashboardStats($orders);
               </div>
             </div>
             <div class="stat-value" id="stat-total-revenue"><?= formatRupiah($stats['total_revenue']) ?></div>
-            <div class="stat-trend positive">
-              <span><?= $stats['total_revenue'] > 0 ? '↑ 24.5%' : '0%' ?></span>
-              <span style="color: var(--text-muted); font-weight: normal;"><?= $stats['total_revenue'] > 0 ? 'target tercapai 92%' : 'belum ada transaksi' ?></span>
-            </div>
           </div>
 
           <!-- Stat 3: Sedang Diproduksi -->
@@ -171,10 +150,6 @@ $stats = getDashboardStats($orders);
               </div>
             </div>
             <div class="stat-value" id="stat-in-production"><?= number_format($stats['in_production_pcs'], 0, ',', '.') ?> pcs</div>
-            <div class="stat-trend neutral">
-              <span><?= $stats['in_production_pcs'] > 0 ? '3 Vendor Aktif' : '0 Vendor Aktif' ?></span>
-              <span style="color: var(--text-muted); font-weight: normal;">• Konveksi Solo &amp; Bdg</span>
-            </div>
           </div>
 
           <!-- Stat 4: Selesai / Kirim -->
@@ -188,10 +163,6 @@ $stats = getDashboardStats($orders);
               </div>
             </div>
             <div class="stat-value" id="stat-completed-pcs"><?= number_format($stats['completed_pcs'], 0, ',', '.') ?> pcs</div>
-            <div class="stat-trend positive">
-              <span><?= $stats['completed_pcs'] > 0 ? '100% On-Time' : '0% On-Time' ?></span>
-              <span style="color: var(--text-muted); font-weight: normal;">• 0 komplain mutu</span>
-            </div>
           </div>
 
         </div>
