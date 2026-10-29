@@ -6,6 +6,27 @@
  */
 require_once __DIR__ . '/includes/functions.php';
 
+// Handle direct checkout session setup
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'set_direct_checkout') {
+    $directItem = [
+        'id' => (int)($_POST['product_id'] ?? 0),
+        'name' => sanitize($_POST['product_name'] ?? ''),
+        'price' => (int)($_POST['price'] ?? 0),
+        'dpPrice' => (int)($_POST['dp_price'] ?? 0),
+        'size' => sanitize($_POST['size'] ?? 'L'),
+        'quantity' => max(1, (int)($_POST['quantity'] ?? 1)),
+        'image' => sanitize($_POST['image'] ?? 'assets/images/default.png')
+    ];
+    
+    // Simpan ke session direct_checkout (JANGAN ke keranjang)
+    $_SESSION['direct_checkout'] = [$directItem];
+    
+    // Return success response untuk JavaScript
+    header('Content-Type: application/json');
+    echo json_encode(['success' => true, 'type' => 'direct']);
+    exit;
+}
+
 $prodId = isset($_GET['id']) ? (int)$_GET['id'] : 1;
 $product = getProductById($prodId);
 
@@ -315,16 +336,34 @@ include __DIR__ . '/includes/navbar.php';
       });
     }
 
-    // Action: Pesan Sekarang (Direct Buy ke Checkout jika Toko Buka & Kuota Ada)
+    // Action: Pesan Sekarang (Direct Buy - simpan ke $_SESSION['direct_checkout'], JANGAN ke keranjang)
     const buyNowBtn = document.getElementById("buy-now-btn");
     if (buyNowBtn && IS_STORE_OPEN && !IS_QUOTA_FULL) {
       buyNowBtn.addEventListener("click", () => {
-        addToCart(CURRENT_PRODUCT, quantity, selectedSize, "Standar", "");
-        if (IS_PO_ACTIVE) {
-          window.location.href = "checkout.php";
-        } else {
+        if (!IS_PO_ACTIVE) {
           window.location.href = "keranjang.php?pesan=po_tutup";
+          return;
         }
+        // Set direct checkout session via form submit
+        const formData = new FormData();
+        formData.append("action", "set_direct_checkout");
+        formData.append("product_id", CURRENT_PRODUCT.id);
+        formData.append("product_name", CURRENT_PRODUCT.name);
+        formData.append("price", CURRENT_PRODUCT.price);
+        formData.append("dp_price", CURRENT_PRODUCT.dpPrice);
+        formData.append("size", selectedSize);
+        formData.append("quantity", quantity);
+        formData.append("image", CURRENT_PRODUCT.images && CURRENT_PRODUCT.images.length > 0 ? CURRENT_PRODUCT.images[0] : 'assets/images/default.png');
+        
+        fetch("detail.php", {
+          method: "POST",
+          body: formData
+        }).then(() => {
+          window.location.href = "checkout.php?type=direct";
+        }).catch(err => {
+          console.error("Direct checkout setup failed:", err);
+          showToast("Gagal memproses pesanan langsung", "error");
+        });
       });
     }
   });

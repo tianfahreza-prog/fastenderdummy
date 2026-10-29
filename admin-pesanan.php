@@ -500,8 +500,8 @@ $orders = getAllOrdersList();
       if (data.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="9" style="text-align: center; padding: 40px; color: var(--text-muted);">
-              Tidak ada data pesanan yang sesuai dengan filter pencarian.
+            <td colspan="9" style="text-align: center; padding: 48px 24px; color: #a1a4aa; font-size: 14px;">
+              Belum ada pesanan masuk
             </td>
           </tr>
         `;
@@ -544,7 +544,7 @@ $orders = getAllOrdersList();
         return `
           <tr>
             <td class="order-id">${order.orderId}</td>
-            <td style="color: var(--text-muted); font-size: 12px;">${order.date}</td>
+            <td style="color: #1e293b !important; font-weight: 500; font-size: 12px;">${order.date}</td>
             <td>
               <div class="customer-name">${order.customerName}</div>
               <div class="customer-sub">${order.org || "-"}</div>

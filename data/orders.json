@@ -1,1 +1,53 @@
-[]
+[
+    {
+        "order_code": "PO-2026-1793249133-dcf3fb",
+        "orderId": "PO-2026-1793249133-dcf3fb",
+        "date": "29 Oct 2026",
+        "customer_name": "Muhammad fatah",
+        "customerName": "Muhammad fatah",
+        "customer_phone": "08123456789",
+        "customerPhone": "08123456789",
+        "jurusan": "akutansi",
+        "customer_email": "-",
+        "organization": "akutansi",
+        "org": "akutansi",
+        "province": "-",
+        "city": "-",
+        "address": "Ambil di Sekretariat USMA (Gedung UKM Polinema)",
+        "shipping_address": "Ambil di Sekretariat USMA (Gedung UKM Polinema)",
+        "courier": "Ambil di Sekretariat / Kampus (Gratis Ongkir)",
+        "payment_scheme": "dp",
+        "paymentScheme": "dp",
+        "payment_method": "BCA",
+        "product_summary": "Workshirt Angkatan 2026 (S, Standar)",
+        "qty": 1,
+        "items": [
+            {
+                "id": 1,
+                "name": "Workshirt Angkatan 2026",
+                "size": "S",
+                "color": "Standar",
+                "customText": "",
+                "quantity": 1,
+                "price": 145000,
+                "dpPrice": 75000,
+                "subtotal": 145000,
+                "image": "assets/images/gambar1.jpg"
+            }
+        ],
+        "subtotal": 145000,
+        "shipping": 0,
+        "shipping_cost": 0,
+        "total_price": 145000,
+        "total": 145000,
+        "total_bayar": 75000,
+        "due": 75000,
+        "dp_amount": 75000,
+        "bukti_pembayaran": "uploads/bukti_pembayaran/bukti_PO-2026-1793249133-dcf3fb_1793249133.png",
+        "payment_status": "Menunggu Verifikasi",
+        "paymentStatus": "Menunggu Verifikasi",
+        "production_status": "Menunggu Konfirmasi Admin",
+        "productionStatus": "Menunggu Konfirmasi Admin",
+        "created_at": "2026-10-29 11:45:33"
+    }
+]

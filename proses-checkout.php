@@ -66,6 +66,19 @@ if ($isAjax) {
 
 if ($result['success']) {
     $_SESSION['checkout_success_order'] = $result['order'];
+    
+    // Tentukan tipe checkout dan clear session sesuai tipenya
+    $checkoutType = isset($_POST['checkout_type']) && $_POST['checkout_type'] === 'direct' ? 'direct' : 'regular';
+    
+    if ($checkoutType === 'direct') {
+        // Mode direct checkout: clear HANYA $_SESSION['direct_checkout']
+        // JANGAN hapus $_SESSION['cart']
+        unset($_SESSION['direct_checkout']);
+    } else {
+        // Mode regular checkout: clear keranjang biasa
+        unset($_SESSION['cart']);
+    }
+    
     header('Location: checkout.php?success=1');
     exit;
 } else {

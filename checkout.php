@@ -20,6 +20,23 @@ if (!isPreOrderActive()) {
     exit;
 }
 
+// Tentukan tipe checkout: direct (dari "Pesan Sekarang") atau regular (dari keranjang)
+$checkoutType = isset($_GET['type']) && $_GET['type'] === 'direct' ? 'direct' : 'regular';
+
+// Validasi data checkout berdasarkan tipe
+if ($checkoutType === 'direct') {
+    // Mode direct checkout: gunakan $_SESSION['direct_checkout']
+    if (empty($_SESSION['direct_checkout'])) {
+        header('Location: katalog.php');
+        exit;
+    }
+    $checkoutItems = $_SESSION['direct_checkout'];
+} else {
+    // Mode regular checkout: gunakan keranjang biasa
+    // Data cart akan dimuat dari localStorage via JavaScript
+    $checkoutItems = [];
+}
+
 // Jika form di-submit langsung ke checkout.php via POST tradisional
 $flashSuccessOrder = $_SESSION['checkout_success_order'] ?? null;
 $flashErrorMessage = $_SESSION['checkout_error_message'] ?? '';
@@ -48,6 +65,34 @@ $hasQrisFile = ($qrisImg !== '' && is_file(__DIR__ . '/' . ltrim($qrisImg, '/'))
 include __DIR__ . '/includes/header.php';
 include __DIR__ . '/includes/navbar.php';
 ?>
+<style>
+  .btn-checkout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 14px 20px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 15px;
+    border: none;
+    transition: all 0.25s ease;
+  }
+  .btn-checkout.active {
+    background-color: #619ae6 !important;
+    color: #ffffff !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    box-shadow: 0 4px 14px rgba(97, 154, 230, 0.4);
+  }
+  .btn-checkout.disabled {
+    background-color: #cbd5e1 !important;
+    color: #64748b !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+    box-shadow: none !important;
+  }
+</style>
 
 <!-- ==========================================
      CHECKOUT CONTENT (LAYOUT 2 KOLOM)
@@ -67,6 +112,7 @@ include __DIR__ . '/includes/navbar.php';
     <form id="checkout-form" action="proses-checkout.php" method="POST" enctype="multipart/form-data" onsubmit="handleCheckoutSubmit(event)">
       <input type="hidden" name="cart_items" id="cart-items-input" value="[]">
       <input type="hidden" name="is_pickup_usma" id="is-pickup-usma" value="0">
+      <input type="hidden" name="checkout_type" value="<?= htmlspecialchars($checkoutType) ?>">
       <div class="checkout-layout">
 
         <!-- KOLOM KIRI: FORM DATA PEMBELI & ALAMAT PENGIRIMAN -->
@@ -122,9 +168,6 @@ include __DIR__ . '/includes/navbar.php';
                     Alamat pengiriman tidak perlu diisi manual. Pesanan Anda diarahkan ke <strong>Sekretariat USMA (Gedung UKM Polinema)</strong> dengan <strong>Gratis Ongkir (Rp 0)</strong>.
                   </p>
                 </div>
-                <button type="button" onclick="selectPickupUSMA(false)" style="background: #ffffff; color: #1e293b; border: 1px solid #cbd5e1; border-radius: 999px; padding: 7px 14px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: all 0.2s ease;">
-                  Isi Alamat Pengiriman Manual
-                </button>
               </div>
             </div>
 
@@ -357,14 +400,14 @@ include __DIR__ . '/includes/navbar.php';
             <!-- Checkbox Persetujuan PO -->
             <div style="margin: 18px 0 16px; font-size: 12px; color: var(--color-ash, #737780);">
               <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer;">
-                <input type="checkbox" required checked style="margin-top: 3px; accent-color: #619ae6;">
+                <input type="checkbox" id="termsAgreeCheckbox" required style="margin-top: 3px; accent-color: #619ae6;">
                 <span>Saya menyetujui ketentuan Pre-Order (PO) dengan estimasi waktu produksi sekitar 14-21 hari kerja setelah kuota batch ditutup.</span>
               </label>
             </div>
 
-            <!-- Tombol "Konfirmasi Pesanan" (Disabled secara default sampai bukti pembayaran diunggah) -->
-            <button type="submit" id="confirm-order-btn" class="btn btn-accent btn-block btn-lg btn-confirm-disabled" disabled>
-              <span id="confirm-btn-text">Konfirmasi Pesanan</span>
+            <!-- Tombol "Konfirmasi Pesanan" (Disabled sampai checkbox dicentang & bukti diunggah) -->
+            <button type="submit" id="btnSubmitOrder" class="btn-checkout" disabled>
+              <span id="confirm-btn-text">Setujui Ketentuan PO Terlebih Dahulu</span>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="20 6 9 17 4 12"></polyline>
               </svg>
@@ -434,6 +477,8 @@ include __DIR__ . '/includes/navbar.php';
   let paymentScheme = "dp"; // "dp" atau "full"
   let selectedProofFile = null;
   const HAS_SERVER_SUCCESS = <?= $flashSuccessOrder ? 'true' : 'false' ?>;
+  const CHECKOUT_TYPE = <?= json_encode($checkoutType) ?>;
+  const DIRECT_CHECKOUT_ITEMS = <?= json_encode($checkoutItems) ?>;
 
   function safeParseNumber(val, fallback = 0) {
     if (typeof val === "number" && !isNaN(val)) return Math.round(val);
@@ -447,11 +492,29 @@ include __DIR__ . '/includes/navbar.php';
 
   document.addEventListener("DOMContentLoaded", () => {
     if (HAS_SERVER_SUCCESS) {
-      saveCart([]);
+      // Setelah checkout sukses, clear session sesuai tipenya
+      if (CHECKOUT_TYPE === 'direct') {
+        // Clear hanya direct checkout, jangan sentuh keranjang
+        fetch('checkout.php', { method: 'POST', body: new FormData(Object.assign(document.createElement('form'), {
+          action: 'clear_direct_checkout'
+        })) });
+      } else {
+        // Clear keranjang biasa
+        saveCart([]);
+      }
       return;
     }
 
-    const cart = getCart();
+    let cart = [];
+    
+    if (CHECKOUT_TYPE === 'direct') {
+      // Mode direct checkout: gunakan data dari server (direct_checkout session)
+      cart = DIRECT_CHECKOUT_ITEMS || [];
+    } else {
+      // Mode regular checkout: ambil dari localStorage (keranjang)
+      cart = getCart();
+    }
+
     if (cart.length === 0) {
       alert("Keranjang Anda masih kosong. Silakan pilih produk terlebih dahulu.");
       window.location.href = "katalog.php";
@@ -459,9 +522,32 @@ include __DIR__ . '/includes/navbar.php';
     }
 
     // Pastikan data keranjang tersimpan dalam bentuk yang sudah ternormalisasi
-    saveCart(cart);
+    if (CHECKOUT_TYPE === 'regular') {
+      saveCart(cart);
+    }
     renderCheckoutSummary();
     setupPaymentProofDropzone();
+    
+    // Setup checkbox persetujuan PO untuk kontrol tombol submit
+    const checkbox = document.getElementById('termsAgreeCheckbox');
+    const submitBtn = document.getElementById('btnSubmitOrder');
+
+    if (!checkbox || !submitBtn) return;
+
+    function updateButton() {
+        if (checkbox.checked) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Konfirmasi Pesanan ✓';
+            submitBtn.className = 'btn-checkout active';
+        } else {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Setujui Ketentuan PO Terlebih Dahulu';
+            submitBtn.className = 'btn-checkout disabled';
+        }
+    }
+
+    checkbox.addEventListener('change', updateButton);
+    updateButton();
   });
 
   function selectPayMethodCard(labelEl) {
@@ -690,6 +776,7 @@ include __DIR__ . '/includes/navbar.php';
   function selectPickupUSMA(forceState = null, fromCourierChange = false) {
     const addressInput = document.getElementById("ship-address");
     const courierSelect = document.getElementById("ship-courier");
+    const courierGroup = document.getElementById("ship-courier-group");
     const provinceSelect = document.getElementById("ship-province");
     const cityInput = document.getElementById("ship-city");
     const postalInput = document.getElementById("ship-postal");
@@ -723,19 +810,21 @@ include __DIR__ . '/includes/navbar.php';
         addressInput.removeAttribute("required");
       }
 
-      // Sembunyikan input alamat manual & tampilkan tanda visual Sekretariat USMA
+      // Sembunyikan input alamat manual, dropdown ekspedisi & tampilkan tanda visual Sekretariat USMA
       if (manualFields) manualFields.style.display = "none";
       if (postalGroup) postalGroup.style.display = "none";
+      if (courierGroup) courierGroup.style.display = "none";
       if (postalCourierGrid) postalCourierGrid.style.gridTemplateColumns = "1fr";
       if (pickupBanner) pickupBanner.style.display = "block";
 
       if (pickupBtn) pickupBtn.classList.add("active");
-      if (pickupBtnText) pickupBtnText.textContent = "✓ Ambil di Sekretariat USMA";
+      if (pickupBtnText) pickupBtnText.textContent = "Isi Alamat Manual";
       if (pickupHidden) pickupHidden.value = "1";
 
       // Otomatis pilih ekspedisi Ambil di Sekretariat / Kampus (Gratis Ongkir Rp 0)
       if (courierSelect) {
         courierSelect.value = "0";
+        courierSelect.removeAttribute("required");
       }
       currentShippingCost = 0;
       renderCheckoutSummary();
@@ -747,6 +836,7 @@ include __DIR__ . '/includes/navbar.php';
       // Kembalikan form alamat pengiriman menjadi aktif & required kembali
       if (manualFields) manualFields.style.display = "block";
       if (postalGroup) postalGroup.style.display = "block";
+      if (courierGroup) courierGroup.style.display = "block";
       if (postalCourierGrid) postalCourierGrid.style.gridTemplateColumns = "";
       if (pickupBanner) pickupBanner.style.display = "none";
 
@@ -770,6 +860,11 @@ include __DIR__ . '/includes/navbar.php';
       if (pickupBtnText) pickupBtnText.textContent = "Ambil di Sekretariat USMA";
       if (pickupHidden) pickupHidden.value = "0";
 
+      // Tampilkan kembali dropdown ekspedisi & set required
+      if (courierSelect) {
+        courierSelect.setAttribute("required", "required");
+      }
+
       if (!fromCourierChange && courierSelect && courierSelect.value === "0") {
         courierSelect.value = "15000";
       }
@@ -783,7 +878,13 @@ include __DIR__ . '/includes/navbar.php';
   }
 
   function hasFullQuotaInCart() {
-    const cart = getCart();
+    // Gunakan source data sesuai checkout type
+    let cart = [];
+    if (CHECKOUT_TYPE === 'direct') {
+      cart = DIRECT_CHECKOUT_ITEMS || [];
+    } else {
+      cart = getCart();
+    }
     return cart.filter(item => {
       const itemId = safeParseNumber(item.id || item.productId, 0);
       return FULL_QUOTA_PRODUCT_IDS.includes(itemId);
@@ -791,7 +892,16 @@ include __DIR__ . '/includes/navbar.php';
   }
 
   function renderCheckoutSummary() {
-    const cart = getCart();
+    // Tentukan source data berdasarkan checkout type
+    let cart = [];
+    if (CHECKOUT_TYPE === 'direct') {
+      // Mode direct: gunakan data dari server session
+      cart = DIRECT_CHECKOUT_ITEMS || [];
+    } else {
+      // Mode regular: ambil dari localStorage keranjang
+      cart = getCart();
+    }
+    
     const summaryContainer = document.getElementById("checkout-items-summary");
     const cartHiddenInput = document.getElementById("cart-items-input");
     if (cartHiddenInput) {
