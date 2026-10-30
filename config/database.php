@@ -1,17 +1,19 @@
 <?php
 /**
  * Fastender Pre-Order Platform
- * File Konfigurasi Database (PDO)
+ * File Konfigurasi Database (PDO) - Supabase PostgreSQL via Transaction Pooler
  * config/database.php
  */
 
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'fastender_db');
-define('DB_PORT', 3306);
+require_once __DIR__ . '/env.php';
 
-function getDbConnection() {
+define('DB_HOST', env('DB_HOST', 'aws-0-ap-northeast-2.pooler.supabase.com'));
+define('DB_PORT', envInt('DB_PORT', 5432));
+define('DB_NAME', env('DB_NAME', 'postgres'));
+define('DB_USER', env('DB_USER', 'postgres.xotrxfmsrrtvestvggrw'));
+define('DB_PASS', env('DB_PASSWORD', ''));
+
+function getDbConnection(): ?PDO {
     static $pdo = null;
     
     if ($pdo !== null) {
@@ -19,17 +21,18 @@ function getDbConnection() {
     }
 
     try {
-        $dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=utf8mb4";
+        $dsn = "pgsql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";sslmode=require";
         $options = [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES   => false,
+            PDO::ATTR_PERSISTENT         => true,
         ];
         $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+        $pdo->exec("SET TIME ZONE 'Asia/Jakarta'");
         return $pdo;
     } catch (PDOException $e) {
-        // Jika database belum diimport atau MySQL belum aktif,
-        // kembalikan null agar sistem fallback ke data JSON/file storage tanpa crash 500 error
+        error_log("DB connection error: " . $e->getMessage());
         return null;
     }
 }
